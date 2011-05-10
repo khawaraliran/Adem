@@ -1037,7 +1037,10 @@ public final class Env
 	{
 		if (ctx != null)
 		{
-			String lang = getContext(ctx, LANGUAGE);
+			//adaxa pb: prefer login language
+			String lang = getPreference(ctx, 0, "Language", false);
+			if (Util.isEmpty(lang))
+				lang = getContext(ctx, LANGUAGE);
 			if (!Util.isEmpty(lang))
 				return Language.getLanguage(lang);
 		}
