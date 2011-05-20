@@ -1060,7 +1060,7 @@ public final class Env
 	public static ArrayList<String> getSupportedLanguages()
 	{
 		ArrayList<String> AD_Languages = new ArrayList<String>();
-		String sql = "SELECT DISTINCT AD_Language FROM AD_Message_Trl";
+		String sql = "SELECT AD_Language FROM AD_Language WHERE IsActive = 'Y'";
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try
