@@ -912,6 +912,7 @@ public final class ALogin extends CDialog
 		Language language = Language.getLanguage(langName);
 		Language.setLoginLanguage(language);
 		Env.setContext(m_ctx, Env.LANGUAGE, language.getAD_Language());
+		Env.setContext(m_ctx, "P|Language", language.getName());
 
 		//	Locales
 		Locale loc = language.getLocale();
