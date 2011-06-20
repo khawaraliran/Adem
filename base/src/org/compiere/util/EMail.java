@@ -227,6 +227,14 @@ public final class EMail implements Serializable
 				props.put("mail.smtp.port", "587");
 				props.put("mail.smtp.starttls.enable", "true");
 			}
+			else if (m_smtpHost.contains(":"))
+			{
+				String[] hostport = m_smtpHost.split(":");
+				String host = hostport[0];
+				String port = hostport[1];
+				props.put("mail.host", host);
+				props.put("mail.smtp.port", port);
+			}
 			
 			session = Session.getInstance(props, m_auth);
 			session.setDebug(CLogMgt.isLevelFinest());
