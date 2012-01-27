@@ -13,6 +13,24 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *                                                                            *
+ * @author Teo Sarca, SC ARHIPAC SERVICE SRL                                  *
+ *   FR [ 1670025 ] ModelValidator.afterLoadPreferences will be useful        *
+ *   BF [ 1679692 ] fireDocValidate doesn't treat exceptions as errors        *
+ *   FR [ 1724662 ] Support Email should contain model validators info        *
+ *   FR [ 2788276 ] Data Import Validator                                     *
+ *    https://sourceforge.net/tracker/?func=detail&aid=2788276&group_id=176962&atid=879335
+ * 	 BF [ 2804135 ] Global FactsValidator are not invoked                     *
+ * 	  https://sourceforge.net/tracker/?func=detail&aid=2804135&group_id=176962&atid=879332
+ * 	 BF [ 2819617 ] NPE if script validator rule returns null                 *
+ * 	  https://sourceforge.net/tracker/?func=detail&aid=2819617&group_id=176962&atid=879332
+ *                                                                            *
+ * @author victor.perez@e-evolution.com, www.e-evolution.com                  *
+ * 	 BF [ 2947607 ] Model Validator Engine duplicate listeners                *
+ *                                                                            *
+ * @author Tobias Schoeneberg, t.schoeneberg@metas.de                         *
+ *   FR [ADEMPIERE-28] ModelValidatorException                                *
+ *    https://adempiere.atlassian.net/browse/ADEMPIERE-28                     *
  *****************************************************************************/
 package org.compiere.model;
 
@@ -26,6 +44,7 @@ import java.util.logging.Level;
 
 import javax.script.ScriptEngine;
 
+import org.adempiere.exceptions.ModelValidatorException;
 import org.adempiere.model.ImportValidator;
 import org.adempiere.process.ImportProcess;
 import org.compiere.acct.Fact;
@@ -49,8 +68,13 @@ import org.compiere.util.KeyNamePair;
  * 					https://sourceforge.net/tracker/?func=detail&aid=2804135&group_id=176962&atid=879332
  * 				<li>BF [ 2819617 ] NPE if script validator rule returns null
  * 					https://sourceforge.net/tracker/?func=detail&aid=2819617&group_id=176962&atid=879332
+ * 
  * @author victor.perez@e-evolution.com, www.e-evolution.com
- * 				<li>BF [ 2947607 ] Model Validator Engine duplicate listeners 
+ * 				<li>BF [ 2947607 ] Model Validator Engine duplicate listeners
+ * 
+ * @author Tobias Schoeneberg, t.schoeneberg@metas.de
+ *              <li>FR [ADEMPIERE-28] ModelValidatorException
+ *                  https://adempiere.atlassian.net/browse/ADEMPIERE-28
  */
 public class ModelValidationEngine 
 {
@@ -400,6 +424,8 @@ public class ModelValidationEngine
 			}
 			catch (Exception e)
 			{
+				checkMVE(e); // FR [ADEMPIERE-28]
+
 				//log the exception
 				log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 				String error = e.getLocalizedMessage();
@@ -557,6 +583,8 @@ public class ModelValidationEngine
 			}
 			catch (Exception e)
 			{
+				checkMVE(e); // FR [ADEMPIERE-28]
+				
 				//log the stack trace
 				log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 				// Exeptions are errors and should stop the document processing - teo_sarca [ 1679692 ]
@@ -697,6 +725,8 @@ public class ModelValidationEngine
 			}
 			catch (Exception e)
 			{
+				checkMVE(e); // FR [ADEMPIERE-28]
+				
 				//log the stack trace
 				log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 				// Exeptions are errors and should stop the document processing - teo_sarca [ 1679692 ]				
@@ -852,4 +882,26 @@ public class ModelValidationEngine
 			}
 		}
 	}
+	
+	/**
+	 * See if the given exception is a ModelValidatorException and if it wants to be passed on. 
+	 * If yes, rethrow the given exception. If no, do nothing.
+	 * 
+	 * @param e
+	 * 
+	 */
+	private void checkMVE(final Exception e)
+	{
+		if(e instanceof ModelValidatorException)
+		{
+			final ModelValidatorException mve = (ModelValidatorException)e;
+			log.log(Level.INFO, "Caught " + mve.toString() + "with PassOn=" + mve.isPassOn());
+			
+			if(mve.isPassOn())
+			{
+				throw mve;
+			}
+		}
+	}
+	
 }	//	ModelValidatorEngine
