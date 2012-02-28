@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import org.compiere.model.MChangeRequest;
 import org.compiere.model.MClient;
 import org.compiere.model.MGroup;
+import org.compiere.model.MMailText;
 import org.compiere.model.MRequest;
 import org.compiere.model.MRequestProcessor;
 import org.compiere.model.MRequestProcessorLog;
@@ -36,12 +37,17 @@ import org.compiere.model.MUser;
 import org.compiere.util.DB;
 import org.compiere.util.Msg;
 import org.compiere.util.TimeUtil;
+import org.compiere.util.Util;
 
 /**
  *	Request Processor
  *	
  *  @author Jorg Janke
  *  @version $Id: RequestProcessor.java,v 1.3 2006/07/30 00:53:33 jjanke Exp $
+ *  
+ *	@author Silvano Trinchero, www.freepath.it
+ *		<li>ADEMPIERE-49 Customization of mail sent by request notifications
+ *			https://adempiere.atlassian.net/browse/ADEMPIERE-49
  */
 public class RequestProcessor extends AdempiereServer
 {
@@ -364,12 +370,50 @@ public class RequestProcessor extends AdempiereServer
 	 */
 	private boolean sendEmail (MRequest request, String AD_Message)
 	{
-		//  Alert: Request {0} overdue
-		String subject = Msg.getMsg(m_client.getAD_Language(), AD_Message, 
-			new String[] {request.getDocumentNo()});
-		return m_client.sendEMail(request.getSalesRep_ID(), 
-			subject, request.getSummary(), request.createPDF());
+		return sendEmail(request.getSalesRep_ID(), request, AD_Message, new String[] {request.getDocumentNo()});
 	}   //  sendAlert
+	
+	/**
+	 *  Send Alert EMail
+	 *  @param Recipient_AD_User_ID AD_User_ID of recipient
+	 *  @param request 	request
+	 *  @param AD_Message parameters for message parsing
+	 *  @param mstParams	
+	 *  @return true if sent
+	 */
+	private boolean sendEmail (int Recipient_AD_User_ID,MRequest request, String AD_Message, String[] msgParams)
+	{
+		//  Alert: Request {0} overdue
+		String subject = Msg.getMsg(m_client.getAD_Language(), AD_Message, msgParams);
+		
+		// ADEMPIERE-49: if available, use MailtText from RequestType
+		
+		MMailText				mMailText = request.getNoticesMailText();
+		boolean					bMailIsHtml = false;
+		String					sOriginalBody = request.getSummary();
+		String					sBody = null;
+
+		if(mMailText != null)
+		{
+			subject = request.getNoticesSubject(subject, mMailText);
+			
+			sBody = request.getNoticesBody2(sOriginalBody, "", mMailText);
+			
+			if(Util.isEmpty(sBody, true))
+			{
+				sBody = request.getNoticesBody(sOriginalBody, "", mMailText);
+			}
+			
+			bMailIsHtml = mMailText.isHtml();
+		}
+		else
+			sBody = sOriginalBody;
+		
+		return m_client.sendEMail(Recipient_AD_User_ID, 
+			subject, sBody, request.createPDF(), bMailIsHtml); // ADEMPIERE-49: managed html request
+	}   //  sendAlert
+	
+	
 
 	/**
 	 *  Escalate
@@ -387,14 +431,21 @@ public class RequestProcessor extends AdempiereServer
 			supervisor = MUser.get(getCtx(), supervisor_ID);
 		
 		//  Escalated: Request {0} to {1}
+		
 		String subject = Msg.getMsg(m_client.getAD_Language(), "RequestEscalate", 
-			new String[] {request.getDocumentNo(), supervisor.getName()});
+				new String[] {request.getDocumentNo(), supervisor.getName()});
+		
 		String to = request.getSalesRep().getEMail();
 		if (to == null || to.length() == 0)
 			log.warning("SalesRep has no EMail - " + request.getSalesRep());
 		else
-			m_client.sendEMail(request.getSalesRep_ID(), 
-				subject, request.getSummary(), request.createPDF());
+		{
+			// ADEMPIERE-49: replaced with call to standard send mail function
+			// m_client.sendEMail(request.getSalesRep_ID(), 
+			//		subject, request.getSummary(), request.createPDF());
+			
+			sendEmail(request.getSalesRep_ID(), request, "RequestEscalate", new String[] {request.getDocumentNo(), supervisor.getName()});
+		}
 
 		//	Not the same - send mail to supervisor
 		if (request.getSalesRep_ID() != supervisor.getAD_User_ID())
@@ -403,8 +454,13 @@ public class RequestProcessor extends AdempiereServer
 			if (to == null || to.length() == 0)
 				log.warning("Supervisor has no EMail - " + supervisor);
 			else
-				m_client.sendEMail(supervisor.getAD_User_ID(), 
-					subject, request.getSummary(), request.createPDF());
+			{
+				// ADEMPIERE-49: replaced with call to standard send mail function
+				// m_client.sendEMail(supervisor.getAD_User_ID(), 
+				//		subject, request.getSummary(), request.createPDF());
+
+				sendEmail(supervisor.getAD_User_ID(), request, "RequestEscalate", new String[] {request.getDocumentNo(), supervisor.getName()});
+			}
 		}
 		
 		//  ----------------

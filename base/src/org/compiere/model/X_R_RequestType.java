@@ -21,6 +21,8 @@ import java.sql.ResultSet;
 import java.util.Properties;
 import org.compiere.util.KeyNamePair;
 
+//F3P: backport ADEMPIERE-49 Customization of mail sent by request notifications
+
 /** Generated Model for R_RequestType
  *  @author Adempiere (generated) 
  *  @version Release 3.7.0LTS - $Id$ */
@@ -30,7 +32,7 @@ public class X_R_RequestType extends PO implements I_R_RequestType, I_Persistent
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20110831L;
+	private static final long serialVersionUID = 20120221L;
 
     /** Standard Constructor */
     public X_R_RequestType (Properties ctx, int R_RequestType_ID, String trxName)
@@ -50,6 +52,8 @@ public class X_R_RequestType extends PO implements I_R_RequestType, I_Persistent
 			setIsEMailWhenDue (false);
 			setIsEMailWhenOverdue (false);
 			setIsIndexed (false);
+			setIsMaintRequest (null);
+// N
 			setIsSelfService (true);
 // Y
 			setName (null);
@@ -85,6 +89,31 @@ public class X_R_RequestType extends PO implements I_R_RequestType, I_Persistent
         .append(get_ID()).append("]");
       return sb.toString();
     }
+
+	public org.compiere.model.I_AD_Rule getAD_Rule() throws RuntimeException
+    {
+		return (org.compiere.model.I_AD_Rule)MTable.get(getCtx(), org.compiere.model.I_AD_Rule.Table_Name)
+			.getPO(getAD_Rule_ID(), get_TrxName());	}
+
+	/** Set Rule.
+		@param AD_Rule_ID Rule	  */
+	public void setAD_Rule_ID (int AD_Rule_ID)
+	{
+		if (AD_Rule_ID < 1) 
+			set_Value (COLUMNNAME_AD_Rule_ID, null);
+		else 
+			set_Value (COLUMNNAME_AD_Rule_ID, Integer.valueOf(AD_Rule_ID));
+	}
+
+	/** Get Rule.
+		@return Rule	  */
+	public int getAD_Rule_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_AD_Rule_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
 
 	/** Set Auto Due Date Days.
 		@param AutoDueDateDays 
@@ -339,6 +368,32 @@ public class X_R_RequestType extends PO implements I_R_RequestType, I_Persistent
 		return false;
 	}
 
+	/** IsMaintRequest AD_Reference_ID=1000058 */
+	public static final int ISMAINTREQUEST_AD_Reference_ID=1000058;
+	/** No = N */
+	public static final String ISMAINTREQUEST_No = "N";
+	/** Maintenance = M */
+	public static final String ISMAINTREQUEST_Maintenance = "M";
+	/** Support = S */
+	public static final String ISMAINTREQUEST_Support = "S";
+	/** Set Maintenance Request.
+		@param IsMaintRequest 
+		Maintenance Request
+	  */
+	public void setIsMaintRequest (String IsMaintRequest)
+	{
+
+		set_Value (COLUMNNAME_IsMaintRequest, IsMaintRequest);
+	}
+
+	/** Get Maintenance Request.
+		@return Maintenance Request
+	  */
+	public String getIsMaintRequest () 
+	{
+		return (String)get_Value(COLUMNNAME_IsMaintRequest);
+	}
+
 	/** Set Self-Service.
 		@param IsSelfService 
 		This is a Self-Service entry or this entry can be changed via Self-Service
@@ -387,6 +442,34 @@ public class X_R_RequestType extends PO implements I_R_RequestType, I_Persistent
     {
         return new KeyNamePair(get_ID(), getName());
     }
+
+	public org.compiere.model.I_R_MailText getR_MailText() throws RuntimeException
+    {
+		return (org.compiere.model.I_R_MailText)MTable.get(getCtx(), org.compiere.model.I_R_MailText.Table_Name)
+			.getPO(getR_MailText_ID(), get_TrxName());	}
+
+	/** Set Mail Template.
+		@param R_MailText_ID 
+		Text templates for mailings
+	  */
+	public void setR_MailText_ID (int R_MailText_ID)
+	{
+		if (R_MailText_ID < 1) 
+			set_Value (COLUMNNAME_R_MailText_ID, null);
+		else 
+			set_Value (COLUMNNAME_R_MailText_ID, Integer.valueOf(R_MailText_ID));
+	}
+
+	/** Get Mail Template.
+		@return Text templates for mailings
+	  */
+	public int getR_MailText_ID () 
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_R_MailText_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
 
 	/** Set Request Type.
 		@param R_RequestType_ID 

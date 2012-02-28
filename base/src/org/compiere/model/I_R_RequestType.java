@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import org.compiere.util.KeyNamePair;
 
+// F3P: backport ADEMPIERE-49 Customization of mail sent by request notifications
+
 /** Generated Interface for R_RequestType
  *  @author Adempiere (generated) 
  *  @version Release 3.7.0LTS
@@ -61,6 +63,17 @@ public interface I_R_RequestType
 	  * Organizational entity within client
 	  */
 	public int getAD_Org_ID();
+
+    /** Column name AD_Rule_ID */
+    public static final String COLUMNNAME_AD_Rule_ID = "AD_Rule_ID";
+
+	/** Set Rule	  */
+	public void setAD_Rule_ID (int AD_Rule_ID);
+
+	/** Get Rule	  */
+	public int getAD_Rule_ID();
+
+	public org.compiere.model.I_AD_Rule getAD_Rule() throws RuntimeException;
 
     /** Column name AutoDueDateDays */
     public static final String COLUMNNAME_AutoDueDateDays = "AutoDueDateDays";
@@ -234,6 +247,19 @@ public interface I_R_RequestType
 	  */
 	public boolean isInvoiced();
 
+    /** Column name IsMaintRequest */
+    public static final String COLUMNNAME_IsMaintRequest = "IsMaintRequest";
+
+	/** Set Maintenance Request.
+	  * Maintenance Request
+	  */
+	public void setIsMaintRequest (String IsMaintRequest);
+
+	/** Get Maintenance Request.
+	  * Maintenance Request
+	  */
+	public String getIsMaintRequest();
+
     /** Column name IsSelfService */
     public static final String COLUMNNAME_IsSelfService = "IsSelfService";
 
@@ -259,6 +285,21 @@ public interface I_R_RequestType
 	  * Alphanumeric identifier of the entity
 	  */
 	public String getName();
+
+    /** Column name R_MailText_ID */
+    public static final String COLUMNNAME_R_MailText_ID = "R_MailText_ID";
+
+	/** Set Mail Template.
+	  * Text templates for mailings
+	  */
+	public void setR_MailText_ID (int R_MailText_ID);
+
+	/** Get Mail Template.
+	  * Text templates for mailings
+	  */
+	public int getR_MailText_ID();
+
+	public org.compiere.model.I_R_MailText getR_MailText() throws RuntimeException;
 
     /** Column name R_RequestType_ID */
     public static final String COLUMNNAME_R_RequestType_ID = "R_RequestType_ID";

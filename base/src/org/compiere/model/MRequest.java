@@ -37,6 +37,10 @@ import org.compiere.util.TimeUtil;
  *
  *  @author Jorg Janke
  *  @version $Id: MRequest.java,v 1.2 2006/07/30 00:51:03 jjanke Exp $
+ *  
+ *  @author Silvano Trinchero, www.freepath.it
+ *		<li>ADEMPIERE-49 Customization of mail sent by request notifications
+ *			https://adempiere.atlassian.net/browse/ADEMPIERE-49
  */
 public class MRequest extends X_R_Request
 {
@@ -1078,39 +1082,65 @@ public class MRequest extends X_R_Request
 		String subject = Msg.translate(getCtx(), "R_Request_ID") 
 			+ " " + Msg.getMsg(getCtx(), "Updated") + ": " + getDocumentNo();
 		//	Message
-		StringBuffer message = new StringBuffer();
+		StringBuffer	detail = new StringBuffer();		// ADEMPIERE-49: split message assembly into detail and trailer
+		String				trailer = null;
+		
 		//		UpdatedBy: Joe
 		int UpdatedBy = Env.getAD_User_ID(getCtx());
 		MUser from = MUser.get(getCtx(), UpdatedBy);
 		if (from != null)
-			message.append(Msg.translate(getCtx(), "UpdatedBy")).append(": ")
+			detail.append(Msg.translate(getCtx(), "UpdatedBy")).append(": ")
 				.append(from.getName());
 		//		LastAction/Created: ...	
 		if (getDateLastAction() != null)
-			message.append("\n").append(Msg.translate(getCtx(), "DateLastAction"))
+			detail.append("\n").append(Msg.translate(getCtx(), "DateLastAction"))
 				.append(": ").append(getDateLastAction());
 		else
-			message.append("\n").append(Msg.translate(getCtx(), "Created"))
+			detail.append("\n").append(Msg.translate(getCtx(), "Created"))
 				.append(": ").append(getCreated());
 		//	Changes
 		for (int i = 0; i < list.size(); i++)
 		{
 			String columnName = (String)list.get(i);
-			message.append("\n").append(Msg.getElement(getCtx(), columnName))
+			detail.append("\n").append(Msg.getElement(getCtx(), columnName))
 				.append(": ").append(get_DisplayValue(columnName, false))
 				.append(" -> ").append(get_DisplayValue(columnName, true));
 		}
 		//	NextAction
 		if (getDateNextAction() != null)
-			message.append("\n").append(Msg.translate(getCtx(), "DateNextAction"))
+			detail.append("\n").append(Msg.translate(getCtx(), "DateNextAction"))
 				.append(": ").append(getDateNextAction());
-		message.append(SEPARATOR)
+		detail.append(SEPARATOR)
 			.append(getSummary());
+		
 		if (getResult() != null)
-			message.append("\n----------\n").append(getResult());
-		message.append(getMailTrailer(null));
+			detail.append("\n----------\n").append(getResult());
+
+		trailer = getMailTrailer(null);
+		
+		String message = null;
+				
+		// ADEMPIERE-49: build full mail text and subject
+		
+		MMailText				mMailText = getNoticesMailText();
+		boolean					bMailIsHtml = false;
+
+		if(mMailText != null)
+		{
+			subject = getNoticesSubject(subject, mMailText);
+			message = getNoticesBody(detail.toString(), trailer, mMailText);
+			bMailIsHtml = mMailText.isHtml();
+		}
+		else
+		{
+			// ADEMPIERE-49: assemble message 
+			// detail.append(getMailTrailer(null));
+			
+			message = detail + trailer;
+		}
+		
 		File pdf = createPDF();
-		log.finer(message.toString());
+		log.finer(message);
 		
 		//	Prepare sending Notice/Mail
 		MClient client = MClient.get(getCtx());
@@ -1130,6 +1160,11 @@ public class MRequest extends X_R_Request
 			+ "GROUP BY u.AD_User_ID, u.NotificationType, u.EMail, u.Name";
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
+		
+		// ADEMPIERE-49: cache logged user, for later use
+		
+		int iLoggedAD_User_ID = Env.getAD_User_ID(getCtx());
+		
 		try
 		{
 			pstmt = DB.prepareStatement (sql, get_TrxName());
@@ -1139,6 +1174,12 @@ public class MRequest extends X_R_Request
 			while (rs.next ())
 			{
 				int AD_User_ID = rs.getInt(1);
+				
+				// ADEMPIERE-49: if notification is to be sent to the logged user, skip it
+				
+				if(AD_User_ID == iLoggedAD_User_ID)
+					continue;				
+				
 				String NotificationType = rs.getString(2);
 				if (NotificationType == null)
 					NotificationType = X_AD_User.NOTIFICATIONTYPE_EMail;
@@ -1194,7 +1235,7 @@ public class MRequest extends X_R_Request
 				if (X_AD_User.NOTIFICATIONTYPE_EMail.equals(NotificationType)
 					|| X_AD_User.NOTIFICATIONTYPE_EMailPlusNotice.equals(NotificationType))
 				{
-					if (client.sendEMail(from, to, subject, message.toString(), pdf)) 
+					if (client.sendEMail(from, to, subject, message, pdf, bMailIsHtml))	// ADEMPIERE-49: support send of mail with html body 
 					{
 						success++;
 						if (m_emailTo.length() > 0)
@@ -1215,7 +1256,7 @@ public class MRequest extends X_R_Request
 					int AD_Message_ID = 834;
 					MNote note = new MNote(getCtx(), AD_Message_ID, AD_User_ID,
 						X_R_Request.Table_ID, getR_Request_ID(), 
-						subject, message.toString(), get_TrxName());
+						subject, message, get_TrxName());
 					if (note.save())
 						notices++;
 				}
@@ -1321,5 +1362,127 @@ public class MRequest extends X_R_Request
 				setPriority(PRIORITY_Low);
 		}
 	}	//	doEscalate
+	
+	// ADEMPIERE-49: get mail text from request type
+	
+	/**
+	 * Obtain mail text to be used to generate notices. The obtained mail text is ready to be used with getNoticesSubject and getNoticesBody, and using a 'local' context
+	 *  
+	 * @return the mail text of request type
+	 */
+	public MMailText	getNoticesMailText()
+	{
+		I_R_RequestType	mRequestType = getR_RequestType();
+		
+		if(mRequestType.getR_MailText_ID() > 0)
+		{
+			Query	qMailText = new Query(getCtx(), MMailText.Table_Name, MMailText.COLUMNNAME_R_MailText_ID + "= ?", get_TrxName());
+			qMailText.setParameters(mRequestType.getR_MailText_ID());
+			
+			MMailText	mMailText = qMailText.first();
+			
+			if(mMailText != null)
+			{
+				MBPartner	mBP = MBPartner.get(getCtx(), getC_BPartner_ID());
+				
+				if(mBP != null)
+				{
+					mMailText.setBPartner(mBP);
+				}
+				
+				MUser mUser = MUser.get(getCtx(), getAD_User_ID());
+				
+				if(mUser != null)
+				{
+					mMailText.setUser(mUser);
+				}
+							
+				mMailText.setPO(this);
+			}
+			
+			return mMailText;
+		}
+	
+		return null;
+	}
+	
+	/**
+	 * Obtain the subject from MMailText, for usage in mail notifications
+	 * 
+	 * @param sOriginalSubject	original subject, usable as variable with @OriginalDetail@
+	 * @param mMailText					mail text
+	 * @return	the mail subject
+	 */
+	public String	getNoticesSubject(String sOriginalSubject,MMailText mMailText)
+	{
+		Properties ctxLocal = new Properties(getCtx());
+		
+		// Put old subject into the local context
+		
+		Env.setContext(ctxLocal, "#OriginalSubject", sOriginalSubject);
+		
+		String sHeader = mMailText.getMailHeader();
+		
+		if(sHeader.indexOf('@') >= 0)
+		{
+			sHeader = Env.parseContext(ctxLocal, 0, sHeader, false, true);
+		}
+		return sHeader;
+	}
+	
+	/**
+	 * Parse message context for original detail and trailer
+	 * 
+	 * @param sText							text to parse
+	 * @param sOriginalDetail		original detail
+	 * @param sOriginalTrailer	original trailer
+	 * @return parsed text
+	 */
+	protected String parseBodyText(String sText,String sOriginalDetail,String sOriginalTrailer)
+	{
+		if(sText.indexOf('@') >= 0)
+		{
+			Properties ctxLocal = new Properties(getCtx());
+			
+			// Put old detail and trailer into the local context
+			
+			Env.setContext(ctxLocal, "#OriginalTrailer", ((sOriginalTrailer!=null)?sOriginalTrailer:"") );
+			Env.setContext(ctxLocal, "#OriginalDetail", ((sOriginalDetail!=null)?sOriginalDetail:""));
+			
+			return Env.parseContext(ctxLocal, 0, sText, false, true);
+		}
+		
+		return sText;
+	}
+	
+	/**
+	 * Obtain the message body from MMailText, for usage in mail notifications, using MailText field
+	 * 
+	 * @param sOriginalDetail		original detail, usable as variable with @OriginalDetail@
+	 * @param sOriginalTrailer	original trailer, usable as variable with @OriginalTrailer@
+	 * @param mMailText					
+	 * @return
+	 */
+	public String	getNoticesBody(String sOriginalDetail,String sOriginalTrailer,MMailText mMailText)
+	{
+		String sBody = mMailText.getMailText();
+		
+		return parseBodyText(sBody,sOriginalDetail,sOriginalTrailer);
+	}
+	
+	/**
+	 * Obtain the message body from MMailText, for usage in mail notifications, using MailText2 field
+	 * 
+	 * @param sOriginalDetail		original detail, usable as variable with @OriginalDetail@
+	 * @param sOriginalTrailer	original trailer, usable as variable with @OriginalTrailer@
+	 * @param mMailText					
+	 * @return
+	 */
+	public String	getNoticesBody2(String sOriginalDetail,String sOriginalTrailer,MMailText mMailText)
+	{
+		String sBody = mMailText.getMailText2();
+		
+		return parseBodyText(sBody,sOriginalDetail,sOriginalTrailer);
+	}
 	
 }	//	MRequest

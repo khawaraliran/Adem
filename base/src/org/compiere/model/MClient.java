@@ -52,6 +52,11 @@ import org.compiere.util.Language;
  *    [ 1619085 ] Client setup creates duplicate trees
  * @author Teo Sarca, SC ARHIPAC SERVICE SRL
  * 			<li>BF [ 1886480 ] Print Format Item Trl not updated even if not multilingual
+ * 
+ * @author Silvano Trinchero, www.freepath.it
+ *		<li>ADEMPIERE-49 Customization of mail sent by request notifications
+ *			https://adempiere.atlassian.net/browse/ADEMPIERE-49 
+ * 
  */
 public class MClient extends X_AD_Client
 {
@@ -501,6 +506,8 @@ public class MClient extends X_AD_Client
 		}
 	}	//	testEMail
 	
+	// ADEMPIERE-49: exposed sendEMail with html param, for AD_Client variant
+	
 	/**
 	 * 	Send EMail from Request User - with trace
 	 *	@param AD_User_ID recipient
@@ -512,11 +519,26 @@ public class MClient extends X_AD_Client
 	public boolean sendEMail (int AD_User_ID, 
 			String subject, String message, File attachment)
 	{
+		return sendEMail(AD_User_ID,subject,message,attachment,false);
+	}
+	
+	/**
+	 * 	Send EMail from Request User - with trace
+	 *	@param AD_User_ID recipient
+	 *	@param subject subject
+	 *	@param message message
+	 *	@param attachment optional attachment
+	 *  @param html
+	 *	@return true if sent
+	 */
+	public boolean sendEMail (int AD_User_ID, 
+			String subject, String message, File attachment, boolean html)
+	{
 		Collection<File> attachments = new ArrayList<File>();
 		if (attachment != null)
 			attachments.add(attachment);
-		return sendEMailAttachments(AD_User_ID, subject, message, attachments);
-	}
+		return sendEMailAttachments(AD_User_ID, subject, message, attachments, html);
+	}	
 	
 	/**
 	 * 	Send EMail from Request User - with trace
