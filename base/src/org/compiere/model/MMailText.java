@@ -23,12 +23,18 @@ import java.util.logging.Level;
 
 import org.compiere.util.CCache;
 import org.compiere.util.DB;
+import org.compiere.util.Env;
 
 /**
  * 	Request Mail Template Model.
  *	Cannot be cached as it holds PO/BPartner/User to parse
  *  @author Jorg Janke
  *  @version $Id: MMailText.java,v 1.3 2006/07/30 00:51:03 jjanke Exp $
+ *  
+ *  @author SVT
+ *  @author Silvano Trinchero, www.freepath.it
+ *		<li>ADEMPIERE-49 Customization of mail sent by request notifications
+ *			https://adempiere.atlassian.net/browse/ADEMPIERE-49
  */
 public class MMailText extends X_R_MailText
 {
@@ -149,19 +155,33 @@ public class MMailText extends X_R_MailText
 	 *	@param text text
 	 *	@return parsed text
 	 */
-	private String parse (String text)
-	{
-		if (text.indexOf('@') == -1)
-			return text;
-		//	Parse User
-		text = parse (text, m_user);
-		//	Parse BP
-		text = parse (text, m_bpartner);
-		//	Parse PO
-		text = parse (text, m_po);
-		//
-		return text;
-	}	//	parse
+	 private String parse (String text)
+	 {
+	  if (text == null || text.indexOf('@') == -1)	// ADEMPIERE-49: added check for null
+	   return text;
+	  
+	  // SVT: added check for null
+	  
+	  // Parse User
+	  if (m_user != null)
+	  {
+	  	text = parse (text, m_user);
+	  }
+	  
+	  // Parse BP
+	  if (m_bpartner != null)
+	  {
+	  	text = parse (text, m_bpartner);
+	  }
+	  
+	  // Parse PO
+	  if (m_po != null)
+	  {
+	  	text = parse (text, m_po);
+	  }
+	  //
+	  return text;
+	 } // parse
 	
 	/**
 	 * 	Parse text
@@ -169,57 +189,14 @@ public class MMailText extends X_R_MailText
 	 *	@param po object
 	 *	@return parsed text
 	 */
+	 
+	// ADEMPIERE-49: replaced custom evaluation with standard function, with more functionalities. Removed unused function
+	 
 	private String parse (String text, PO po)
 	{
-		if (po == null || text.indexOf('@') == -1)
-			return text;
-		
-		String inStr = text;
-		String token;
-		StringBuffer outStr = new StringBuffer();
-
-		int i = inStr.indexOf('@');
-		while (i != -1)
-		{
-			outStr.append(inStr.substring(0, i));			// up to @
-			inStr = inStr.substring(i+1, inStr.length());	// from first @
-
-			int j = inStr.indexOf('@');						// next @
-			if (j < 0)										// no second tag
-			{
-				inStr = "@" + inStr;
-				break;
-			}
-
-			token = inStr.substring(0, j);
-			outStr.append(parseVariable(token, po));		// replace context
-
-			inStr = inStr.substring(j+1, inStr.length());	// from second @
-			i = inStr.indexOf('@');
-		}
-
-		outStr.append(inStr);           					//	add remainder
-		return outStr.toString();
+		return Env.parseVariable(text, po, po.get_TrxName(), true);	
 	}	//	parse
 
-	/**
-	 * 	Parse Variable
-	 *	@param variable variable
-	 *	@param po po
-	 *	@return translated variable or if not found the original tag
-	 */
-	private String parseVariable (String variable, PO po)
-	{
-		int index = po.get_ColumnIndex(variable);
-		if (index == -1)
-			return "@" + variable + "@";	//	keep for next
-		//
-		Object value = po.get_Value(index);
-		if (value == null)
-			return "";
-		return value.toString();
-	}	//	translate
-	
 	/**
 	 * 	Set User for parse
 	 *	@param AD_User_ID user

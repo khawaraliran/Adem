@@ -1440,7 +1440,7 @@ public class MRequest extends X_R_Request
 	 */
 	protected String parseBodyText(String sText,String sOriginalDetail,String sOriginalTrailer)
 	{
-		if(sText.indexOf('@') >= 0)
+		if(sText != null && sText.indexOf('@') >= 0)
 		{
 			Properties ctxLocal = new Properties(getCtx());
 			
