@@ -13,6 +13,22 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *                                                                            * 
+ *  @author Jorg Janke                                                        *
+ *  @author Low Heng Sin                                                      *
+ *  <li>added rollback(boolean) and commit(boolean) [20070105]                *
+ *  <li>remove unnecessary use of savepoint                                   *
+ *  <li>use UUID for safer transaction name generation                        *
+ *  @author Teo Sarca, http://www.arhipac.ro                                  *
+ *  	    <li>FR [ 2080217 ] Implement TrxRunnable                          *
+ *  		<li>BF [ 2876927 ] Oracle JDBC driver problem                     *
+ *  				https://sourceforge.net/tracker/?func=detail&atid=879332&aid=2876927&group_id=176962
+ *  @author Teo Sarca, teo.sarca@gmail.com                                    *
+ *  		<li>BF [ 2849122 ] PO.AfterSave is not rollback on error - add releaseSavepoint method
+ *  			https://sourceforge.net/tracker/index.php?func=detail&aid=2849122&group_id=176962&atid=879332#
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Hooks to the Trx Constraints API               *
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73           *
  *****************************************************************************/
 package org.compiere.util;
 
@@ -28,6 +44,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.adempiere.util.Services;
+import org.adempiere.util.trxConstraints.api.IOpenTrxBL;
 
 /**
  *	Transaction Management.
@@ -50,6 +68,9 @@ import org.adempiere.exceptions.AdempiereException;
  *  @author Teo Sarca, teo.sarca@gmail.com
  *  		<li>BF [ 2849122 ] PO.AfterSave is not rollback on error - add releaseSavepoint method
  *  			https://sourceforge.net/tracker/index.php?func=detail&aid=2849122&group_id=176962&atid=879332#
+ *  @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Hooks to the Trx Constraints API
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73
  */
 public class Trx implements VetoableChangeListener
 {
@@ -74,6 +95,7 @@ public class Trx implements VetoableChangeListener
 		if (retValue == null && createNew)
 		{
 			retValue = new Trx (trxName);
+			Services.get(IOpenTrxBL.class).onNewTrx(retValue); // FR [ JIRA-73 ]
 			s_cache.put(trxName, retValue);
 		}
 		return retValue;
@@ -260,6 +282,7 @@ public class Trx implements VetoableChangeListener
 			if (m_connection != null)
 			{
 				m_connection.rollback();
+				Services.get(IOpenTrxBL.class).onRollback(this); // FR [ JIRA-73 ]
 				log.info ("**** " + m_trxName);
 				m_active = false;
 				return true;
@@ -304,6 +327,7 @@ public class Trx implements VetoableChangeListener
 			if (m_connection != null)
 			{
 				m_connection.rollback(savepoint);
+				Services.get(IOpenTrxBL.class).onRollback(this);  // FR [ JIRA-73 ]
 				log.info ("**** " + m_trxName);
 				return true;
 			}
@@ -329,6 +353,7 @@ public class Trx implements VetoableChangeListener
 			if (m_connection != null)
 			{
 				m_connection.commit();
+				Services.get(IOpenTrxBL.class).onCommit(this);  // FR [ JIRA-73 ]
 				log.log(isLocalTrx(m_trxName) ? Level.FINE : Level.INFO, "**** " + m_trxName);
 				m_active = false;
 				return true;
@@ -384,6 +409,7 @@ public class Trx implements VetoableChangeListener
 		try
 		{
 			m_connection.close();
+			Services.get(IOpenTrxBL.class).onClose(this);  // FR [ JIRA-73 ]
 		}
 		catch (SQLException e)
 		{
@@ -406,10 +432,16 @@ public class Trx implements VetoableChangeListener
 			getConnection();
 		
 		if(m_connection != null) {
+			
+			final Savepoint result;
 			if (name != null)
-				return m_connection.setSavepoint(name);
+				result = m_connection.setSavepoint(name);
 			else
-				return m_connection.setSavepoint();
+				result = m_connection.setSavepoint();
+			
+			Services.get(IOpenTrxBL.class).onSetSavepoint(this, result);  // FR [ JIRA-73 ]
+			return result;
+			
 		} else {
 			return null;
 		}
@@ -439,6 +471,7 @@ public class Trx implements VetoableChangeListener
 		if(m_connection != null)
 		{
 			m_connection.releaseSavepoint(savepoint);
+			Services.get(IOpenTrxBL.class).onReleaseSavepoint(this, savepoint);  // FR [ JIRA-73 ]
 		}
 		
 	}
@@ -447,6 +480,7 @@ public class Trx implements VetoableChangeListener
 	 * 	String Representation
 	 *	@return info
 	 */
+	@Override
 	public String toString()
 	{
 		StringBuffer sb = new StringBuffer("Trx[");
@@ -462,6 +496,7 @@ public class Trx implements VetoableChangeListener
 	 *	@param evt event
 	 *	@throws PropertyVetoException
 	 */
+	@Override
 	public void vetoableChange (PropertyChangeEvent evt)
 		throws PropertyVetoException
 	{

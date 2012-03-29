@@ -13,6 +13,36 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *                                                                            *
+ * @author     Jorg Janke                                                     *
+ * @author Ashley Ramdass (Posterita)                                         *
+ *		<li>Modifications: removed static references to database connection and instead always
+ *			get a new connection from database pool manager which manages all connections
+ *			set rw/ro properties for the connection accordingly.              *
+ * @author Teo Sarca, SC ARHIPAC SERVICE SRL                                  *
+ * 		<li>BF [ 1647864 ] WAN: delete record error                           *
+ * 		<li>FR [ 1884435 ] Add more DB.getSQLValue helper methods             *
+ * 		<li>FR [ 1904460 ] DB.executeUpdate should handle Boolean params      *
+ * 		<li>BF [ 1962568 ] DB.executeUpdate should handle null params         *
+ * 		<li>FR [ 1984268 ] DB.executeUpdateEx should throw DBException        *
+ * 		<li>FR [ 1986583 ] Add DB.executeUpdateEx(String, Object[], String)   *
+ * 		<li>BF [ 2030233 ] Remove duplicate code from DB class                *
+ * 		<li>FR [ 2107062 ] Add more DB.getKeyNamePairs methods                *
+ *		<li>FR [ 2448461 ] Introduce DB.getSQLValue*Ex methods                *
+ *		<li>FR [ 2781053 ] Introduce DB.getValueNamePairs                     *
+ *		<li>FR [ 2818480 ] Introduce DB.createT_Selection helper method       *
+ *			https://sourceforge.net/tracker/?func=detail&aid=2818480&group_id=176962&atid=879335
+ * @author Teo Sarca, teo.sarca@gmail.com                                     *
+ * 		<li>BF [ 2873324 ] DB.TO_NUMBER should be a static method             *
+ * 			https://sourceforge.net/tracker/?func=detail&aid=2873324&group_id=176962&atid=879332
+ * 		<li>FR [ 2873891 ] DB.getKeyNamePairs should use trxName              *
+ * 			https://sourceforge.net/tracker/?func=detail&aid=2873891&group_id=176962&atid=879335
+ *  @author Paul Bowden, phib                                                 *
+ *      <li>BF 2900767 Zoom to child tab - inefficient queries                *
+ *          https://sourceforge.net/tracker/?func=detail&aid=2900767&group_id=176962&atid=879332
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services            *
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73           *
  *****************************************************************************/
 package org.compiere.util;
 
@@ -40,6 +70,9 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import org.adempiere.exceptions.DBException;
+import org.adempiere.util.Services;
+import org.adempiere.util.trxConstraints.api.ITrxConstraints;
+import org.adempiere.util.trxConstraints.api.ITrxConstraintsBL;
 import org.compiere.Adempiere;
 import org.compiere.db.AdempiereDatabase;
 import org.compiere.db.CConnection;
@@ -86,8 +119,13 @@ import org.compiere.process.SequenceCheck;
  * 			https://sourceforge.net/tracker/?func=detail&aid=2873324&group_id=176962&atid=879332
  * 		<li>FR [ 2873891 ] DB.getKeyNamePairs should use trxName
  * 			https://sourceforge.net/tracker/?func=detail&aid=2873891&group_id=176962&atid=879335
- *  @author Paul Bowden, phib BF 2900767 Zoom to child tab - inefficient queries
- *  @see https://sourceforge.net/tracker/?func=detail&aid=2900767&group_id=176962&atid=879332
+ *  @author Paul Bowden, phib 
+ *      <li>BF 2900767 Zoom to child tab - inefficient queries
+ *          https://sourceforge.net/tracker/?func=detail&aid=2900767&group_id=176962&atid=879332
+ *  @author Tobias Schoeneberg, metas GmbH
+ *      <li>FR [ JIRA-73 ] Methods to access TrxConstraints
+ *          https://adempiere.atlassian.net/browse/ADEMPIERE-73
+ *          
  */
 public final class DB
 {
@@ -2259,6 +2297,47 @@ public final class DB
 			// this is equivalent to commit without trx (autocommit)
 			log.severe("Transaction closed or never opened ("+trxName+") => this is equivalent to commit without trx (autocommit) --> " + sql); // severe?
 		}
+	}
+	
+	/**
+	 * Returns the current ITrxConstraints instance of the current thread. The instance is created on-the-fly the first
+	 * time this method is called from a given thread. It is destroyed when the calling thread finishes.
+	 * 
+	 * Note that there might be more than one instance per thread, but there is only one active instance at a time. See
+	 * {@link #saveConstraints()} and {@link #restoreConstraints()} for details.
+	 * 
+	 */
+	// FR Jira-73
+	public static ITrxConstraints getConstraints()
+	{
+		return Services.get(ITrxConstraintsBL.class).getConstraints();
+	}
+
+	/**
+	 * Saves the current constraints instance of the current thread to be restored later on.
+	 * 
+	 * More specifically, the current constraints are copied and the copy is pushed to a stack (i.e. on top of the
+	 * current instance). Therefore, the next invocation of {@link #getConstraints()} will return the copy. The calling
+	 * thread can modify the copy for its temporary needs (e.g. relax some constraint while calling a particular
+	 * method).
+	 * 
+	 * @see #restoreConstraints()
+	 */
+	// FR Jira-73
+	public static void saveConstraints()
+	{
+		Services.get(ITrxConstraintsBL.class).saveConstraints();
+	}	
+		
+	/**
+	 * Discards the currently active constraints instance and restores the one that has previously been saved.
+	 * 
+	 * @see #saveConstraints()
+	 */
+	// FR Jira-73
+	public static void restoreConstraints()
+	{
+		Services.get(ITrxConstraintsBL.class).restoreConstraints();
 	}
 
 }	//	DB

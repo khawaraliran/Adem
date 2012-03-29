@@ -13,6 +13,19 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *                                                                            *
+ * @author Jorg Janke                                                         *
+ * @author Teo Sarca, SC ARHIPAC SERVICE SRL                                  *
+ * 			<li>FR [ 1646891 ] SvrProcess - post process support              *
+ * 			<li>BF [ 1877935 ] SvrProcess.process should catch all throwables *
+ * 			<li>FR [ 1877937 ] SvrProcess: added commitEx method              *
+ * 			<li>BF [ 1878743 ] SvrProcess.getAD_User_ID                       *
+ *			<li>BF [ 1935093 ] SvrProcess.unlock() is setting invalid result  *
+ *			<li>FR [ 2788006 ] SvrProcess: change access to some methods      *
+ *				https://sourceforge.net/tracker/?func=detail&aid=2788006&group_id=176962&atid=879335
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services            *
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73           *
  *****************************************************************************/
 package org.compiere.process;
 
@@ -48,6 +61,9 @@ import org.compiere.util.Trx;
  *			<li>BF [ 1935093 ] SvrProcess.unlock() is setting invalid result
  *			<li>FR [ 2788006 ] SvrProcess: change access to some methods
  *				https://sourceforge.net/tracker/?func=detail&aid=2788006&group_id=176962&atid=879335
+ *  @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Using TrxConstraints services
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73
  */
 public abstract class SvrProcess implements ProcessCall
 {
@@ -102,6 +118,16 @@ public abstract class SvrProcess implements ProcessCall
 		//
 		lock();
 		
+		DB.saveConstraints();
+		try {
+		// BF [ JIRA-73 ]: making sure that the current thread doesn't do any weird stuff while processing
+		DB.getConstraints().setActive(true)
+				.setOnlyAllowedTrxNamePrefixes(true)
+				.addAllowedTrxNamePrefix(m_trx.getTrxName())
+				.setMaxTrx(1)
+				.setMaxSavepoints(1)
+				.setAllowTrxAfterThreadEnd(false);
+		
 		boolean success = process();
 		//
 		if (localTrx)
@@ -123,6 +149,10 @@ public abstract class SvrProcess implements ProcessCall
 			m_trx.close();
 			m_trx = null;
 		}
+		
+		} // BF [ JIRA-73 ]: changing the constraints back to their default 
+		finally
+		{ DB.restoreConstraints(); }
 		
 		unlock();
 		

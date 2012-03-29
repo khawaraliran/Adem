@@ -13,6 +13,10 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *  @author Jorg Janke                                                        *
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services            *
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73           *
  *****************************************************************************/
 package org.compiere.model;
 
@@ -48,6 +52,9 @@ import org.compiere.util.Secure;
  * 	Issue Report Model
  *	
  *  @author Jorg Janke
+ *  @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Using TrxConstraints
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73
  *  @version $Id: MIssue.java,v 1.3 2006/07/30 00:58:37 jjanke Exp $
  */
 public class MIssue extends X_AD_Issue
@@ -64,6 +71,11 @@ public class MIssue extends X_AD_Issue
 	 */
 	public static MIssue create (LogRecord record)
 	{
+		
+		DB.saveConstraints();
+		try // BF [ JIRA-73 ] Temporarily relax our DB constraints
+		{ DB.getConstraints().setOnlyAllowedTrxNamePrefixes(false).incMaxTrx(1);
+			
 		s_log.config(record.getMessage());
 		MSystem system = MSystem.get(Env.getCtx()); 
 		if (!DB.isConnected() 
@@ -77,6 +89,9 @@ public class MIssue extends X_AD_Issue
 		if (error != null)
 			return null;
 		return issue;
+		} // BF [ JIRA-73 ]
+		finally	{ DB.restoreConstraints(); }
+		
 	}	//	create
 	
 	/**

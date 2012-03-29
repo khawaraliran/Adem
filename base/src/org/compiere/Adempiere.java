@@ -13,6 +13,10 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *  @author Jorg Janke                                                        *
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services            *
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73           *
  *****************************************************************************/
 package org.compiere;
 
@@ -30,6 +34,11 @@ import javax.jnlp.ServiceManager;
 import javax.jnlp.UnavailableServiceException;
 import javax.swing.ImageIcon;
 
+import org.adempiere.util.Services;
+import org.adempiere.util.trxConstraints.api.IOpenTrxBL;
+import org.adempiere.util.trxConstraints.api.ITrxConstraintsBL;
+import org.adempiere.util.trxConstraints.api.impl.OpenTrxBL;
+import org.adempiere.util.trxConstraints.api.impl.TrxConstraintsBL;
 import org.compiere.db.CConnection;
 import org.compiere.model.MClient;
 import org.compiere.model.MSystem;
@@ -50,6 +59,9 @@ import org.compiere.util.Util;
  *  Adempiere Control Class
  *
  *  @author Jorg Janke
+ *  @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73
  *  @version $Id: Adempiere.java,v 1.8 2006/08/11 02:58:14 jjanke Exp $
  *  
  */
@@ -472,6 +484,9 @@ public final class Adempiere
 		if (log != null)
 			return true;
 
+		Services.registerService(ITrxConstraintsBL.class, new TrxConstraintsBL()); // BF [ JIRA-73 ]
+		Services.registerService(IOpenTrxBL.class, new OpenTrxBL()); // BF [ JIRA-73 ]
+		
 		//	Check Version
 		if (isClient && !Login.isJavaOK(isClient))
 			System.exit(1);

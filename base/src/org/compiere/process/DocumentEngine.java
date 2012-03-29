@@ -13,6 +13,13 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *  @author Jorg Janke                                                        *
+ *  @author Karsten Thiemann FR [ 1782412 ]                                   *
+ *  @author victor.perez@e-evolution.com www.e-evolution.com FR [ 1866214 ]   *
+ *          http://sourceforge.net/tracker/index.php?func=detail&aid=1866214&group_id=176962&atid=879335
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services            *
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73           *
  *****************************************************************************/
 package org.compiere.process;
 
@@ -59,7 +66,11 @@ import org.eevolution.model.I_PP_Order;
  *	
  *  @author Jorg Janke 
  *  @author Karsten Thiemann FR [ 1782412 ]
- *  @author victor.perez@e-evolution.com www.e-evolution.com FR [ 1866214 ]  http://sourceforge.net/tracker/index.php?func=detail&aid=1866214&group_id=176962&atid=879335
+ *  @author victor.perez@e-evolution.com www.e-evolution.com FR [ 1866214 ]  
+ *          http://sourceforge.net/tracker/index.php?func=detail&aid=1866214&group_id=176962&atid=879335
+ *  @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Registering TrxConstraints services
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73
  *  @version $Id: DocumentEngine.java,v 1.2 2006/07/30 00:54:44 jjanke Exp $
  */
 public class DocumentEngine implements DocAction
@@ -229,6 +240,15 @@ public class DocumentEngine implements DocAction
 	 */
 	public boolean processIt (String processAction, String docAction)
 	{
+		// BF [ JIRA-73 ]: making sure that the current thread doesn't do any weird stuff while processing 'm_document'
+		DB.getConstraints().setActive(true)
+			.setOnlyAllowedTrxNamePrefixes(true)
+			.addAllowedTrxNamePrefix(m_document.get_TrxName())
+			.setMaxTrx(1)
+			.setMaxSavepoints(1)
+			.setAllowTrxAfterThreadEnd(false);
+		try
+		{
 		m_message = null;
 		m_action = null;
 		//	Std User Workflows - see MWFNodeNext.isValidFor
@@ -257,6 +277,9 @@ public class DocumentEngine implements DocAction
 		if (m_document != null)
 			m_document.get_Logger().fine("**** Action=" + m_action + " - Success=" + success);
 		return success;
+		}
+		finally // BF [ JIRA-73 ] changing the constraints back to their default
+		{ DB.getConstraints().reset(); }
 	}	//	process
 	
 	/**

@@ -13,6 +13,14 @@
  * For the text or an alternative of this public license, you may reach us    *
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *                                                                            *
+ *  @author Jorg Janke                                                        *
+ *  @author victor.perez@e-evolution.com, e-Evolution http://www.e-evolution.com
+ * 				<li>FR [ 2520591 ] Support multiples calendar for Org         *
+ *				@see http://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id=176962 
+ *  @author Tobias Schoeneberg, metas GmbH                                    *
+ *          <li>FR [ JIRA-73 ] Using TrxConstraints                           *
+ *              @see https://adempiere.atlassian.net/browse/ADEMPIERE-73      *
  *****************************************************************************/
 package org.compiere.acct;
 
@@ -75,7 +83,7 @@ import org.compiere.util.Trx;
  *  M_Production:       MMP
  *      Doc_Production  325 - DocType fixed
  *      
- * M_Production:        MMO
+ *  M_Production:       MMO
  *      Doc_CostCollector  330 - DocType fixed
  *
  *  C_BankStatement:    CMB
@@ -104,6 +112,10 @@ import org.compiere.util.Trx;
  *  @author victor.perez@e-evolution.com, e-Evolution http://www.e-evolution.com
  * 				<li>FR [ 2520591 ] Support multiples calendar for Org 
  *				@see http://sourceforge.net/tracker2/?func=detail&atid=879335&aid=2520591&group_id=176962 
+ *  @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Using TrxConstraints
+ *              @see https://adempiere.atlassian.net/browse/ADEMPIERE-73
+ *              
  *  @version  $Id: Doc.java,v 1.6 2006/07/30 00:53:33 jjanke Exp $
  */
 public abstract class Doc
@@ -679,6 +691,12 @@ public abstract class Doc
 		//  Create Note
 		if (!p_Status.equals(STATUS_Posted))
 		{
+			// BF [ JIRA-73 ]: temporarily relax the trx constraints to allow creating this note
+			DB.saveConstraints(); 
+			try{
+			DB.getConstraints().setOnlyAllowedTrxNamePrefixes(false).incMaxTrx(1);
+			// metas end
+			
 			//  Insert Note
 			String AD_MessageValue = "PostingError-" + p_Status;
 			int AD_User_ID = p_po.getUpdatedBy();
@@ -703,6 +721,12 @@ public abstract class Doc
 			note.setTextMsg(Text.toString());
 			note.save();
 			p_Error = Text.toString();
+			
+			// BF [ JIRA-73 ]: restore whatever trx constraints we had
+			}finally{
+				DB.restoreConstraints();
+			}
+			// metas end
 		}
 
 		//  dispose facts
