@@ -1,4 +1,4 @@
-******************************************************************************
+/******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
  * Copyright (C) metas GmbH All Rights Reserved.                              *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -22,7 +22,10 @@ import java.util.Set;
 import org.adempiere.util.trxConstraints.api.ITrxConstraints;
 
 /**
- * 
+ * @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Runtime checking of trx constraints
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73 
+ *              
  * @see ITrxConstraints for java doc
  */
 public class TrxConstraints implements ITrxConstraints

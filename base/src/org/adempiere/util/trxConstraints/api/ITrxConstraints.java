@@ -1,4 +1,4 @@
-******************************************************************************
+/******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
  * Copyright (C) metas GmbH All Rights Reserved.                              *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -12,7 +12,6 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *                                                                            *
  * @author Tobias Schoenebrg, metas GmbH                                      *
- *  			                                                              *
  *****************************************************************************/
 package org.adempiere.util.trxConstraints.api;
 
@@ -39,7 +38,10 @@ import java.util.Set;
  * Therefore we need to specify (e.g.) that there may only be a limited number of transactions opened from the current
  * thread at the same time. Or a limited number of save points per transaction. Or, that all transactions opened by a
  * given thread have to be finished (committed or rolled back) within a given timeout.
- * 
+ *
+ * @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Runtime checking of trx constraints
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73 
  * @see org.compiere.util.DB#getConstraints()
  */
 public interface ITrxConstraints

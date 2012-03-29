@@ -1,4 +1,4 @@
-******************************************************************************
+/******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
  * Copyright (C) metas GmbH All Rights Reserved.                              *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -12,7 +12,6 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *                                                                            *
  * @author Tobias Schoenebrg, metas GmbH                                      *
- *  			                                                              *
  *****************************************************************************/
 package org.adempiere.util.trxConstraints.api;
 
@@ -23,7 +22,10 @@ import org.compiere.util.DB;
  * Service maintains {@link ITrxConstraints} instances for threads. A new instance is created for a thread at the first
  * time, 'getConstraints' is called. The instance is destroyed when the thread finishes.
  * 
- * @author ts
+ * @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Runtime checking of trx constraints
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73 
+ *              
  * @see DB#getConstraints()
  */
 public interface ITrxConstraintsBL extends ISingletonService

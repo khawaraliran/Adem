@@ -1,4 +1,4 @@
-******************************************************************************
+/******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
  * Copyright (C) metas GmbH All Rights Reserved.                              *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -12,7 +12,6 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *                                                                            *
  * @author Tobias Schoenebrg, metas GmbH                                      *
- *  			                                                              *
  *****************************************************************************/
 package org.adempiere.util.trxConstraints.api.impl;
 
@@ -35,6 +34,12 @@ import org.compiere.util.CLogger;
 import org.compiere.util.Trx;
 import org.compiere.util.Util;
 
+/**
+ * 
+ * @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Runtime checking of trx constraints
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73
+ */
 public class OpenTrxBL implements IOpenTrxBL
 {
 	private static final CLogger logger = CLogger.getCLogger(OpenTrxBL.class);

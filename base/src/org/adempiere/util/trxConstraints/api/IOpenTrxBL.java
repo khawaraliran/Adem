@@ -1,4 +1,4 @@
-******************************************************************************
+/******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
  * Copyright (C) metas GmbH All Rights Reserved.                              *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -12,7 +12,6 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *                                                                            *
  * @author Tobias Schoenebrg, metas GmbH                                      *
- *  			                                                              *
  *****************************************************************************/
 package org.adempiere.util.trxConstraints.api;
 
@@ -25,6 +24,10 @@ import org.compiere.util.Trx;
  * Service contains methods to be called from {@link Trx} on certain events to check against {@link ITrxConstraints}.
  * Implementers of this service are responsible for the enforcement of the transaction constraints
  * 
+ * @author Tobias Schoeneberg, metas GmbH
+ *          <li>FR [ JIRA-73 ] Runtime checking of trx constraints
+ *              https://adempiere.atlassian.net/browse/ADEMPIERE-73 
+ *
  * @see org.compiere.util.DB#getConstraints()
  * @see ITrxConstraints
  */

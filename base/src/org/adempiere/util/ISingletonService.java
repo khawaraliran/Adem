@@ -1,4 +1,4 @@
-******************************************************************************
+/******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
  * Copyright (C) metas GmbH All Rights Reserved.                              *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -17,9 +17,7 @@
 package org.adempiere.util;
 
 /**
- * Marker interface for Services (API interfaces) that can be registeres in the Services registry
+ * Marker interface for Services (API interfaces) which can be registered in the {@link Services} registry.
  */
 public interface ISingletonService
-{
-
-}
+{}
