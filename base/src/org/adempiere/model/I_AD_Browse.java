@@ -14,32 +14,42 @@
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
-package org.compiere.model;
+package org.adempiere.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for AD_Element
+/** Generated Interface for AD_Browse
  *  @author Adempiere (generated) 
  *  @version Release 3.7.0LTS
  */
-public interface I_AD_Element 
+public interface I_AD_Browse 
 {
 
-    /** TableName=AD_Element */
-    public static final String Table_Name = "AD_Element";
+    /** TableName=AD_Browse */
+    public static final String Table_Name = "AD_Browse";
 
-    /** AD_Table_ID=276 */
+    /** AD_Table_ID=53224 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
 
-    /** AccessLevel = 4 - System 
+    /** AccessLevel = 6 - System - Client 
      */
-    BigDecimal accessLevel = BigDecimal.valueOf(4);
+    BigDecimal accessLevel = BigDecimal.valueOf(6);
 
     /** Load Meta Data */
+
+    /** Column name AD_Browse_ID */
+    public static final String COLUMNNAME_AD_Browse_ID = "AD_Browse_ID";
+
+	/** Set Smart Browse	  */
+	public void setAD_Browse_ID (int AD_Browse_ID);
+
+	/** Get Smart Browse	  */
+	public int getAD_Browse_ID();
 
     /** Column name AD_Client_ID */
     public static final String COLUMNNAME_AD_Client_ID = "AD_Client_ID";
@@ -48,19 +58,6 @@ public interface I_AD_Element
 	  * Client/Tenant for this installation.
 	  */
 	public int getAD_Client_ID();
-
-    /** Column name AD_Element_ID */
-    public static final String COLUMNNAME_AD_Element_ID = "AD_Element_ID";
-
-	/** Set System Element.
-	  * System Element enables the central maintenance of column description and help.
-	  */
-	public void setAD_Element_ID (int AD_Element_ID);
-
-	/** Get System Element.
-	  * System Element enables the central maintenance of column description and help.
-	  */
-	public int getAD_Element_ID();
 
     /** Column name AD_Org_ID */
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
@@ -75,48 +72,48 @@ public interface I_AD_Element
 	  */
 	public int getAD_Org_ID();
 
-    /** Column name AD_Reference_ID */
-    public static final String COLUMNNAME_AD_Reference_ID = "AD_Reference_ID";
+    /** Column name AD_Process_ID */
+    public static final String COLUMNNAME_AD_Process_ID = "AD_Process_ID";
 
-	/** Set Reference.
-	  * System Reference and Validation
+	/** Set Process.
+	  * Process or Report
 	  */
-	public void setAD_Reference_ID (int AD_Reference_ID);
+	public void setAD_Process_ID (int AD_Process_ID);
 
-	/** Get Reference.
-	  * System Reference and Validation
+	/** Get Process.
+	  * Process or Report
 	  */
-	public int getAD_Reference_ID();
+	public int getAD_Process_ID();
 
-	public org.compiere.model.I_AD_Reference getAD_Reference() throws RuntimeException;
+	public org.compiere.model.I_AD_Process getAD_Process() throws RuntimeException;
 
-    /** Column name AD_Reference_Value_ID */
-    public static final String COLUMNNAME_AD_Reference_Value_ID = "AD_Reference_Value_ID";
+    /** Column name AD_View_ID */
+    public static final String COLUMNNAME_AD_View_ID = "AD_View_ID";
 
-	/** Set Reference Key.
-	  * Required to specify, if data type is Table or List
+	/** Set View.
+	  * View allows you to create dynamic views of information from the dictionary application
 	  */
-	public void setAD_Reference_Value_ID (int AD_Reference_Value_ID);
+	public void setAD_View_ID (int AD_View_ID);
 
-	/** Get Reference Key.
-	  * Required to specify, if data type is Table or List
+	/** Get View.
+	  * View allows you to create dynamic views of information from the dictionary application
 	  */
-	public int getAD_Reference_Value_ID();
+	public int getAD_View_ID();
 
-	public org.compiere.model.I_AD_Reference getAD_Reference_Value() throws RuntimeException;
+	public org.adempiere.model.I_AD_View getAD_View() throws RuntimeException;
 
-    /** Column name ColumnName */
-    public static final String COLUMNNAME_ColumnName = "ColumnName";
+    /** Column name AccessLevel */
+    public static final String COLUMNNAME_AccessLevel = "AccessLevel";
 
-	/** Set DB Column Name.
-	  * Name of the column in the database
+	/** Set Data Access Level.
+	  * Access Level required
 	  */
-	public void setColumnName (String ColumnName);
+	public void setAccessLevel (String AccessLevel);
 
-	/** Get DB Column Name.
-	  * Name of the column in the database
+	/** Get Data Access Level.
+	  * Access Level required
 	  */
-	public String getColumnName();
+	public String getAccessLevel();
 
     /** Column name Created */
     public static final String COLUMNNAME_Created = "Created";
@@ -162,19 +159,6 @@ public interface I_AD_Element
 	  */
 	public String getEntityType();
 
-    /** Column name FieldLength */
-    public static final String COLUMNNAME_FieldLength = "FieldLength";
-
-	/** Set Length.
-	  * Length of the column in the database
-	  */
-	public void setFieldLength (int FieldLength);
-
-	/** Get Length.
-	  * Length of the column in the database
-	  */
-	public int getFieldLength();
-
     /** Column name Help */
     public static final String COLUMNNAME_Help = "Help";
 
@@ -201,6 +185,19 @@ public interface I_AD_Element
 	  */
 	public boolean isActive();
 
+    /** Column name IsBetaFunctionality */
+    public static final String COLUMNNAME_IsBetaFunctionality = "IsBetaFunctionality";
+
+	/** Set Beta Functionality.
+	  * This functionality is considered Beta
+	  */
+	public void setIsBetaFunctionality (boolean IsBetaFunctionality);
+
+	/** Get Beta Functionality.
+	  * This functionality is considered Beta
+	  */
+	public boolean isBetaFunctionality();
+
     /** Column name Name */
     public static final String COLUMNNAME_Name = "Name";
 
@@ -214,70 +211,14 @@ public interface I_AD_Element
 	  */
 	public String getName();
 
-    /** Column name PO_Description */
-    public static final String COLUMNNAME_PO_Description = "PO_Description";
+    /** Column name Processing */
+    public static final String COLUMNNAME_Processing = "Processing";
 
-	/** Set PO Description.
-	  * Description in PO Screens
-	  */
-	public void setPO_Description (String PO_Description);
+	/** Set Process Now	  */
+	public void setProcessing (boolean Processing);
 
-	/** Get PO Description.
-	  * Description in PO Screens
-	  */
-	public String getPO_Description();
-
-    /** Column name PO_Help */
-    public static final String COLUMNNAME_PO_Help = "PO_Help";
-
-	/** Set PO Help.
-	  * Help for PO Screens
-	  */
-	public void setPO_Help (String PO_Help);
-
-	/** Get PO Help.
-	  * Help for PO Screens
-	  */
-	public String getPO_Help();
-
-    /** Column name PO_Name */
-    public static final String COLUMNNAME_PO_Name = "PO_Name";
-
-	/** Set PO Name.
-	  * Name on PO Screens
-	  */
-	public void setPO_Name (String PO_Name);
-
-	/** Get PO Name.
-	  * Name on PO Screens
-	  */
-	public String getPO_Name();
-
-    /** Column name PO_PrintName */
-    public static final String COLUMNNAME_PO_PrintName = "PO_PrintName";
-
-	/** Set PO Print name.
-	  * Print name on PO Screens/Reports
-	  */
-	public void setPO_PrintName (String PO_PrintName);
-
-	/** Get PO Print name.
-	  * Print name on PO Screens/Reports
-	  */
-	public String getPO_PrintName();
-
-    /** Column name PrintName */
-    public static final String COLUMNNAME_PrintName = "PrintName";
-
-	/** Set Print Text.
-	  * The label text to be printed on a document or correspondence.
-	  */
-	public void setPrintName (String PrintName);
-
-	/** Get Print Text.
-	  * The label text to be printed on a document or correspondence.
-	  */
-	public String getPrintName();
+	/** Get Process Now	  */
+	public boolean isProcessing();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";
@@ -294,4 +235,30 @@ public interface I_AD_Element
 	  * User who updated this records
 	  */
 	public int getUpdatedBy();
+
+    /** Column name Value */
+    public static final String COLUMNNAME_Value = "Value";
+
+	/** Set Search Key.
+	  * Search key for the record in the format required - must be unique
+	  */
+	public void setValue (String Value);
+
+	/** Get Search Key.
+	  * Search key for the record in the format required - must be unique
+	  */
+	public String getValue();
+
+    /** Column name WhereClause */
+    public static final String COLUMNNAME_WhereClause = "WhereClause";
+
+	/** Set Sql WHERE.
+	  * Fully qualified SQL WHERE clause
+	  */
+	public void setWhereClause (String WhereClause);
+
+	/** Get Sql WHERE.
+	  * Fully qualified SQL WHERE clause
+	  */
+	public String getWhereClause();
 }

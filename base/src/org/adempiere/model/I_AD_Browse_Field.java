@@ -14,32 +14,53 @@
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
-package org.compiere.model;
+package org.adempiere.model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for AD_Element
+/** Generated Interface for AD_Browse_Field
  *  @author Adempiere (generated) 
  *  @version Release 3.7.0LTS
  */
-public interface I_AD_Element 
+public interface I_AD_Browse_Field 
 {
 
-    /** TableName=AD_Element */
-    public static final String Table_Name = "AD_Element";
+    /** TableName=AD_Browse_Field */
+    public static final String Table_Name = "AD_Browse_Field";
 
-    /** AD_Table_ID=276 */
+    /** AD_Table_ID=53223 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
 
-    /** AccessLevel = 4 - System 
+    /** AccessLevel = 6 - System - Client 
      */
-    BigDecimal accessLevel = BigDecimal.valueOf(4);
+    BigDecimal accessLevel = BigDecimal.valueOf(6);
 
     /** Load Meta Data */
+
+    /** Column name AD_Browse_Field_ID */
+    public static final String COLUMNNAME_AD_Browse_Field_ID = "AD_Browse_Field_ID";
+
+	/** Set Smart Browse Fields ID	  */
+	public void setAD_Browse_Field_ID (int AD_Browse_Field_ID);
+
+	/** Get Smart Browse Fields ID	  */
+	public int getAD_Browse_Field_ID();
+
+    /** Column name AD_Browse_ID */
+    public static final String COLUMNNAME_AD_Browse_ID = "AD_Browse_ID";
+
+	/** Set Smart Browse	  */
+	public void setAD_Browse_ID (int AD_Browse_ID);
+
+	/** Get Smart Browse	  */
+	public int getAD_Browse_ID();
+
+	public org.adempiere.model.I_AD_Browse getAD_Browse() throws RuntimeException;
 
     /** Column name AD_Client_ID */
     public static final String COLUMNNAME_AD_Client_ID = "AD_Client_ID";
@@ -61,6 +82,8 @@ public interface I_AD_Element
 	  * System Element enables the central maintenance of column description and help.
 	  */
 	public int getAD_Element_ID();
+
+	public org.compiere.model.I_AD_Element getAD_Element() throws RuntimeException;
 
     /** Column name AD_Org_ID */
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
@@ -105,18 +128,20 @@ public interface I_AD_Element
 
 	public org.compiere.model.I_AD_Reference getAD_Reference_Value() throws RuntimeException;
 
-    /** Column name ColumnName */
-    public static final String COLUMNNAME_ColumnName = "ColumnName";
+    /** Column name AD_View_Column_ID */
+    public static final String COLUMNNAME_AD_View_Column_ID = "AD_View_Column_ID";
 
-	/** Set DB Column Name.
-	  * Name of the column in the database
+	/** Set View Column.
+	  * Column of View
 	  */
-	public void setColumnName (String ColumnName);
+	public void setAD_View_Column_ID (int AD_View_Column_ID);
 
-	/** Get DB Column Name.
-	  * Name of the column in the database
+	/** Get View Column.
+	  * Column of View
 	  */
-	public String getColumnName();
+	public int getAD_View_Column_ID();
+
+	public org.adempiere.model.I_AD_View_Column getAD_View_Column() throws RuntimeException;
 
     /** Column name Created */
     public static final String COLUMNNAME_Created = "Created";
@@ -162,19 +187,6 @@ public interface I_AD_Element
 	  */
 	public String getEntityType();
 
-    /** Column name FieldLength */
-    public static final String COLUMNNAME_FieldLength = "FieldLength";
-
-	/** Set Length.
-	  * Length of the column in the database
-	  */
-	public void setFieldLength (int FieldLength);
-
-	/** Get Length.
-	  * Length of the column in the database
-	  */
-	public int getFieldLength();
-
     /** Column name Help */
     public static final String COLUMNNAME_Help = "Help";
 
@@ -201,6 +213,97 @@ public interface I_AD_Element
 	  */
 	public boolean isActive();
 
+    /** Column name IsCentrallyMaintained */
+    public static final String COLUMNNAME_IsCentrallyMaintained = "IsCentrallyMaintained";
+
+	/** Set Centrally maintained.
+	  * Information maintained in System Element table
+	  */
+	public void setIsCentrallyMaintained (boolean IsCentrallyMaintained);
+
+	/** Get Centrally maintained.
+	  * Information maintained in System Element table
+	  */
+	public boolean isCentrallyMaintained();
+
+    /** Column name IsDisplayed */
+    public static final String COLUMNNAME_IsDisplayed = "IsDisplayed";
+
+	/** Set Displayed.
+	  * Determines, if this field is displayed
+	  */
+	public void setIsDisplayed (boolean IsDisplayed);
+
+	/** Get Displayed.
+	  * Determines, if this field is displayed
+	  */
+	public boolean isDisplayed();
+
+    /** Column name IsIdentifier */
+    public static final String COLUMNNAME_IsIdentifier = "IsIdentifier";
+
+	/** Set Identifier.
+	  * This column is part of the record identifier
+	  */
+	public void setIsIdentifier (boolean IsIdentifier);
+
+	/** Get Identifier.
+	  * This column is part of the record identifier
+	  */
+	public boolean isIdentifier();
+
+    /** Column name IsKey */
+    public static final String COLUMNNAME_IsKey = "IsKey";
+
+	/** Set Key column.
+	  * This column is the key in this table
+	  */
+	public void setIsKey (boolean IsKey);
+
+	/** Get Key column.
+	  * This column is the key in this table
+	  */
+	public boolean isKey();
+
+    /** Column name IsMandatory */
+    public static final String COLUMNNAME_IsMandatory = "IsMandatory";
+
+	/** Set Mandatory.
+	  * Data entry is required in this column
+	  */
+	public void setIsMandatory (boolean IsMandatory);
+
+	/** Get Mandatory.
+	  * Data entry is required in this column
+	  */
+	public boolean isMandatory();
+
+    /** Column name IsQueryCriteria */
+    public static final String COLUMNNAME_IsQueryCriteria = "IsQueryCriteria";
+
+	/** Set Query Criteria.
+	  * The column is also used as a query criteria
+	  */
+	public void setIsQueryCriteria (boolean IsQueryCriteria);
+
+	/** Get Query Criteria.
+	  * The column is also used as a query criteria
+	  */
+	public boolean isQueryCriteria();
+
+    /** Column name IsRange */
+    public static final String COLUMNNAME_IsRange = "IsRange";
+
+	/** Set Range.
+	  * The parameter is a range of values
+	  */
+	public void setIsRange (boolean IsRange);
+
+	/** Get Range.
+	  * The parameter is a range of values
+	  */
+	public boolean isRange();
+
     /** Column name Name */
     public static final String COLUMNNAME_Name = "Name";
 
@@ -214,70 +317,20 @@ public interface I_AD_Element
 	  */
 	public String getName();
 
-    /** Column name PO_Description */
-    public static final String COLUMNNAME_PO_Description = "PO_Description";
+    /** Column name SeqNo */
+    public static final String COLUMNNAME_SeqNo = "SeqNo";
 
-	/** Set PO Description.
-	  * Description in PO Screens
+	/** Set Sequence.
+	  * Method of ordering records;
+ lowest number comes first
 	  */
-	public void setPO_Description (String PO_Description);
+	public void setSeqNo (int SeqNo);
 
-	/** Get PO Description.
-	  * Description in PO Screens
+	/** Get Sequence.
+	  * Method of ordering records;
+ lowest number comes first
 	  */
-	public String getPO_Description();
-
-    /** Column name PO_Help */
-    public static final String COLUMNNAME_PO_Help = "PO_Help";
-
-	/** Set PO Help.
-	  * Help for PO Screens
-	  */
-	public void setPO_Help (String PO_Help);
-
-	/** Get PO Help.
-	  * Help for PO Screens
-	  */
-	public String getPO_Help();
-
-    /** Column name PO_Name */
-    public static final String COLUMNNAME_PO_Name = "PO_Name";
-
-	/** Set PO Name.
-	  * Name on PO Screens
-	  */
-	public void setPO_Name (String PO_Name);
-
-	/** Get PO Name.
-	  * Name on PO Screens
-	  */
-	public String getPO_Name();
-
-    /** Column name PO_PrintName */
-    public static final String COLUMNNAME_PO_PrintName = "PO_PrintName";
-
-	/** Set PO Print name.
-	  * Print name on PO Screens/Reports
-	  */
-	public void setPO_PrintName (String PO_PrintName);
-
-	/** Get PO Print name.
-	  * Print name on PO Screens/Reports
-	  */
-	public String getPO_PrintName();
-
-    /** Column name PrintName */
-    public static final String COLUMNNAME_PrintName = "PrintName";
-
-	/** Set Print Text.
-	  * The label text to be printed on a document or correspondence.
-	  */
-	public void setPrintName (String PrintName);
-
-	/** Get Print Text.
-	  * The label text to be printed on a document or correspondence.
-	  */
-	public String getPrintName();
+	public int getSeqNo();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";
