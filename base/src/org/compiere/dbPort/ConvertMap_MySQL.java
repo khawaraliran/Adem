@@ -67,6 +67,7 @@ public class ConvertMap_MySQL {
 		// Reserved words
 		s_mysql.put("\\bLIMIT\\b",                 "`limit`");
 		s_mysql.put("\\bSEPARATOR\\b",             "`separator`");
+		s_mysql.put("\\bSQLLIMIT\\b",              "limit");
 		s_mysql.put("\\bUNDO\\b",                  "`undo`");
 		s_mysql.put("\\bLINES\\b",                 "`lines`");
 		//s_mysql.put("\\bACTION\\b",                "`action`");

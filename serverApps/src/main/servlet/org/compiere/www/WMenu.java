@@ -420,6 +420,8 @@ public class WMenu extends HttpServlet
 		MTree tree = new MTree (wsc.ctx, AD_Tree_ID, false, false, null);	// Language set in WLogin
 		//	Trim tree
 		MTreeNode root = tree.getRoot();
+		tree.trimTree();
+		
 		Enumeration en = root.preorderEnumeration();
 		/*while (en.hasMoreElements())
 		{
@@ -434,7 +436,7 @@ public class WMenu extends HttpServlet
 				parent.remove(nd);
 			}
 		}*/
-		tree.trimTree();
+		
 		
 		//	Print tree
 		StringBuffer buf = new StringBuffer();

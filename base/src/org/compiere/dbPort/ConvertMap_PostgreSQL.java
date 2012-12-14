@@ -47,6 +47,7 @@ public final class ConvertMap_PostgreSQL {
 		s_pg.put("\\bBLOB\\b",                  "BYTEA");                 //  BLOB not directly supported
 		s_pg.put("\\bCLOB\\b",                  "TEXT");                //  CLOB not directly supported
 		s_pg.put("\\bLIMIT\\b","\"limit\""); 
+		s_pg.put("\\bSQLLIMIT\\b","limit");
 		s_pg.put("\\bACTION\\b","\"action\""); 
 		s_pg.put("\\bold\\b","\"old\""); 
 		s_pg.put("\\bnew\\b","\"new\""); 
