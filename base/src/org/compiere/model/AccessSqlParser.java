@@ -254,7 +254,7 @@ public class AccessSqlParser
 				}
 				else
 				{
-					log.log(Level.SEVERE, "Could not remove ON " + from);
+					log.log(Level.FINE, "Could not remove ON " + from);
 					break;
 				}			
 				index = from.indexOf(ON);

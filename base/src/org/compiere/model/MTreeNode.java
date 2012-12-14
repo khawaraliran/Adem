@@ -17,13 +17,19 @@
 package org.compiere.model;
 
 import java.awt.Color;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.logging.Level;
 
 import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
+import org.compiere.print.MPrintColor;
 import org.compiere.util.CLogger;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.wf.MWFNode;
 
@@ -31,7 +37,8 @@ import org.compiere.wf.MWFNode;
  *  Mutable Tree Node (not a PO).
  *
  *  @author 	Jorg Janke
- *  @version 	$Id: MTreeNode.java,v 1.3 2006/07/30 00:51:05 jjanke Exp $
+ * @author Jan Thielemann - jan.thielemann@evenos.de - evenos GmbH - www.evenos.de
+ * @version 1.4 2012/12/10 10:13:05 Jan Thielemann
  */
 public final class MTreeNode extends DefaultMutableTreeNode
 {
@@ -42,57 +49,70 @@ public final class MTreeNode extends DefaultMutableTreeNode
 
 
 	/**
-	 *  Construct Model TreeNode
-	 *  @param node_ID	node
-	 *  @param seqNo sequence
-	 *  @param name name
-	 *  @param description description
-	 *  @param parent_ID parent
-	 *  @param isSummary summary
-	 *  @param imageIndicator image indicator
-	 *  @param onBar on bar
-	 *  @param color color
+	 * Construct Model TreeNode
+	 * 
+	 * @param node_ID
+	 *            node
+	 * @param seqNo
+	 *            sequence
+	 * @param name
+	 *            name
+	 * @param description
+	 *            description
+	 * @param parent_ID
+	 *            parent
+	 * @param isSummary
+	 *            summary
+	 * @param imageIndicator
+	 *            image indicator
+	 * @param onBar
+	 *            on bar
+	 * @param color
+	 *            color
 	 */
-	public MTreeNode (int node_ID, int seqNo, String name, String description,
-		int parent_ID, boolean isSummary, String imageIndicator, boolean onBar, Color color)
-	{
+	public MTreeNode(MTree tree, int node_ID, int seqNo, String name,
+			String description, int parent_ID, boolean isSummary,
+			String imageIndicator, boolean onBar, Color color) {
 		super();
-	//	log.fine( "MTreeNode Node_ID=" + node_ID + ", Parent_ID=" + parent_ID + " - " + name);
+		m_tree = tree;
 		m_node_ID = node_ID;
 		m_seqNo = seqNo;
 		m_name = name;
-		m_description = description;
-		if (m_description == null)
-			m_description = "";
+		m_description = description == null ? "" : description;
 		m_parent_ID = parent_ID;
 		setSummary(isSummary);
 		setImageIndicator(imageIndicator);
 		m_onBar = onBar;
 		m_color = color;
-	}   //  MTreeNode
+	} // MTreeNode
 
-	/** Node ID         */
-	private int     	m_node_ID;
-	/**	SeqNo			*/
-	private int     	m_seqNo;
-	/** Name			*/
-	private String  	m_name;
-	/** Description		*/
-	private String  	m_description;
-	/**	Parent ID		*/
-	private int     	m_parent_ID;
-	/**	Summaty			*/
-	private boolean 	m_isSummary;
-	/** Image Indicator				*/
-	private String      m_imageIndicator;
-	/** Index to Icon               */
-	private int 		m_imageIndex = 0;
-	/**	On Bar			*/
-	private boolean 	m_onBar;
-	/**	Color			*/
-	private Color 		m_color;
+	/** Tree ID */
+	private MTree m_tree;
+	/** Node ID */
+	private int m_node_ID;
+	/** SeqNo */
+	private int m_seqNo;
+	/** Name */
+	private String m_name;
+	/** Description */
+	private String m_description;
+	/** Parent ID */
+	private int m_parent_ID;
+	/** Summaty */
+	private boolean m_isSummary;
+	/** Image Indicator */
+	private String m_imageIndicator;
+	/** Index to Icon */
+	private int m_imageIndex = 0;
+	/** On Bar */
+	private boolean m_onBar;
+	/** Color */
+	private Color m_color;
 
-	/**	Logger			*/
+	
+	private boolean childrenEnsured = false;
+	
+	/** Logger */
 	private static CLogger log = CLogger.getCLogger(MTreeNode.class);
 	
 	/*************************************************************************/
@@ -129,6 +149,15 @@ public final class MTreeNode extends DefaultMutableTreeNode
 	};
 
 
+	/**************************************************************************
+	 * Get MTree
+	 * 
+	 * @return tree id (e.g. 10 for default menu tree)
+	 */
+	public MTree getMTree() {
+		return m_tree;
+	}
+	
 	/**************************************************************************
 	 *  Get Node ID
 	 *  @return node id (e.g. AD_Menu_ID)
@@ -218,8 +247,8 @@ public final class MTreeNode extends DefaultMutableTreeNode
 	 */
 	public void setAllowsChildren (boolean isSummary)
 	{
-		super.setAllowsChildren (isSummary);
 		m_isSummary = isSummary;
+		super.setAllowsChildren (isSummary);
 	}   //  setAllowsChildren
 
 	/**
@@ -231,7 +260,12 @@ public final class MTreeNode extends DefaultMutableTreeNode
 		return m_isSummary;
 	}   //  isSummary
 
-
+	@Override
+	public boolean isLeaf() {
+		return !(isSummary() && getChildCount() > 0);
+	}
+	
+	
 	/**************************************************************************
 	 *  Get Image Indicator/Index
 	 *  @param imageIndicator image indicator (W/X/R/P/F/T/B) MWFNode.ACTION_
@@ -435,4 +469,361 @@ public final class MTreeNode extends DefaultMutableTreeNode
 		return null;
 	}   //  findNode
 
+	/*************************************************************************/
+
+	@Override
+	public int getChildCount() {
+		log.finest("");
+		ensureChildren();
+		return super.getChildCount();
+	}
+
+	@Override
+	public TreeNode getChildAt(int index) {
+		log.finest("");
+		ensureChildren();
+		return super.getChildAt(index);
+	}
+
+	private void ensureChildren() {
+		if (isSummary() && !childrenEnsured) {
+			childrenEnsured = true;
+			
+			log.fine("Load children for node=" + m_node_ID + ", tree="
+					+ m_tree.get_ID() + ", tablename=" + m_tree.getNodeTableName());
+
+			
+			// Create a sql statement which loads all child nodes for the current node 
+			String sql = buildSQLForLoadingChildNodes();
+					
+					
+			// Try to execute the SQL
+			try {
+				
+				// Create a prepared statement from the sql
+				PreparedStatement pstmt = DB.prepareStatement(sql, null);
+				
+				// Execute the Query
+				ResultSet rs = pstmt.executeQuery();
+				while (rs.next()) {
+
+					int node_ID = rs.getInt(1);
+					int parent_ID = rs.getInt(2);
+					int seqNo = rs.getInt(3);
+					boolean onBar = "Y".equalsIgnoreCase(rs.getString(4));
+					String name = rs.getString(5);
+					String description = rs.getString(6);
+					boolean isSummary = "Y".equalsIgnoreCase(rs.getString(7));
+					String actionColor = rs.getString(8);
+					
+					if (node_ID == 0 && parent_ID == 0) {
+						log.finest("Root Node, not Adding this one.");
+					} 
+					else {
+						
+						//Dummy node
+						MTreeNode child = null;
+						
+						//Menu only
+						if (m_tree.getTreeType().equals(MTree.TREETYPE_Menu) && !isSummary)
+							{
+								int AD_Window_ID = rs.getInt(9);
+								int AD_Process_ID = rs.getInt(10);
+								int AD_Form_ID = rs.getInt(11);
+								int AD_Workflow_ID = rs.getInt(12);
+								int AD_Task_ID = rs.getInt(13);
+								int AD_Workbench_ID = rs.getInt(14);
+								//
+								MRole role = MRole.getDefault(Env.getCtx(), false);
+								Boolean access = null;
+								if (X_AD_Menu.ACTION_Window.equals(actionColor))
+									access = role.getWindowAccess(AD_Window_ID);
+								else if (X_AD_Menu.ACTION_Process.equals(actionColor) 
+									|| X_AD_Menu.ACTION_Report.equals(actionColor))
+									access = role.getProcessAccess(AD_Process_ID);
+								else if (X_AD_Menu.ACTION_Form.equals(actionColor))
+									access = role.getFormAccess(AD_Form_ID);
+								else if (X_AD_Menu.ACTION_WorkFlow.equals(actionColor))
+									access = role.getWorkflowAccess(AD_Workflow_ID);
+								else if (X_AD_Menu.ACTION_Task.equals(actionColor))
+									access = role.getTaskAccess(AD_Task_ID);
+								if (access != null		//	rw or ro for Role 
+									|| m_tree.isEditable())		//	Menu Window can see all
+								{
+									child = new MTreeNode (m_tree, node_ID, seqNo,
+										name, description, parent_ID, isSummary,
+										actionColor, onBar, null);	//	menu has no color
+								}
+							}
+							else	//	always add
+							{
+								Color color = null;	//	action
+								if (actionColor != null && !m_tree.getTreeType().equals(MTree.TREETYPE_Menu))
+								{
+									MPrintColor printColor = MPrintColor.get(Env.getCtx(), actionColor);
+									if (printColor != null)
+										color = printColor.getColor();
+								}
+								//
+								child = new MTreeNode (m_tree, node_ID, seqNo,
+									name, description, parent_ID, isSummary,
+									null, onBar, color);			//	no action
+							}
+						//Get the TreeNode for a given id/parent
+						if (child != null) {
+							add(child);
+							child = null;
+						}
+					}
+				}
+				rs.close();
+				pstmt.close();
+
+			} catch (SQLException e) {
+
+			}
+		}
+	}
+	
+	
+	private String buildSQLForLoadingChildNodes(){
+		String sql = null;
+		StringBuilder sqlNode = new StringBuilder();
+		String nodeTable = m_tree.getNodeTableName();
+		String sourceTable = "t";
+		String fromClause = m_tree.getSourceTableName(false);	//	fully qualified
+		String columnNameX = m_tree.getSourceTableName(true); //--> AD_Menu, C_BPartner, AD_Org...
+		String color = m_tree.getActionColorName();
+		
+		
+		int ad_user_id;
+		if (m_tree.isAllNodes())
+			ad_user_id = -1;
+		else
+			ad_user_id = Env.getContextAsInt(Env.getCtx(), "AD_User_ID");
+		
+		if (m_tree.getTreeType().equals(MTree.TREETYPE_Menu))
+		{
+			boolean base = Env.isBaseLanguage(Env.getCtx(), "AD_Menu");
+			sourceTable = "m";
+			if (base){
+				sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, tb.IsActive, m.Name,m.Description, m.IsSummary, ");
+				sqlNode.append("m.Action, m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, m.AD_Workbench_ID ");
+				sqlNode.append("FROM AD_Menu m JOIN AD_TreeNodeMM tn ON m.ad_menu_id=tn.node_id ");
+				sqlNode.append("LEFT OUTER JOIN AD_TreeBar tb ON (tn.AD_Tree_ID=tb.AD_Tree_ID AND tn.Node_ID=tb.Node_ID ");
+				sqlNode.append((ad_user_id != -1 ? " AND tb.AD_User_ID="+ad_user_id+") " : ") "));
+			}
+			else{
+				sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, tb.IsActive, t.Name,t.Description, m.IsSummary, ");
+				sqlNode.append("m.Action, m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, m.AD_Workbench_ID ");
+				sqlNode.append("FROM AD_Menu m JOIN AD_TreeNodeMM tn ON m.ad_menu_id=tn.node_id ");
+				sqlNode.append("LEFT OUTER JOIN AD_TreeBar tb ON (tn.AD_Tree_ID=tb.AD_Tree_ID AND tn.Node_ID=tb.Node_ID ");
+				sqlNode.append((ad_user_id != -1 ? " AND tb.AD_User_ID="+ad_user_id+") " : ") "));
+				sqlNode.append("JOIN AD_Menu_Trl t on m.ad_menu_id = t.ad_menu_id ");
+			}
+			
+			if (!base)
+				sqlNode.append(" WHERE m.AD_Menu_ID=t.AD_Menu_ID AND t.AD_Language='")
+					.append(Env.getAD_Language(Env.getCtx())).append("'");
+			if (!m_tree.isEditable())
+			{
+				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+				sqlNode.append(hasWhere ? " AND " : " WHERE ").append("m.IsActive='Y' ");
+			}
+			//	Do not show Beta
+			if (!MClient.get(Env.getCtx()).isUseBetaFunctions())
+			{
+				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+				sqlNode.append(hasWhere ? " AND " : " WHERE ");
+				sqlNode.append("(m.AD_Window_ID IS NULL OR EXISTS (SELECT * FROM AD_Window w WHERE m.AD_Window_ID=w.AD_Window_ID AND w.IsBetaFunctionality='N'))")
+					.append(" AND (m.AD_Process_ID IS NULL OR EXISTS (SELECT * FROM AD_Process p WHERE m.AD_Process_ID=p.AD_Process_ID AND p.IsBetaFunctionality='N'))")
+					.append(" AND (m.AD_Workflow_ID IS NULL OR EXISTS (SELECT * FROM AD_Workflow wf WHERE m.AD_Workflow_ID=wf.AD_Workflow_ID AND wf.IsBetaFunctionality='N'))")
+					.append(" AND (m.AD_Form_ID IS NULL OR EXISTS (SELECT * FROM AD_Form f WHERE m.AD_Form_ID=f.AD_Form_ID AND f.IsBetaFunctionality='N'))");
+			}
+			//	In R/O Menu - Show only defined Forms
+			if (!m_tree.isEditable())
+			{
+				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+				sqlNode.append(hasWhere ? " AND " : " WHERE ");
+				sqlNode.append("(m.AD_Form_ID IS NULL OR EXISTS (SELECT * FROM AD_Form f WHERE m.AD_Form_ID=f.AD_Form_ID AND ");
+				if (m_tree.isClientTree())
+					sqlNode.append("f.Classname");
+				else
+					sqlNode.append("f.JSPURL");
+				sqlNode.append(" IS NOT NULL))");
+			}
+			
+			//Show only child for current node
+			boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+			sqlNode.append(hasWhere ? " AND " : " WHERE ");
+			sqlNode.append(" tn.AD_Tree_ID="+ m_tree.get_ID() + " AND tn.Parent_ID ="+m_node_ID + " ");
+			
+			if (!m_tree.isEditable())
+				sqlNode.append(" AND tn.IsActive='Y' ");
+			sqlNode.append(" ORDER BY COALESCE(tn.Parent_ID, -1), tn.SeqNo ");
+			
+			
+			
+	
+		}else{
+			if (columnNameX == null)
+				throw new IllegalArgumentException("Unknown TreeType=" + m_tree.getTreeType());
+					
+			sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, tb.IsActive, t.Name,t.Description,t.IsSummary, ");
+			sqlNode.append(color);
+			sqlNode.append(" FROM "+fromClause+" JOIN " + nodeTable + " tn ON t."+columnNameX+"_ID = tn.Node_ID ");
+			sqlNode.append(" LEFT OUTER JOIN AD_TreeBar tb ON (tn.AD_Tree_ID=tb.AD_Tree_ID AND tn.Node_ID=tb.Node_ID) ");
+			if (!m_tree.isEditable())
+				sqlNode.append(" WHERE t.IsActive='Y'");
+			
+			//Show only child for current node
+			boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+			sqlNode.append(hasWhere ? " AND " : " WHERE ");
+			sqlNode.append(" tn.AD_Tree_ID="+ m_tree.get_ID() + " AND tn.Parent_ID ="+m_node_ID + " ");
+		}
+		
+			
+		
+		//Add the Access SQL
+		sql = sqlNode.toString();
+		if (!m_tree.isEditable())	//	editable = menu/etc. window
+			sql = MRole.getDefault(Env.getCtx(), false).addAccessSQL(sql, 
+				sourceTable, MRole.SQL_FULLYQUALIFIED, m_tree.isEditable());
+		
+		
+		log.fine(sql);
+		
+		
+		return sql;
+	}
+	
+	public String buildSQLForLoadingAllNodesWithNameOrDescription(String searchText){
+		String sql = null;
+		StringBuilder sqlNode = new StringBuilder();
+		String nodeTable = m_tree.getNodeTableName();
+		String sourceTable = "t";
+		String fromClause = m_tree.getSourceTableName(false);	//	fully qualified
+		String columnNameX = m_tree.getSourceTableName(true); //--> AD_Menu, C_BPartner, AD_Org...
+		String color = m_tree.getActionColorName();
+		
+		
+		int ad_user_id;
+		if (m_tree.isAllNodes())
+			ad_user_id = -1;
+		else
+			ad_user_id = Env.getContextAsInt(Env.getCtx(), "AD_User_ID");
+		
+		if (m_tree.getTreeType().equals(MTree.TREETYPE_Menu))
+		{
+			boolean base = Env.isBaseLanguage(Env.getCtx(), "AD_Menu");
+			sourceTable = "m";
+			if (base){
+				sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, tb.IsActive, m.Name,m.Description, m.IsSummary, ");
+				sqlNode.append("m.Action, m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, m.AD_Workbench_ID ");
+				sqlNode.append("FROM AD_Menu m JOIN AD_TreeNodeMM tn ON m.ad_menu_id=tn.node_id ");
+				sqlNode.append("LEFT OUTER JOIN AD_TreeBar tb ON (tn.AD_Tree_ID=tb.AD_Tree_ID AND tn.Node_ID=tb.Node_ID ");
+				sqlNode.append((ad_user_id != -1 ? " AND tb.AD_User_ID="+ad_user_id+") " : ") "));
+			}
+			else{
+				sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, tb.IsActive, t.Name,t.Description, m.IsSummary, ");
+				sqlNode.append("m.Action, m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, m.AD_Workbench_ID ");
+				sqlNode.append("FROM AD_Menu m JOIN AD_TreeNodeMM tn ON m.ad_menu_id=tn.node_id ");
+				sqlNode.append("LEFT OUTER JOIN AD_TreeBar tb ON (tn.AD_Tree_ID=tb.AD_Tree_ID AND tn.Node_ID=tb.Node_ID ");
+				sqlNode.append((ad_user_id != -1 ? " AND tb.AD_User_ID="+ad_user_id+") " : ") "));
+				sqlNode.append("JOIN AD_Menu_Trl t on m.ad_menu_id = t.ad_menu_id ");
+			}
+			
+			if (!base)
+				sqlNode.append(" WHERE m.AD_Menu_ID=t.AD_Menu_ID AND t.AD_Language='")
+					.append(Env.getAD_Language(Env.getCtx())).append("'");
+			if (!m_tree.isEditable())
+			{
+				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+				sqlNode.append(hasWhere ? " AND " : " WHERE ").append("m.IsActive='Y' ");
+			}
+			//	Do not show Beta
+			if (!MClient.get(Env.getCtx()).isUseBetaFunctions())
+			{
+				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+				sqlNode.append(hasWhere ? " AND " : " WHERE ");
+				sqlNode.append("(m.AD_Window_ID IS NULL OR EXISTS (SELECT * FROM AD_Window w WHERE m.AD_Window_ID=w.AD_Window_ID AND w.IsBetaFunctionality='N'))")
+					.append(" AND (m.AD_Process_ID IS NULL OR EXISTS (SELECT * FROM AD_Process p WHERE m.AD_Process_ID=p.AD_Process_ID AND p.IsBetaFunctionality='N'))")
+					.append(" AND (m.AD_Workflow_ID IS NULL OR EXISTS (SELECT * FROM AD_Workflow wf WHERE m.AD_Workflow_ID=wf.AD_Workflow_ID AND wf.IsBetaFunctionality='N'))")
+					.append(" AND (m.AD_Form_ID IS NULL OR EXISTS (SELECT * FROM AD_Form f WHERE m.AD_Form_ID=f.AD_Form_ID AND f.IsBetaFunctionality='N'))");
+			}
+			//	In R/O Menu - Show only defined Forms
+			if (!m_tree.isEditable())
+			{
+				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+				sqlNode.append(hasWhere ? " AND " : " WHERE ");
+				sqlNode.append("(m.AD_Form_ID IS NULL OR EXISTS (SELECT * FROM AD_Form f WHERE m.AD_Form_ID=f.AD_Form_ID AND ");
+				if (m_tree.isClientTree())
+					sqlNode.append("f.Classname");
+				else
+					sqlNode.append("f.JSPURL");
+				sqlNode.append(" IS NOT NULL))");
+			}
+			
+			//Show only  for current tree
+			boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+			sqlNode.append(hasWhere ? " AND " : " WHERE ");
+			sqlNode.append(" tn.AD_Tree_ID="+ m_tree.get_ID() + " ");
+			
+			
+			
+			//Show only matching the search term
+			boolean hasWhere2 = sqlNode.indexOf(" WHERE ") != -1;
+			sqlNode.append(hasWhere2 ? " AND " : " WHERE ");
+			sqlNode.append(" upper(m.name) like upper('%"+ searchText + "%') or upper(m.description) like upper('%"+searchText+"%') ");
+			
+			
+			
+			if (!m_tree.isEditable())
+				sqlNode.append(" AND tn.IsActive='Y' ");
+			sqlNode.append(" ORDER BY COALESCE(tn.Parent_ID, -1), tn.SeqNo ");
+			
+				
+		}else{
+			if (columnNameX == null)
+				throw new IllegalArgumentException("Unknown TreeType=" + m_tree.getTreeType());
+					
+			sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, tb.IsActive, t.Name,t.Description,t.IsSummary, ");
+			sqlNode.append(color);
+			sqlNode.append(" FROM "+fromClause+" JOIN " + nodeTable + " tn ON t."+columnNameX+"_ID = tn.Node_ID ");
+			sqlNode.append(" LEFT OUTER JOIN AD_TreeBar tb ON (tn.AD_Tree_ID=tb.AD_Tree_ID AND tn.Node_ID=tb.Node_ID) ");
+			if (!m_tree.isEditable())
+				sqlNode.append(" WHERE t.IsActive='Y'");
+			
+			//Show only for current tree
+			boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
+			sqlNode.append(hasWhere ? " AND " : " WHERE ");
+			sqlNode.append(" tn.AD_Tree_ID="+ m_tree.get_ID() + " ");
+			
+			
+			boolean hasWhere2 = sqlNode.indexOf(" WHERE ") != -1;
+			sqlNode.append(hasWhere2 ? " AND " : " WHERE ");
+			sqlNode.append(" upper(t.name) like upper('%"+ searchText + "%') or upper(t.description) like upper('%"+searchText+"%') ");
+		}
+		
+	
+		
+		//Add the Access SQL
+		sql = sqlNode.toString();
+		if (!m_tree.isEditable())	//	editable = menu/etc. window
+			sql = MRole.getDefault(Env.getCtx(), false).addAccessSQL(sql, 
+				sourceTable, MRole.SQL_FULLYQUALIFIED, m_tree.isEditable());
+		
+		
+		log.info(sql);
+		
+		
+		return sql;
+	}
+	
+	@Override
+	public Enumeration preorderEnumeration() {
+		ensureChildren();
+		return super.preorderEnumeration();
+	}
+	
 }   //  MTreeNode

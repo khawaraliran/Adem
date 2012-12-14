@@ -317,6 +317,54 @@ public class MTree_Base extends X_AD_Tree
 	}	//	getSourceTableName
 
 	
+	/** Get the ID Column Name of the Trees Source Table*/
+	public String getSourceTableIDColumnName(){
+		
+		String sourceTableID = null;
+		
+		String treeType = getTreeType();
+		
+		if (treeType.equals(TREETYPE_Menu))
+			sourceTableID = "AD_Menu_ID";
+		else if (treeType.equals(TREETYPE_Organization))
+			sourceTableID = "AD_Org_ID";
+		else if (treeType.equals(TREETYPE_Product))
+			sourceTableID = "M_Product_ID";
+		else if (treeType.equals(TREETYPE_ProductCategory))
+			sourceTableID = "M_Product_Category_ID";
+		else if (treeType.equals(TREETYPE_BoM))
+			sourceTableID = "M_BOM_ID";
+		else if (treeType.equals(TREETYPE_ElementValue))
+			sourceTableID = "C_ElementValue_ID";
+		else if (treeType.equals(TREETYPE_BPartner))
+			sourceTableID = "C_BPartner_ID";
+		else if (treeType.equals(TREETYPE_Campaign))
+			sourceTableID = "C_Campaign_ID";
+		else if (treeType.equals(TREETYPE_Project))
+			sourceTableID = "C_Project_ID";
+		else if (treeType.equals(TREETYPE_Activity))
+			sourceTableID = "C_Activity_ID";
+		else if (treeType.equals(TREETYPE_SalesRegion))
+			sourceTableID = "C_SalesRegion_ID";
+		else if (treeType.equals(TREETYPE_CMContainer))
+			sourceTableID = "CM_Container_ID";
+		else if (treeType.equals(TREETYPE_CMContainerStage))
+			sourceTableID = "CM_CStage_ID";
+		else if (treeType.equals(TREETYPE_CMMedia))
+			sourceTableID = "CM_Media_ID";
+		else if (treeType.equals(TREETYPE_CMTemplate))
+			sourceTableID = "CM_Template_ID";
+		//	User Trees
+		// afalcone [Bugs #1837219]
+		else if (treeType.equals(TREETYPE_User1) || 
+				 treeType.equals(TREETYPE_User2) || 
+				 treeType.equals(TREETYPE_User3) || 
+				 treeType.equals(TREETYPE_User4))
+			sourceTableID = "C_ElementValue_ID";
+				
+		return sourceTableID;
+	}
+	
 	/**
 	 * 	Get fully qualified Name of Action/Color Column
 	 *	@return NULL or Action or Color
