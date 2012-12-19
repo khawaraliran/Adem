@@ -67,8 +67,7 @@ public class StatementProxy implements InvocationHandler {
 			throws Throwable {
 		String name = method.getName();		
 		//handle special case	
-		if (name.equals("executeQuery") || name.equals("executeUpdate") 
-			|| name.equals("execute") || name.equals("addBatch")) {
+		if (name.equals("executeQuery") || name.equals("executeUpdate") || name.equals("execute") || name.equals("addBatch")) {
 			if (args != null && args.length > 0 && args[0] != null && args[0] instanceof String) {
 				String sql = (String)args[0];
 				p_vo.setSql(DB.getDatabase().convertStatement(sql));

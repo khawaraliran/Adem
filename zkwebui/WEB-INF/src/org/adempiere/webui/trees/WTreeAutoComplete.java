@@ -109,9 +109,9 @@ public class WTreeAutoComplete  extends Combobox
 	
 	
 	
-	/*TODO: This methods looks for 20 entries for the auto complete list 
+	/*TODO: This methods looks for 100 entries for the auto complete list 
 	 * BUT it checks later if the current role is allowed to see the entries
-	 * so it is possible that from 20 entries only 5 are visible to the user.
+	 * so it is possible that from 100 entries only 5 are visible to the user.
 	 * this is bad, buildSQLForLoadingAllLeafsWithNameOrDescription() should be 
 	 * refactored to include all the access logic directly!
 	 */
@@ -132,7 +132,7 @@ public class WTreeAutoComplete  extends Combobox
 			
 			
 			//Build SQL for loading results for the auto complete list
-			String sql = m_wmodel.buildSQLForLoadingAllLeafsWithNameOrDescription(val.trim(), 20);
+			String sql = m_wmodel.buildSQLForLoadingAllLeafsWithNameOrDescription(val.trim(), 100);
 				
 			
 			

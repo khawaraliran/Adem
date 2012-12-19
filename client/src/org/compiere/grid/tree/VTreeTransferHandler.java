@@ -139,16 +139,19 @@
  *****************************************************************************/
 package org.compiere.grid.tree;
 
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 
 import javax.swing.JComponent;
 import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.compiere.model.MTreeNode;
-import org.jfree.util.Log;
+import org.compiere.util.CLogger;
 
 /**
  *  VTreeTransferHandler provides the TransferHandler for dragging and dropping
@@ -160,55 +163,75 @@ import org.jfree.util.Log;
  */
 public class VTreeTransferHandler extends TransferHandler {
 
+	private static CLogger log = CLogger.getCLogger(VTreeTransferHandler.class);
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Used to determine if we have a drag or cut action. We don't need copy for our handler 
+	 */
 	public int getSourceActions(JComponent c) {
+		log.info("-");
 		return TransferHandler.MOVE;
 	}
 
 	/**
-	 * Creates a Transferable so we can drag & drop a TreeNode
+	 * Creates a TransferableTreeNode so we can drag & drop or paste this node
 	 */
 	protected Transferable createTransferable(JComponent c) {
+		log.info("-");
+		
 		JTree tree = (JTree) c;
 		MTreeNode node = (MTreeNode) tree.getSelectionPath().getLastPathComponent();
 		
-		//If the node is the root node, it's not a good idea to drag&drop it. Just return
+		//If the node is the root node, it's not a good idea to drag&drop it. Just return nothing
 		if(node.getNode_ID()==0){
+			log.info("return null");
 			return null;
 		}
+		log.info("return " + node);
 		return new TransferableTreeNode(node);
 	}
 
+	/**
+	 * Invoked after the drop/cut action. In our case, we need to remove the node 
+	 * from its previous parent
+	 */
 	protected void exportDone(JComponent c, Transferable t, int action) {
+		log.info("Action="+action);
+		
 		if (action == MOVE) {
-			JTree tree = (JTree) c;
-			MTreeNode node = null;
 			try {
-				node = (MTreeNode) t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
-			} catch (Exception e) {
-				// ignore
-			}
-			
-			if ( node != null ){
+				JTree tree = (JTree) c;
+				MTreeNode node = (MTreeNode) t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
 				((DefaultTreeModel) tree.getModel()).removeNodeFromParent(node);
 				tree.updateUI();
+				log.info("MOVE " + node +": entferne node von altem parent");
+			} catch (Exception e) {
+				// ignore
 			}
 		}
 	}
 
+	/**
+	 * Invoked during dragging or paste action. Tells if the object is allowed to get dropped/pasted at this place.
+	 */
 	public boolean canImport(TransferSupport info) {
+		log.info("-");
 		// Check for flavor
 		if (!info.isDataFlavorSupported(TransferableTreeNode.TREE_NODE_FLAVOR)) {
+			log.info("nope");
 			return false;
 		}
+		log.info("jepp");
 		return true;
 	}
 	
 	public boolean importData(TransferHandler.TransferSupport info) {
+		log.info("-");
 		
 		//First check if importing the data is supported - means: is it a MTreeNode we want to handle?
 		if (!canImport(info))
@@ -229,36 +252,32 @@ public class VTreeTransferHandler extends TransferHandler {
 		//Node which is moved
 		MTreeNode from = null;
 		
+		//Index in which the node should get inserted in its new parent
+		int index;
 		
+		
+		/* First we need to know the from and to node. Then we decide if from node is one 
+		   of to nodes parent or itself. In this case we will not allow drop/paste */		
 		try {
 			//Try to load the Node which is moved. If node cannot be loaded (throws exception) return with false so nothing is changed
 			from = (MTreeNode)t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
 		} 
-		catch (Exception e) { return false; }
+		catch (Exception e) { 
+			return false; 
+		}
+		
 
-		
-		//Index in which the node should get inserted in its new parent
-		int index;
-		
-		//If the from-node war drag&dropped
-		if (info.isDrop()) {
-			
+		if (info.isDrop()) {//If the from-node war drag&dropped
+			log.info("isDrop!");
 			//Get new parent - the node or place where the from-node was dropped 
 			JTree.DropLocation dl = (JTree.DropLocation)info.getDropLocation();
 			to = (MTreeNode) dl.getPath().getLastPathComponent();
 
-			//If node was dropped on itself, return with false and do nothing
-			if (from.equals(to))
-				return false;
-
 			//Make sure we get the right index for inserting the node
 			index = dl.getChildIndex() == -1 ? 0 : dl.getChildIndex();
 			
-		}
-		
-		//the node was inserted by cut/paste
-		else {              
-			
+		}else {   //the node was inserted by cut/paste           
+			log.info("IsPaste");
 			//Get the selected node in which we want to insert our from-node
 			MTreeNode selected = (MTreeNode) tree.getSelectionPath().getLastPathComponent();
 			
@@ -274,6 +293,26 @@ public class VTreeTransferHandler extends TransferHandler {
 			}
 		}
 
+				
+		/* If from node is in to nodes treePath, we don't want to drop/paste it. 
+		 * A node, dropped to one of its children or itself would disappear
+		 */
+		for(TreeNode treeNode : to.getPath()){
+			MTreeNode node = (MTreeNode)treeNode;
+			if(node.getNode_ID() == from.getNode_ID()){
+				log.fine("Cannot drop node " + from + " on node " + to);
+				return false;
+			}
+		}
+		
+		
+		//Because we want a node only to be pasted once, we set a new clipboard content after we pasted the node
+		if (!info.isDrop()){
+			Clipboard c = tree.getToolkit().getSystemClipboard();
+			c.setContents(new StringSelection(""), null);
+		}
+		
+		
 		//Now that we know in which node (to) we want to insert the from-node and at what index we want to insert, 
 		//we tell the model to insert the node
 		model.insertNodeInto(from, to, index);

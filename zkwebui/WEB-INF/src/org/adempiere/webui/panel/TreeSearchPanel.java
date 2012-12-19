@@ -467,13 +467,13 @@ public class TreeSearchPanel extends Panel implements EventListener, TreeDataLis
 		selectedItem.getTree().setSelectedItem(selectedItem);
 	}
     
-    //TODO: Maybe we should remove this because it is not necessary anymore since we load the auto complete list on demand
+    
 
 	/**
 	 * @param event
 	 * @see TreeDataListener#onChange(TreeDataEvent)
 	 */
-	public void onChange(TreeDataEvent event) {
+	public void onChange(TreeDataEvent event) {//TODO: Maybe we should remove this because it is not necessary anymore since we load the auto complete list on demand
 		System.out.println("TreeModel changed...?");
 	}
 
