@@ -598,8 +598,8 @@ public class WTreeNode {
 			log.fine("Load children for node=" + m_node_ID + ", tree="
 					+ m_tree.get_ID() + ", tablename=" + m_tree.getNodeTableName());
 	
-			System.out.println("Load children for node=" + m_node_ID + ", tree="
-					+ m_tree.get_ID() + ", tablename=" + m_tree.getNodeTableName());
+//			System.out.println("Load children for node=" + m_node_ID + ", tree="
+//					+ m_tree.get_ID() + ", tablename=" + m_tree.getNodeTableName());
 	
 			
 			// Try to load nodes children

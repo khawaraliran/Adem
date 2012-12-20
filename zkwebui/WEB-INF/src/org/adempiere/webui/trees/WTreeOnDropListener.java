@@ -39,11 +39,11 @@ public class WTreeOnDropListener implements EventListener {
 	public void onEvent(Event event) throws Exception {
 		if (event instanceof DropEvent) {
 			DropEvent de = (DropEvent) event;
-			System.out.println("Source=" + de.getDragged() + " Target=" + de.getTarget());
+//			System.out.println("Source=" + de.getDragged() + " Target=" + de.getTarget());
 			if (de.getDragged() != de.getTarget()) {
 				Treeitem src = (Treeitem) ((Treerow) de.getDragged()).getParent();
 				Treeitem target = (Treeitem) ((Treerow) de.getTarget()).getParent();
-				System.out.println("Move Node ");
+//				System.out.println("Move Node ");
 				moveNode((WTreeNode)src.getValue(), (WTreeNode)target.getValue());
 			}
 		} 

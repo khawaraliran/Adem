@@ -524,13 +524,16 @@ public class DPFavourites extends DashboardPanel implements EventListener {
 				String label = treeitem.getLabel().trim();
 				ToolBarButton btnFavItem = new ToolBarButton(String.valueOf(Node_ID));
 				btnFavItem.setLabel(label);
-				btnFavItem.setImageContent(treecellForTreeitem(treeitem).getImageContent());
+
+				btnFavItem.setImage(treeitem.getImage());
+//Works too:	btnFavItem.setImage(getIconFile(((WTreeNode)value)));
 				btnFavItem.setDraggable(DELETE_FAV_DROPPABLE);
 				btnFavItem.addEventListener(Events.ON_CLICK, this);
 				btnFavItem.addEventListener(Events.ON_DROP, this);
 				bxFav.appendChild(btnFavItem);
 				bxFav.removeChild(lblMsg);        					
 				bxFav.invalidate();
+				
 			} else {
 				if (DBException.isUniqueContraintError(CLogger.retrieveException()))
 					FDialog.error(0, this, "BookmarkExist", null);
