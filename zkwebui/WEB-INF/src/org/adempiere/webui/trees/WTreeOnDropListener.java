@@ -58,10 +58,16 @@ public class WTreeOnDropListener implements EventListener {
 	{
 		log.info(movingNode.toString() + " to " + toNode.toString());
 
-		//TODO: Check if node to insert is a child of self - jan.thielemann@evenos.de
-		//prompt user to select insert after or drop into the summary node
-		if (movingNode == toNode)
-			return;
+		/* FIXME-evenos: Find out where the draging of a treenode takes place and check there if 		 * the node is allowed to be dropped on another node */
+		int[] movingPath = wTreeModel.getPathFromRootToNode(movingNode);
+		int[] toPath = wTreeModel.getPathFromRootToNode(toNode);
+		WTreeNode parent = (WTreeNode) wTreeModel.getRoot();
+		for(int i = 0; i < toPath.length; i++){
+			parent = parent.getChildAt(toPath[i]);
+			if(parent.getNode_ID() == movingNode.getNode_ID())
+				return;
+		}
+	
 		
 					
 		WTreeNode newParent;

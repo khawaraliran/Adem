@@ -143,11 +143,12 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 				}
 				//Icons if tree is not a menu tree (e.g. organization)
 				else{
-					item.setImage("/images/mReport.png"); //FIXME: This is just a suggestion because no icons in the tree looks a little bit ugly
+					item.setImage("/images/mReport.png"); 
+					//FIXME: This is just a suggestion because no icons in the tree looks a little bit ugly
 				}
 					
 				
-				//If dragging leafs to a destination is allowed, set the draggable destination
+				//If dragging leafs to a destination is allowed, set the dragable destination
 				if(leafsDraggableDestination!=null && leafsDraggableDestination.length()>0)
 					tr.setDraggable(leafsDraggableDestination);
 			}
@@ -395,7 +396,7 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 				
 				//Try to find the next child
 				child = parent.getChildWithNodeID((Integer)nodeList.get(i));
-				System.out.println("Geladen Child: " + child);
+
 				//Add the index of the child in its parent to the path
 				pathList.add(parent.getIndexOfChild(child));
 				
@@ -414,14 +415,17 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 	}
 	
 
+	
+	/**
+	 * Gets the TreePath from a given node to a given node. If parent node is the root node, we do it lazy,
+	 * if not, the whole tree is loaded because we will use super.getPath()
+	 */
 	@Override
 	public int[] getPath(Object parent, Object lastNode){
-		System.out.println("Kein Path für dich heute! "+parent.getClass());
 		WTreeNode parentNode = (WTreeNode)parent;
 		WTreeNode searchedNode = (WTreeNode)lastNode;
 		
 		if(parentNode.getNode_ID() == ((WTreeNode)getRoot()).getNode_ID()){
-			System.out.println("Nagut, ein path aber nur von der root node bis zu " + searchedNode);
 			return getPathFromRootToNode(searchedNode);
 		}
 		else{
