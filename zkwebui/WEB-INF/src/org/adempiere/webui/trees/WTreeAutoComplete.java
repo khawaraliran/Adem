@@ -129,20 +129,14 @@ public class WTreeAutoComplete  extends Combobox
 		if(val.trim().length()>0){
 			//System.out.println("Value is greater than 3 characters. Start searching");
 			
-			
-			
-			//Build SQL for loading results for the auto complete list
-			String sql = m_wmodel.buildSQLForLoadingAllLeafsWithNameOrDescription(val.trim(), 100);
-				
-			
-			
+						
 			//PreparedStatement & ResultSet
 			PreparedStatement pstmt = null;
 			ResultSet rs = null;
 			
 			try{
-				//Prepare the statement
-				pstmt = DB.prepareStatement(sql, null);
+				//Prepare the statement for loading search results
+				pstmt = m_wmodel.pstmtForLoadingLeafWithNameOrDescription(val.trim(), 150);
 				
 				//Execture the Query
 				rs = pstmt.executeQuery();

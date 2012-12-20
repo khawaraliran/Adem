@@ -3,12 +3,14 @@ package org.adempiere.webui.trees;
 import java.awt.image.RenderedImage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.compiere.model.MClient;
 import org.compiere.model.MRole;
 import org.compiere.model.MTree;
+import org.compiere.model.MTreeNode;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
@@ -210,7 +212,8 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 	public void removeNode(WTreeNode node) {
 		
 		//Get Path from root node to the node we want to remove
-		int path[] = this.getPath(getRoot(), node);
+		int path[] = this.getPathFromRootToNode(node);
+		
 		
 		//If we got a path and the node is not the root we go through the path
 		if (path != null && path.length > 0) {
@@ -387,9 +390,12 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 			
 			for(int i = nodeList.size()-1; i>=0; i--){
 				
+				if((Integer)nodeList.get(i) == 0)
+					continue;
+				
 				//Try to find the next child
 				child = parent.getChildWithNodeID((Integer)nodeList.get(i));
-				
+				System.out.println("Geladen Child: " + child);
 				//Add the index of the child in its parent to the path
 				pathList.add(parent.getIndexOfChild(child));
 				
@@ -407,6 +413,21 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 			return null;
 	}
 	
+
+	@Override
+	public int[] getPath(Object parent, Object lastNode){
+		System.out.println("Kein Path für dich heute! "+parent.getClass());
+		WTreeNode parentNode = (WTreeNode)parent;
+		WTreeNode searchedNode = (WTreeNode)lastNode;
+		
+		if(parentNode.getNode_ID() == ((WTreeNode)getRoot()).getNode_ID()){
+			System.out.println("Nagut, ein path aber nur von der root node bis zu " + searchedNode);
+			return getPathFromRootToNode(searchedNode);
+		}
+		else{
+			return super.getPath(parent, lastNode);
+		}
+	}
 	
 	/**
 	 * Gets a TreePath from the root node to a node with the given id
@@ -503,14 +524,17 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 	
 	
 	/**
-	 * Returns a SQL-Statment for loading all leafs where name or description contains the search text. Also limits the resultset
+	 * Returns a PreparedStatement for loading all leafs where name or description contains the search text. Also limits the resultset
 	 * @param searchText
 	 * @param limit
-	 * @return String
+	 * @return PreparedStatement
 	 */
-	public String buildSQLForLoadingAllLeafsWithNameOrDescription(String searchText, int limit){
-		//FIXME: use "?" and the prepared statement parameter functions instead of building the sql with the parameters directly
+	public PreparedStatement pstmtForLoadingLeafWithNameOrDescription(String searchText, int limit) throws SQLException{
 		
+		//This models MTree
+		MTree m_tree = ((MTreeNode)getRoot()).getMTree();
+		
+		//Strings for building SQLs
 		String sql = null;
 		StringBuilder sqlNode = new StringBuilder();
 		String nodeTable = m_WTree.getNodeTableName();
@@ -520,15 +544,12 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 		String color = m_WTree.getActionColorName();
 		
 		
-		int ad_user_id;
-		if (m_WTree.isAllNodes())
-			ad_user_id = -1;
-		else
-			ad_user_id = Env.getContextAsInt(Env.getCtx(), "AD_User_ID");
+		//Used for checking if we use base language or other
+		boolean base = Env.isBaseLanguage(Env.getCtx(), "AD_Menu");
+		
 		
 		if (m_WTree.getTreeType().equals(MTree.TREETYPE_Menu))
 		{
-			boolean base = Env.isBaseLanguage(Env.getCtx(), "AD_Menu");
 			sourceTable = "m";
 			if (base){
 				sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, m.Name,m.Description, m.IsSummary, ");
@@ -540,11 +561,9 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 				sqlNode.append("m.Action, m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, m.AD_Workbench_ID ");
 				sqlNode.append("FROM AD_Menu m JOIN AD_TreeNodeMM tn ON m.ad_menu_id=tn.node_id ");
 				sqlNode.append("JOIN AD_Menu_Trl t on m.ad_menu_id = t.ad_menu_id ");
+				sqlNode.append("WHERE m.AD_Menu_ID=t.AD_Menu_ID AND t.AD_Language=? ");
 			}
 			
-			if (!base)
-				sqlNode.append(" WHERE m.AD_Menu_ID=t.AD_Menu_ID AND t.AD_Language='")
-					.append(Env.getAD_Language(Env.getCtx())).append("'");
 			if (!m_WTree.isEditable())
 			{
 				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
@@ -576,45 +595,35 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 			//Show only  for current tree
 			boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
 			sqlNode.append(hasWhere ? " AND " : " WHERE ");
-			sqlNode.append(" tn.AD_Tree_ID="+ m_WTree.get_ID() + " ");
-			
+			sqlNode.append(" tn.AD_Tree_ID=? ");
 			
 			//Show only matching the search term
-			hasWhere = sqlNode.indexOf(" WHERE ") != -1;
-			sqlNode.append(hasWhere ? " AND " : " WHERE ");
-			sqlNode.append(" (upper(m.name) like upper('%"+ searchText + "%') or upper(m.description) like upper('%"+searchText+"%')) ");
+			sqlNode.append(" AND (upper(m.name) like upper(?) or upper(m.description) like upper(?)) ");
 			
 			
 			//Show only active nodes
-			hasWhere = sqlNode.indexOf(" WHERE ") != -1;
-			sqlNode.append(hasWhere ? " AND " : " WHERE ");
-			sqlNode.append(" tn.IsActive='Y' ");
+			sqlNode.append(" AND tn.IsActive='Y' ");
 			
 			
 			//In Menu, we want only leaf nodes - not summary nodes
-			hasWhere = sqlNode.indexOf(" WHERE ") != -1;
-			sqlNode.append(hasWhere ? " AND " : " WHERE ");
-			sqlNode.append(" m.issummary='N' ");
-				
+			sqlNode.append(" AND m.issummary='N' ");
+			
 		}else{
 			if (columnNameX == null)
 				throw new IllegalArgumentException("Unknown TreeType=" + m_WTree.getTreeType());
 					
 			sqlNode.append("SELECT tn.Node_ID, tn.Parent_ID, tn.SeqNo, t.Name,t.Description,t.IsSummary, ");
 			sqlNode.append(color);
-			sqlNode.append(" FROM "+fromClause+" JOIN " + nodeTable + " tn ON t."+columnNameX+"_ID = tn.Node_ID "); //FIXME: use "?" and the prepared statement parameter functions
+			sqlNode.append(" FROM "+fromClause+" JOIN " + nodeTable + " tn ON t."+columnNameX+"_ID = tn.Node_ID "); 
 			if (!m_WTree.isEditable())
 				sqlNode.append(" WHERE t.IsActive='Y'");
 			
 			//Show only for current tree
 			boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
 			sqlNode.append(hasWhere ? " AND " : " WHERE ");
-			sqlNode.append(" tn.AD_Tree_ID="+ m_WTree.get_ID() + " ");
+			sqlNode.append(" tn.AD_Tree_ID=? ");
+			sqlNode.append(" AND (upper(t.name) like upper(?) or upper(t.description) like upper(?)) ");
 			
-			
-			hasWhere = sqlNode.indexOf(" WHERE ") != -1;
-			sqlNode.append(hasWhere ? " AND " : " WHERE ");
-			sqlNode.append(" (upper(t.name) like upper('%"+ searchText + "%') or upper(t.description) like upper('%"+searchText+"%')) ");
 		}
 		
 	
@@ -629,6 +638,34 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 			sql += " SQLLIMIT " + limit;
 		
 		
-		return sql;
+		//Prepare the statement which we will return
+		PreparedStatement pstmt = DB.prepareStatement(sql, null);
+				
+		//Set statement parameter
+		int i = 1;
+		if (m_tree.getTreeType().equals(MTree.TREETYPE_Menu)){	//In menu
+			
+			//Set language if needed
+			if (!base)
+				pstmt.setString(i++, Env.getAD_Language(Env.getCtx()));
+			
+			//Set tree id
+			pstmt.setInt(i++, m_tree.get_ID());
+			
+			//Set search term
+			pstmt.setString(i++, "%"+searchText+"%");
+			pstmt.setString(i++, "%"+searchText+"%");
+								
+		}else{	//not in menu
+			
+			//Set tree id
+			pstmt.setInt(i++, m_tree.get_ID());
+			
+			//Set search term
+			pstmt.setString(i++, "%"+searchText+"%");
+			pstmt.setString(i++, "%"+searchText+"%");
+		}
+		
+		return pstmt;
 	}
 }

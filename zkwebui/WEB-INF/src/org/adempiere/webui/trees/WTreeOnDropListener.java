@@ -39,10 +39,11 @@ public class WTreeOnDropListener implements EventListener {
 	public void onEvent(Event event) throws Exception {
 		if (event instanceof DropEvent) {
 			DropEvent de = (DropEvent) event;
-			log.fine("Source=" + de.getDragged() + " Target=" + de.getTarget());
+			System.out.println("Source=" + de.getDragged() + " Target=" + de.getTarget());
 			if (de.getDragged() != de.getTarget()) {
 				Treeitem src = (Treeitem) ((Treerow) de.getDragged()).getParent();
 				Treeitem target = (Treeitem) ((Treerow) de.getTarget()).getParent();
+				System.out.println("Move Node ");
 				moveNode((WTreeNode)src.getValue(), (WTreeNode)target.getValue());
 			}
 		} 
@@ -57,6 +58,8 @@ public class WTreeOnDropListener implements EventListener {
 	{
 		log.info(movingNode.toString() + " to " + toNode.toString());
 
+		//TODO: Check if node to insert is a child of self - jan.thielemann@evenos.de
+		//prompt user to select insert after or drop into the summary node
 		if (movingNode == toNode)
 			return;
 		
@@ -69,8 +72,7 @@ public class WTreeOnDropListener implements EventListener {
 		}
 		else						//	drop on a summary node
 		{
-			//TODO: Check if node to insert is a child of self - jan.thielemann@evenos.de
-			//prompt user to select insert after or drop into the summary node
+			
 			int path[] = wTreeModel.getPathFromRootToNode(toNode);
 			Treeitem toItem = tree.renderItemByPath(path);
 			

@@ -212,6 +212,9 @@ public class AdempiereTreeModel extends DefaultTreeModel {
 				for (int i = 0; i < to.getChildCount(); i++)
 				{
 					MTreeNode nd = (MTreeNode)to.getChildAt(i);
+					
+					log.info("To-Node at index " + i + " ist jetzt " + nd);
+					
 					StringBuffer sql = new StringBuffer("UPDATE ");
 					sql.append(toTree.getNodeTableName())
 						.append(" SET Parent_ID=").append(to.getNode_ID())
@@ -313,8 +316,6 @@ public class AdempiereTreeModel extends DefaultTreeModel {
 		String columnNameX = m_tree.getSourceTableName(true); //--> AD_Menu, C_BPartner, AD_Org...
 		String color = m_tree.getActionColorName();
 		
-		//PreparedStatement which we will return
-		PreparedStatement pstmt = null;
 		
 		
 		//Used for checking if we use base language or other
@@ -335,10 +336,9 @@ public class AdempiereTreeModel extends DefaultTreeModel {
 				sqlNode.append("m.Action, m.AD_Window_ID, m.AD_Process_ID, m.AD_Form_ID, m.AD_Workflow_ID, m.AD_Task_ID, m.AD_Workbench_ID ");
 				sqlNode.append("FROM AD_Menu m JOIN AD_TreeNodeMM tn ON m.ad_menu_id=tn.node_id ");
 				sqlNode.append("JOIN AD_Menu_Trl t on m.ad_menu_id = t.ad_menu_id ");
+				sqlNode.append("WHERE m.AD_Menu_ID=t.AD_Menu_ID AND t.AD_Language=? ");
 			}
-			
-			if (!base)
-				sqlNode.append(" WHERE m.AD_Menu_ID=t.AD_Menu_ID AND t.AD_Language=? ");
+						
 			if (!m_tree.isEditable())
 			{
 				boolean hasWhere = sqlNode.indexOf(" WHERE ") != -1;
@@ -409,8 +409,8 @@ public class AdempiereTreeModel extends DefaultTreeModel {
 		
 		
 		
-		//Prepare the statement
-		pstmt = DB.prepareStatement(sql, null);
+		//Prepare the statement which we will return
+		PreparedStatement pstmt = DB.prepareStatement(sql, null);
 		
 		//Set statement parameter
 		int i = 1;

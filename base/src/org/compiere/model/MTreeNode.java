@@ -49,7 +49,7 @@ public final class MTreeNode extends DefaultMutableTreeNode
 
 
 	/**
-	 * Construct Model TreeNode
+	 * Construct a TreeNode used by AdempiereTreeModel to visualize a tree
 	 * 
 	 * @param node_ID
 	 *            node
@@ -484,6 +484,8 @@ public final class MTreeNode extends DefaultMutableTreeNode
 		ensureChildren();
 		return super.getChildAt(index);
 	}
+	
+	
 
 	private void ensureChildren() {
 		if (isSummary() && !childrenEnsured) {
