@@ -717,7 +717,7 @@ public final class VTreePanel extends CPanel
 			}
 			return true;
 		}
-		log.info("Node not found; ID=" + nodeID);
+		log.fine("Node not found; ID=" + nodeID);
 		return false;
 	}   //  selectID
 
@@ -748,7 +748,7 @@ public final class VTreePanel extends CPanel
 	public void nodeChanged (boolean save, int keyID,
 		String name, String description, boolean isSummary, String imageIndicator)
 	{
-		log.info("Save=" + save + ", KeyID=" + keyID
+		log.fine("Save=" + save + ", KeyID=" + keyID
 			+ ", Name=" + name + ", Description=" + description 
 			+ ", IsSummary=" + isSummary + ", ImageInd=" + imageIndicator
 			+ ", root=" + m_root);

@@ -51,7 +51,6 @@ public class VTreeTransferHandler extends TransferHandler {
 	 * Used to determine if we have a drag or cut action. We don't need copy for our handler 
 	 */
 	public int getSourceActions(JComponent c) {
-		log.info("-");
 		return TransferHandler.MOVE;
 	}
 	
@@ -61,17 +60,13 @@ public class VTreeTransferHandler extends TransferHandler {
 	 * Creates a TransferableTreeNode so we can drag & drop or paste this node
 	 */
 	protected Transferable createTransferable(JComponent c) {
-		log.info("-");
-		
 		JTree tree = (JTree) c;
 		MTreeNode node = (MTreeNode) tree.getSelectionPath().getLastPathComponent();
 		
 		//If the node is the root node, it's not a good idea to drag&drop it. Just return nothing
 		if(node.getNode_ID()==0){
-			log.info("return null");
 			return null;
 		}
-		log.info("return " + node);
 		return new TransferableTreeNode(node);
 	}
 
@@ -80,15 +75,12 @@ public class VTreeTransferHandler extends TransferHandler {
 	 * from its previous parent
 	 */
 	protected void exportDone(JComponent c, Transferable t, int action) {
-		log.info("Action="+action);
-		
 		if (action == MOVE) {
 			try {
 				JTree tree = (JTree) c;
 				MTreeNode node = (MTreeNode) t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
 				((DefaultTreeModel) tree.getModel()).removeNodeFromParent(node);
 				tree.updateUI();
-				log.info("MOVE " + node +": entferne node von altem parent");
 			} catch (Exception e) {
 				// ignore
 			}
@@ -99,19 +91,15 @@ public class VTreeTransferHandler extends TransferHandler {
 	 * Invoked during dragging or paste action. Tells if the object is allowed to get dropped/pasted at this place.
 	 */
 	public boolean canImport(TransferSupport info) {
-		log.info("-");
 		// Check for flavor
 		if (!info.isDataFlavorSupported(TransferableTreeNode.TREE_NODE_FLAVOR)) {
-			log.info("nope");
 			return false;
 		}
-		log.info("jepp");
 		return true;
 	}
 	
 	public boolean importData(TransferHandler.TransferSupport info) {
-		log.info("-");
-		
+
 		//First check if importing the data is supported - means: is it a MTreeNode we want to handle?
 		if (!canImport(info))
 			return false;
@@ -152,7 +140,7 @@ public class VTreeTransferHandler extends TransferHandler {
 		
 
 		if (info.isDrop()) {//If the from-node war drag&dropped
-			log.info("isDrop!");
+
 			//Get new parent - the node or place where the from-node was dropped 
 			JTree.DropLocation dl = (JTree.DropLocation)info.getDropLocation();
 			to = (MTreeNode) dl.getPath().getLastPathComponent();
@@ -161,7 +149,7 @@ public class VTreeTransferHandler extends TransferHandler {
 			index = dl.getChildIndex() == -1 ? 0 : dl.getChildIndex();
 			
 		}else {   //the node was inserted by cut/paste           
-			log.info("IsPaste");
+			
 			//Get the selected node in which we want to insert our from-node
 			MTreeNode selected = (MTreeNode) tree.getSelectionPath().getLastPathComponent();
 			
