@@ -775,6 +775,8 @@ public final class VTreePanel extends CPanel
 		{
 			//Update node		
 			node.setName (name);
+			node.setDescription(description);
+			node.setImageIndicator(imageIndicator);
 			node.setAllowsChildren(isSummary);
 			
 		}

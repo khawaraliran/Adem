@@ -169,7 +169,7 @@ public final class MTreeNode extends DefaultMutableTreeNode
 
 	/**
 	 *  Set Name
-	 *  @param name name
+	 *  @param String name
 	 */
 	public void setName (String name)
 	{
@@ -179,6 +179,18 @@ public final class MTreeNode extends DefaultMutableTreeNode
 			m_name = name;
 	}   //  setName
 
+	/**
+	 *  Set Description
+	 *  @param String description
+	 */
+	public void setDescription (String description)
+	{
+		if (description == null)
+			m_description = "";
+		else
+			m_description = description;
+	}   //  setName
+	
 	/**
 	 *  Get Name
 	 *  @return name
