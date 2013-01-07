@@ -19,6 +19,8 @@ package org.compiere.grid.tree;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 
 import javax.swing.JComponent;
 import javax.swing.JTree;
@@ -47,6 +49,14 @@ public class VTreeTransferHandler extends TransferHandler {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private int m_windowno;
+	
+	public VTreeTransferHandler(int windowNo){
+		super();
+		m_windowno = windowNo;
+	}
+	
+	
 	/**
 	 * Used to determine if we have a drag or cut action. We don't need copy for our handler 
 	 */
@@ -60,6 +70,8 @@ public class VTreeTransferHandler extends TransferHandler {
 	 * Creates a TransferableTreeNode so we can drag & drop or paste this node
 	 */
 	protected Transferable createTransferable(JComponent c) {
+		
+		//Get selected node from tree
 		JTree tree = (JTree) c;
 		MTreeNode node = (MTreeNode) tree.getSelectionPath().getLastPathComponent();
 		
@@ -67,20 +79,33 @@ public class VTreeTransferHandler extends TransferHandler {
 		if(node.getNode_ID()==0){
 			return null;
 		}
-		return new TransferableTreeNode(node);
+		
+		//Create new Transferable
+		return new TransferableTreeNode(node, m_windowno);
 	}
 
+	
 	/**
 	 * Invoked after the drop/cut action. In our case, we need to remove the node 
 	 * from its previous parent
 	 */
 	protected void exportDone(JComponent c, Transferable t, int action) {
+		//Check if we have a move action here (from drag&drop or cut&paste)
 		if (action == MOVE) {
 			try {
-				JTree tree = (JTree) c;
-				MTreeNode node = (MTreeNode) t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
-				((DefaultTreeModel) tree.getModel()).removeNodeFromParent(node);
-				tree.updateUI();
+				
+				//Check if Transferable is a TransferableTreeNode
+				if(t.getClass().equals(TransferableTreeNode.class)){
+					
+					//Check if TransferableTreeNode is from the correct window (so we can't e. g. insert Organization Nodes in Menu Trees)
+					if(((TransferableTreeNode)t).nodecontainer.windowno == m_windowno){
+						JTree tree = (JTree) c;
+						MTreeNode node = ((MTreeNodeContainer)t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR)).node;
+						((DefaultTreeModel) tree.getModel()).removeNodeFromParent(node);
+						tree.updateUI();		
+					}
+				}		
+				
 			} catch (Exception e) {
 				// ignore
 			}
@@ -95,6 +120,19 @@ public class VTreeTransferHandler extends TransferHandler {
 		if (!info.isDataFlavorSupported(TransferableTreeNode.TREE_NODE_FLAVOR)) {
 			return false;
 		}
+				
+		//Check if we are in the correct window (e. g. we don't want to allow drag&drop organization nodes to menu window)
+		try {
+			Transferable t = info.getTransferable();
+			MTreeNodeContainer c = (MTreeNodeContainer)t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
+			if(c.windowno != m_windowno){
+				return false;
+			}
+		} catch (Exception e) {
+			log.severe(e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+		
 		return true;
 	}
 	
@@ -132,7 +170,7 @@ public class VTreeTransferHandler extends TransferHandler {
 			 * Try to load the Node which is moved. If node cannot be loaded (throws exception)
 			 * return with false so nothing is changed
 			 */
-			from = (MTreeNode)t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR);
+			from = ((MTreeNodeContainer)t.getTransferData(TransferableTreeNode.TREE_NODE_FLAVOR)).node;
 		} 
 		catch (Exception e) { 
 			return false; 

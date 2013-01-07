@@ -24,42 +24,57 @@ import java.io.IOException;
 import org.compiere.model.MTreeNode;
 
 /**
- *  TransferableTreeNode wraps an MTreeNode into a Transferable for
- *  use by drag and drop type actions.
+ * TransferableTreeNode wraps an MTreeNode into a Transferable for use by drag
+ * and drop type actions.
  * 
- *
- *  @author 	phib  2008/07/30
- *  FR [ 2032092 ] Java 6 improvements to tree drag and drop
+ * 
+ * @author phib 2008/07/30 FR [ 2032092 ] Java 6 improvements to tree drag and
+ *         drop
  */
 class TransferableTreeNode implements Transferable {
 
-	  public static DataFlavor TREE_NODE_FLAVOR = new DataFlavor(MTreeNode.class,
-	      "Tree Path");
+	public static DataFlavor TREE_NODE_FLAVOR = new DataFlavor(MTreeNode.class,
+			"Tree Path");
 
-	  DataFlavor flavors[] = { TREE_NODE_FLAVOR };
+	DataFlavor flavors[] = { TREE_NODE_FLAVOR };
 
-	  MTreeNode node;
 
-	  public TransferableTreeNode(MTreeNode node) {
-	    this.node = node;
-	  }
+	MTreeNodeContainer nodecontainer;
 
-	  public synchronized DataFlavor[] getTransferDataFlavors() {
-	    return flavors;
-	  }
 
-	  public boolean isDataFlavorSupported(DataFlavor flavor) {
-	    return (flavor.getRepresentationClass() == MTreeNode.class);
-	  }
 
-	  public synchronized Object getTransferData(DataFlavor flavor)
-	      throws UnsupportedFlavorException, IOException {
-	    if (isDataFlavorSupported(flavor)) {
-	      return (Object) node;
-	    } else {
-	      throw new UnsupportedFlavorException(flavor);
-	    }
-	  }
+	public TransferableTreeNode(MTreeNode node, int windowno) {
+		this.nodecontainer = new MTreeNodeContainer(node, windowno);
 	}
 
-	           
+	public synchronized DataFlavor[] getTransferDataFlavors() {
+		return flavors;
+	}
+
+	public boolean isDataFlavorSupported(DataFlavor flavor) {
+		return (flavor.getRepresentationClass() == MTreeNode.class);
+	}
+
+	public synchronized Object getTransferData(DataFlavor flavor)
+			throws UnsupportedFlavorException, IOException {
+		if (isDataFlavorSupported(flavor)) {
+			return (Object) nodecontainer;
+		} else {
+			throw new UnsupportedFlavorException(flavor);
+		}
+	}
+
+}
+
+class MTreeNodeContainer implements java.io.Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6548046451015886622L;
+	MTreeNode node;
+	int windowno;
+	public MTreeNodeContainer(MTreeNode node, int windowNo){
+		this.node = node;
+		this.windowno = windowNo;
+	}
+}

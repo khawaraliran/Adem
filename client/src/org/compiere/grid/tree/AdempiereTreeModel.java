@@ -177,7 +177,7 @@ public class AdempiereTreeModel extends DefaultTreeModel {
 	
 	public void saveChangedNodes(MTreeNode from, MTreeNode to) {
 		
-		log.info("Saving from="+from + " to="+to);
+		log.config("Saving from="+from + " to="+to);
 		
 		//Get the Trees from Nodes
 		MTree toTree = to.getMTree();
@@ -213,7 +213,7 @@ public class AdempiereTreeModel extends DefaultTreeModel {
 				{
 					MTreeNode nd = (MTreeNode)to.getChildAt(i);
 					
-					log.info("To-Node at index " + i + " ist jetzt " + nd);
+					log.finest("To-Node at index " + i + " ist jetzt " + nd);
 					
 					StringBuffer sql = new StringBuffer("UPDATE ");
 					sql.append(toTree.getNodeTableName())

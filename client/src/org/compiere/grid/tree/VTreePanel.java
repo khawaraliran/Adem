@@ -186,7 +186,7 @@ public final class VTreePanel extends CPanel
 
 	protected boolean m_lookAndFeelChanged = false;
 
-	private VTreeTransferHandler handler = new VTreeTransferHandler();
+	private VTreeTransferHandler handler; //= new VTreeTransferHandler();
 
 	/**
 	 *  Tree Panel for browsing and editing of a tree.
@@ -204,6 +204,11 @@ public final class VTreePanel extends CPanel
 		m_hasBar = hasBar;
 		m_editable = editable;
 
+		
+		//Init the Tree  transfer handler with the current window no
+		handler = new VTreeTransferHandler(m_WindowNo);
+		log.warning("Neues VTreePanel mit windowno = "+m_WindowNo);
+		
 		//	static init
 		jbInit();
 		if (!hasBar)
