@@ -205,9 +205,10 @@ public final class VTreePanel extends CPanel
 		m_editable = editable;
 
 		
-		//Init the Tree  transfer handler with the current window no
+		//Init the VTreeTransferHandler with the current window no so we can make sure that 
+		//transfering nodes is only possible within the window where the nodes are from 
 		handler = new VTreeTransferHandler(m_WindowNo);
-		log.warning("Neues VTreePanel mit windowno = "+m_WindowNo);
+		
 		
 		//	static init
 		jbInit();
