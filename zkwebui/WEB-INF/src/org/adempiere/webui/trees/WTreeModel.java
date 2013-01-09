@@ -535,8 +535,6 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 	 */
 	public PreparedStatement pstmtForLoadingLeafWithNameOrDescription(String searchText, int limit) throws SQLException{
 		
-		//This models MTree
-		MTree m_tree = ((MTreeNode)getRoot()).getMTree();
 		
 		//Strings for building SQLs
 		String sql = null;
@@ -647,14 +645,14 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 				
 		//Set statement parameter
 		int i = 1;
-		if (m_tree.getTreeType().equals(MTree.TREETYPE_Menu)){	//In menu
+		if (m_WTree.getTreeType().equals(MTree.TREETYPE_Menu)){	//In menu
 			
 			//Set language if needed
 			if (!base)
 				pstmt.setString(i++, Env.getAD_Language(Env.getCtx()));
 			
 			//Set tree id
-			pstmt.setInt(i++, m_tree.get_ID());
+			pstmt.setInt(i++, m_WTree.get_ID());
 			
 			//Set search term
 			pstmt.setString(i++, "%"+searchText+"%");
@@ -663,7 +661,7 @@ public class WTreeModel extends AbstractTreeModel implements TreeitemRenderer, E
 		}else{	//not in menu
 			
 			//Set tree id
-			pstmt.setInt(i++, m_tree.get_ID());
+			pstmt.setInt(i++, m_WTree.get_ID());
 			
 			//Set search term
 			pstmt.setString(i++, "%"+searchText+"%");
