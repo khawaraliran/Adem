@@ -98,6 +98,8 @@ import org.w3c.dom.Element;
  *			<li>http://sourceforge.net/tracker/index.php?func=detail&aid=2195894&group_id=176962&atid=879335
  *			<li>BF [2947622] The replication ID (Primary Key) is not working
  *			<li>https://sourceforge.net/tracker/?func=detail&aid=2947622&group_id=176962&atid=879332
+ *			<li>Error when try load a PO Entity with virtual columns
+ *			<li>http://adempiere.atlassian.net/browse/ADEMPIERE-100
  */
 public abstract class PO
 	implements Serializable, Comparator, Evaluatee, Cloneable
@@ -194,7 +196,7 @@ public abstract class PO
 		int size = p_info.getColumnCount();
 		m_oldValues = new Object[size];
 		m_newValues = new Object[size];
-		m_valueLoaded = new boolean[size]; // metas
+		m_valueLoaded = new boolean[size]; // metas (lazy loading)
 
 		if (rs != null)
 			load(rs);		//	will not have virtual columns
@@ -1112,7 +1114,7 @@ public abstract class PO
 		// [ 1845793 ] PO.set_CustomColumn not updating correctly m_newValues
 		// this is for columns not in PO - verify and call proper method if exists
 		int poIndex = get_ColumnIndex(columnName);
-		// metas: tsa: correct, it should be greather OR EQUAL because else first column is skiped and we get duplicate column error on insert
+		// metas: tsa: correct, it should be greather OR EQUAL because else first column is skipped and we get duplicate column error on insert
 		if (poIndex >= 0) { 
 			// is not custom column - it exists in the PO
 			return set_Value(columnName, value);
@@ -1410,8 +1412,9 @@ public abstract class PO
 		log.finest("ID=" + ID);
 		if (ID > 0)
 		{
+			setKeyInfo();
+			//m_KeyColumns = new String[] {p_info.getTableName() + "_ID"};
 			m_IDs = new Object[] {new Integer(ID)};
-			m_KeyColumns = new String[] {p_info.getTableName() + "_ID"};
 			load(trxName);
 		}
 		else	//	new
@@ -1434,10 +1437,10 @@ public abstract class PO
 		m_trxName = trxName;
 		boolean success = true;
 		StringBuffer sql = p_info.buildSelect();
-		int size = get_ColumnCount();
 		sql.append(" WHERE ")
-			.append(get_WhereClause(false));
-
+			.append(get_WhereClause(false))
+		;
+		int size = get_ColumnCount();
 		//
 	//	int index = -1;
 		if (CLogMgt.isLevelFinest())
@@ -1517,50 +1520,54 @@ public abstract class PO
 	private boolean loadColumn(int index, ResultSet rs)
 	{
 		boolean success = true;
-		String columnName = p_info.getColumnName(index);
-		Class<?> clazz = p_info.getColumnClass(index);
-		int dt = p_info.getColumnDisplayType(index);
-		try
-		{
-			if (clazz == Integer.class)
-				m_oldValues[index] = decrypt(index, new Integer(rs.getInt(columnName)));
-			else if (clazz == BigDecimal.class)
-				m_oldValues[index] = decrypt(index, rs.getBigDecimal(columnName));
-			else if (clazz == Boolean.class)
-				m_oldValues[index] = new Boolean ("Y".equals(decrypt(index, rs.getString(columnName))));
-			else if (clazz == Timestamp.class)
-				m_oldValues[index] = decrypt(index, rs.getTimestamp(columnName));
-			else if (DisplayType.isLOB(dt))
-				m_oldValues[index] = get_LOB (rs.getObject(columnName));
-			else if (clazz == String.class)
-				m_oldValues[index] = decrypt(index, rs.getString(columnName));
-			else
-				m_oldValues[index] = loadSpecial(rs, index);
-			//	NULL
-			if (rs.wasNull() && m_oldValues[index] != null)
-				m_oldValues[index] = null;
+			String columnName = p_info.getColumnName(index);
+			Class<?> clazz = p_info.getColumnClass(index);
+			int dt = p_info.getColumnDisplayType(index);
+			//ADEMPIERE-100
+			if(p_info.isVirtualColumn(index))
+				return true;
+			try
+			{
+				if (clazz == Integer.class)
+					m_oldValues[index] = decrypt(index, new Integer(rs.getInt(columnName)));
+				else if (clazz == BigDecimal.class)
+					m_oldValues[index] = decrypt(index, rs.getBigDecimal(columnName));
+				else if (clazz == Boolean.class)
+					m_oldValues[index] = new Boolean ("Y".equals(decrypt(index, rs.getString(columnName))));
+				else if (clazz == Timestamp.class)
+					m_oldValues[index] = decrypt(index, rs.getTimestamp(columnName));
+				else if (DisplayType.isLOB(dt))
+					m_oldValues[index] = get_LOB (rs.getObject(columnName));
+				else if (clazz == String.class)
+					m_oldValues[index] = decrypt(index, rs.getString(columnName));
+				else
+					m_oldValues[index] = loadSpecial(rs, index);
+				//	NULL
+				if (rs.wasNull() && m_oldValues[index] != null)
+					m_oldValues[index] = null;
 
 			m_newValues[index] = null; // reset new value
 			m_valueLoaded[index] = true;
-			//
-			if (CLogMgt.isLevelAll())
-				log.finest(String.valueOf(index) + ": " + p_info.getColumnName(index)
-					+ "(" + p_info.getColumnClass(index) + ") = " + m_oldValues[index]);
-		}
-		catch (SQLException e)
-		{
-			if (p_info.isVirtualColumn(index))	//	if rs constructor used
-				log.log(Level.FINER, "Virtual Column not loaded: " + columnName);
-			else
-			{
-				log.log(Level.SEVERE, "(rs) - " + String.valueOf(index)
-					+ ": " + p_info.getTableName() + "." + p_info.getColumnName(index)
-					+ " (" + p_info.getColumnClass(index) + ") - " + e);
-				success = false;
+				//
+				if (CLogMgt.isLevelAll())
+					log.finest(String.valueOf(index) + ": " + p_info.getColumnName(index)
+						+ "(" + p_info.getColumnClass(index) + ") = " + m_oldValues[index]);
 			}
+			catch (SQLException e)
+			{
+				e.printStackTrace(); // @Trifon - MySQL Port
+				if (p_info.isVirtualColumn(index))	//	if rs constructor used
+					log.log(Level.FINER, "Virtual Column not loaded: " + columnName);
+				else
+				{
+					log.log(Level.SEVERE, "(rs) - " + String.valueOf(index)
+						+ ": " + p_info.getTableName() + "." + p_info.getColumnName(index)
+						+ " (" + p_info.getColumnClass(index) + ") - " + e);
+					success = false;
+				}
+			}
+			return success;
 		}
-		return success;
-	}
 	
 	private boolean loadColumn(int index)
 	{
@@ -1595,7 +1602,7 @@ public abstract class PO
 			rs = null; pstmt = null;
 		}
 		return success;
-	}
+	}	//	load
 
 	/**
 	 * 	Load from HashMap
@@ -2202,23 +2209,23 @@ public abstract class PO
 			
 			if (!isAssignedID)
 			{
-				if (!beforeSave(newRecord))
+			if (!beforeSave(newRecord))
+			{
+				log.warning("beforeSave failed - " + toString());
+				if (localTrx != null)
 				{
-					log.warning("beforeSave failed - " + toString());
-					if (localTrx != null)
-					{
-						localTrx.rollback();
-						localTrx.close();
-						m_trxName = null;
-					}
-					else
-					{
-						trx.rollback(savepoint);
-						savepoint = null;
-					}
-					return false;
+					localTrx.rollback();
+					localTrx.close();
+					m_trxName = null;
 				}
+				else
+				{
+					trx.rollback(savepoint);
+					savepoint = null;
+				}
+				return false;
 			}
+		}
 		}
 		catch (Exception e)
 		{
@@ -3092,12 +3099,12 @@ public abstract class PO
 		{
 			if (!isAssignedID)
 			{
-				if (!beforeDelete())
-				{
-					log.warning("beforeDelete failed");
-					return false;
-				}
+			if (!beforeDelete())
+			{
+				log.warning("beforeDelete failed");
+				return false;
 			}
+		}
 		}
 		catch (Exception e)
 		{
@@ -3205,17 +3212,17 @@ public abstract class PO
 
 		if (!isAssignedID)
 		{
-			try
-			{
-				success = afterDelete(success);
-			}
-			catch (Exception e)
-			{
-				log.log(Level.WARNING, "afterDelete", e);
-				log.saveError("Error", e, false);
-				success = false;
-				// throw new DBException(e);
-			}
+		try
+		{
+			success = afterDelete (success);
+		}
+		catch (Exception e)
+		{
+			log.log(Level.WARNING, "afterDelete", e);
+			log.saveError("Error", e, false);
+			success = false;
+		//	throw new DBException(e);
+		}
 		}
 
 		// Call ModelValidators TYPE_AFTER_DELETE - teo_sarca [ 1675490 ]
@@ -4211,8 +4218,8 @@ public abstract class PO
 			return "Y".equals(oo);
 		}
 		return false;
-		
 	}
+	
 	
 // metas: begin
 	private Map<String, Object> m_dynAttrs = null;

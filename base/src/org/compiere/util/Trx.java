@@ -171,10 +171,20 @@ public class Trx implements VetoableChangeListener
 	private long m_startTime;
 
 	/**
-	 * 	Get Connection
-	 *	@return connection
+	 * Get connection
+	 * @return connection
 	 */
 	public Connection getConnection()
+	{
+		return getConnection(true);
+	}
+
+	/**
+	 * 	Get Connection
+	 *  @param createNew if true, create new connection if the trx does not have one created yet
+	 *	@return connection
+	 */
+	public Connection getConnection(boolean createNew)
 	{
 		log.log(Level.ALL, "Active=" + isActive() + ", Connection=" + m_connection);
 		
@@ -200,8 +210,21 @@ public class Trx implements VetoableChangeListener
 			}
 		}
 		// metas: tsa: end:
+		
 		if (m_connection == null)	//	get new Connection
-			setConnection(DB.createConnection(false, Connection.TRANSACTION_READ_COMMITTED));
+		{
+			if (createNew)
+			{
+				if (s_trxMap == null || !s_trxMap.containsKey(m_trxName))
+				{
+					new Exception("Illegal to getConnection for Trx that is not register.").printStackTrace();
+					return null;
+				}
+				setConnection(DB.createConnection(false, Connection.TRANSACTION_READ_COMMITTED));
+			}
+			else
+				return null;
+		}
 		if (!isActive())
 			start();
 		return m_connection;
@@ -395,7 +418,7 @@ public class Trx implements VetoableChangeListener
 
 			// mo73_04265: If transaction was successfully committed fire listeners
 			if (success)
-			{
+	{
 				getTrxListenerManager(false).fireAfterCommit(getTrxName());
 			}
 		}
@@ -540,6 +563,7 @@ public class Trx implements VetoableChangeListener
 			m_connection.releaseSavepoint(savepoint);
 			Services.get(IOpenTrxBL.class).onReleaseSavepoint(this, savepoint); // metas me00_02367
 		}
+		
 	}
 	
 	/**
@@ -629,14 +653,14 @@ public class Trx implements VetoableChangeListener
 	public static void run(String trxName, boolean manageTrx, TrxRunnable r)
 	{
 		Services.get(ITrxBL.class).run(trxName, manageTrx, r);
-	}
-
+		}
+			
 	private boolean isLocalTrx(String trxName)
-	{
+			{
 		return trxName == null
 			|| trxName.startsWith("POSave") // TODO: hardcoded
 			;
-	}
+			}
 
 	/**
 	 * Current {@link ITrxListenerManager}
@@ -656,14 +680,14 @@ public class Trx implements VetoableChangeListener
 	 * @task mo73_04265
 	 */
 	private ITrxListenerManager getTrxListenerManager(final boolean create)
-	{
+			{
 		if (trxListenerManager != null)
-		{
+			{
 			return trxListenerManager;
 		}
 
 		if (create)
-		{
+			{
 			trxListenerManager = new TrxListenerManager();
 			return trxListenerManager;
 		}
@@ -682,4 +706,4 @@ public class Trx implements VetoableChangeListener
 	{
 		return getTrxListenerManager(true); // create=true
 	}
-}	// Trx
+}	//	Trx

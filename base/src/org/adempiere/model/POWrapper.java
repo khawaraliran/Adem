@@ -35,10 +35,10 @@ import org.compiere.util.Env;
  * <pre>
  * public interface I_C_Invoice_Customized
  * {
- * public int getCustomValue1();
- * public void setCustomValue1(int customValue1);
- * public String getCustomString1();
- * public void setCustomString1(String customString1);
+ *	public int getCustomValue1();
+ *	public void setCustomValue1(int customValue1);
+ *	public String getCustomString1();
+ *	public void setCustomString1(String customString1);
  * }
  * ....
  * MInvoice invoice = ......;
@@ -96,9 +96,9 @@ public class POWrapper implements InvocationHandler
 			if (!poTableName.equals(classTableName))
 			{
 				throw new IllegalArgumentException("PO " + po + " (TableName:" + poTableName + ") and class " + cl + " (TableName:" + classTableName + ") are not compatible");
-			}
 		}
-
+	}
+	
 		return (T)Proxy.newProxyInstance(cl.getClassLoader(),
 				new Class<?>[] { cl },
 				new POWrapper(cl, po, useOldValues, trlAdLanguage));
@@ -228,8 +228,8 @@ public class POWrapper implements InvocationHandler
 			if (ih instanceof POWrapper)
 			{
 				POWrapper wrapper = (POWrapper)ih;
-				return (T)wrapper.getPO();
-			}
+		return (T)wrapper.getPO();
+	}
 			if (ih instanceof GridTabWrapper && checkOtherWrapper)
 			{
 				// using the grid tab wrapper to load the PO
@@ -311,7 +311,7 @@ public class POWrapper implements InvocationHandler
 	private final PO po;
 	private final boolean useOldValues;
 	private final String trlAdLanguage;
-
+	
 	private POWrapper(Class<?> interfaceClass, PO po, boolean useOldValues, String trlAdLanguage)
 	{
 		super();
@@ -512,7 +512,7 @@ public class POWrapper implements InvocationHandler
 			}
 			else if (PO.class.isAssignableFrom(method.getReturnType()))
 			{
-				throw new IllegalArgumentException("Method not supported - " + methodName);
+				throw new IllegalArgumentException("Method not supported - "+methodName);
 			}
 			return value;
 		}
@@ -532,18 +532,18 @@ public class POWrapper implements InvocationHandler
 				return getValue(propertyName, ii, method.getReturnType());
 			}
 			//
-			throw new IllegalArgumentException("Method not supported - " + methodName);
+			throw new IllegalArgumentException("Method not supported - "+methodName);
 		}
 		else if (methodName.equals("equals") && args.length == 1)
 		{
 			return invokeEquals(args);
-		}
+	}
 		else
-		{
+	{
 			return invokeParent(method, args);
 		}
 	}
-
+	
 	/**
 	 * Load object that is referenced by given property. Example: getReferencedObject("M_Product", method) should load the M_Product record with ID given by M_Product_ID property name;
 	 * 
@@ -568,12 +568,13 @@ public class POWrapper implements InvocationHandler
 		int i = getColumnIndex(propertyName + "_ID");
 		if (i < 0)
 			return null;
-
+		
 		// Fetch Record_ID
 		final Integer record_id = getValueAsInt(i);
 		if (record_id == null || record_id <= 0)
 			return null;
-
+			
+		
 		// Fetch TableName from returning class
 		Class<?> cl = method.getReturnType();
 		String tableName;
@@ -586,14 +587,14 @@ public class POWrapper implements InvocationHandler
 			log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 			return null;
 		}
-
+		
 		// Load Persistent Object
 		PO child = MTable.get(getCtx(), tableName).getPO(record_id, getTrxName());
 		if (child == null || child.get_ID() != record_id)
 			throw new AdempiereException("@PONotFound@ @" + tableName + "@ (ID=" + record_id + ")");
 		return POWrapper.create(child, method.getReturnType());
 	}
-
+	
 	private boolean isModelInterface(Class<?> cl)
 	{
 		try

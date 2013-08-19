@@ -18,6 +18,7 @@
 package org.adempiere.webui.session;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -33,6 +34,7 @@ import org.adempiere.webui.window.ZkReportViewerProvider;
 import org.compiere.Adempiere;
 import org.compiere.print.ReportCtl;
 import org.compiere.report.ReportStarter;
+import org.compiere.util.CLogMgt;
 import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.Ini;

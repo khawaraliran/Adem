@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.adempiere.ad.dao.IQueryOrderBy;
 import org.adempiere.ad.dao.IQueryOrderByBuilder;
-import org.compiere.util.Util;
+import org.adempiere.util.Check;
 
 class QueryOrderByBuilder implements IQueryOrderByBuilder
 {
@@ -30,7 +30,7 @@ class QueryOrderByBuilder implements IQueryOrderByBuilder
 	@Override
 	public IQueryOrderByBuilder addColumn(String columnName, boolean asc)
 	{
-		Util.assumeNotNull(columnName, "columnName not null");
+		Check.assumeNotNull(columnName, "columnName not null");
 
 		final QueryOrderByItem orderByItem = new QueryOrderByItem(columnName, asc);
 		orderBys.add(orderByItem);

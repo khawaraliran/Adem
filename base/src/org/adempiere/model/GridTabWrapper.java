@@ -99,7 +99,7 @@ public class GridTabWrapper implements InvocationHandler
 
 		return null;
 	}
-
+	
 	public static void refresh(Object model)
 	{
 		GridTab gridTab = getGridTab(model);
@@ -114,14 +114,14 @@ public class GridTabWrapper implements InvocationHandler
 	}
 
 	private final GridTab m_gridTab;
-
+	
 	private boolean failOnColumnNotFound = false;
 
 	private GridTabWrapper(GridTab gridTab)
 	{
 		this.m_gridTab = gridTab;
 	}
-
+	
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
 	{
@@ -188,7 +188,7 @@ public class GridTabWrapper implements InvocationHandler
 			}
 			else if (PO.class.isAssignableFrom(method.getReturnType()))
 			{
-				throw new IllegalArgumentException("Method not supported - " + methodName);
+				throw new IllegalArgumentException("Method not supported - "+methodName);
 			}
 			return value;
 		}
@@ -202,14 +202,14 @@ public class GridTabWrapper implements InvocationHandler
 				return value instanceof Boolean ? value : "Y".equals(value);
 			}
 			//
-			field = m_gridTab.getField("Is" + propertyName);
+			field = m_gridTab.getField("Is"+propertyName);
 			if (field != null)
 			{
 				final Object value = field.getValue();
 				return value instanceof Boolean ? value : "Y".equals(value);
 			}
 			//
-			throw new IllegalArgumentException("Method not supported - " + methodName);
+			throw new IllegalArgumentException("Method not supported - "+methodName);
 		}
 		else if (method.getName().equals("get_TableName"))
 		{
@@ -226,17 +226,17 @@ public class GridTabWrapper implements InvocationHandler
 	{
 		return this.m_gridTab;
 	}
-
+	
 	private final Properties getCtx()
 	{
 		return Env.getCtx();
 	}
-
+	
 	private final String getTrxName()
 	{
 		return null;
 	}
-
+	
 	/**
 	 * Load object that is referenced by given property. Example: getReferencedObject("M_Product", method) should load the M_Product record with ID given by M_Product_ID property name;
 	 * 
@@ -246,15 +246,16 @@ public class GridTabWrapper implements InvocationHandler
 	 */
 	private final Object getReferencedObject(String propertyName, Method method)
 	{
-		final GridField idField = m_gridTab.getField(propertyName + "_ID");
+		final GridField idField = m_gridTab.getField(propertyName+"_ID");
 		if (idField == null)
 			return null;
-
+		
 		// Fetch Record_ID
 		final Integer record_id = (Integer)m_gridTab.getValue(idField);
 		if (record_id == null || record_id <= 0)
 			return null;
-
+			
+		
 		// Fetch TableName from returning class
 		Class<?> cl = method.getReturnType();
 		String tableName;
@@ -267,12 +268,12 @@ public class GridTabWrapper implements InvocationHandler
 			log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 			return null;
 		}
-
+		
 		// Load Persistent Object
 		PO po = MTable.get(getCtx(), tableName).getPO(record_id, getTrxName());
 		return po;
 	}
-
+	
 	private boolean isModelInterface(Class<?> cl)
 	{
 		try

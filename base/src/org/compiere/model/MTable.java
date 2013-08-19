@@ -794,7 +794,7 @@ public class MTable extends X_AD_Table
 			else if (!seq.getName().equals(getTableName()))
 			{
 				seq.setName(getTableName());
-				seq.save();
+				seq.saveEx();
 			}
 		}	
 		
@@ -922,8 +922,8 @@ public class MTable extends X_AD_Table
 			{
 				s_cacheTableName2Id.put(tableName, retValue);
 			}
-			return retValue;
-		}
+		return retValue;
+	}
 		else
 		{
 			return -1;

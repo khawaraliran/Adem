@@ -795,11 +795,6 @@ public class GridField
 		return true;
 	}	//	isDisplayed
 
-	// Should the column be hidden by default in list view
-	public boolean isHideInListView() {
-		return(m_vo.HideInListView);
-	}
-	
 	/**
 	 * Preferred width in list view
 	 */
@@ -961,6 +956,22 @@ public class GridField
 	public boolean isDisplayed()
 	{
 		return m_vo.IsDisplayed;
+	}
+	/**
+	 * 	Is Displayed
+	 *	@return true if displayed
+	 */
+	public boolean isDisplayedGrid()
+	{
+		return m_vo.IsDisplayedGrid;
+	}
+	/**
+	 * 	Grid sequence number
+	 *	@return sequence number
+	 */
+	public int getSeqNoGrid()
+	{
+		return m_vo.SeqNoGrid;
 	}
 	/**
 	 * 	Get DisplayLogic
@@ -1192,6 +1203,15 @@ public class GridField
 	{
 		return m_vo.AD_Process_ID;
 	}
+	
+	/** get AD_Chart_ID
+	 * @return chart id
+	 */
+	public int getAD_Chart_ID()
+	{
+		return m_vo.AD_Chart_ID;
+	}
+	
 	/**
 	 * 	Get Description
 	 *	@return description

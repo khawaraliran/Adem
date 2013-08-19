@@ -62,6 +62,7 @@ import org.adempiere.util.api.IMsgBL;
  *  @version    $Id: Util.java,v 1.3 2006/07/30 00:52:23 jjanke Exp $
  *  
  *  @author     Teo Sarca, SC ARHIPAC SERVICE SRL - BF [ 1748346 ]
+ *  @author     t.schoeneberg@metas.de - FR [ 3407104 ] Explicit Assumptions
  */
 public class Util
 {

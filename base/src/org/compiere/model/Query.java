@@ -187,7 +187,7 @@ public class Query implements IQuery
 		this.applyAccessFilter = flag;
 		return this;
 	}
-	
+
 	/**
 	 * Turn on data access filter with controls
 	 * @param flag
@@ -621,12 +621,12 @@ public class Query implements IQuery
 				if (value == null)
 				{
 					value = defaultValue;
-				}
-				if (value != null)
-				{
-					result.add(value);
-				}
 			}
+				if (value != null)
+			{
+					result.add(value);
+			}
+		}
 		}
 		catch (SQLException e)
 		{
@@ -836,11 +836,11 @@ public class Query implements IQuery
 	}
 	
 	public Query addWhereClause(final boolean joinByAnd, final String whereClause)
-	{
-		if (Util.isEmpty(whereClause, true))
 		{
+		if (Util.isEmpty(whereClause, true))
+			{
 			return this;
-		}
+			}
 
 		final String whereClauseFinal;
 		if (!Util.isEmpty(getWhereClause(), true))
@@ -903,7 +903,7 @@ public class Query implements IQuery
 	}
 	
 	protected final List<Object> getParametersEffective()
-	{
+		{
 		final List<Object> parametersEffective = new ArrayList<Object>();
 		
 		if (parameters != null && !parameters.isEmpty())
@@ -963,7 +963,6 @@ public class Query implements IQuery
 		{
 			sqlBuffer.append(" ORDER BY ").append(orderBy);
 		}
-		
 		String sql = sqlBuffer.toString();
 		if (applyAccessFilter)
 		{

@@ -550,7 +550,7 @@ public class TimeUtil
 		cal.add(Calendar.MINUTE, offset);			//	may have a problem with negative
 		return new Timestamp (cal.getTimeInMillis());
 	}	//	addMinutes
-	
+
 	/**
 	 * 	Return DateTime + offset in hours
 	 * 	@param dateTime Date and Time
@@ -877,7 +877,7 @@ public class TimeUtil
 		System.out.println(formatElapsed(3601234).equals("01:00:01.234") + " ("+formatElapsed(3601234)+")");
 		System.out.println(formatElapsed(7261234).equals("02:01:01.234") + " ("+formatElapsed(7261234)+")");
 	}	//	main
-
+	
 	/**
 	 * 	Get last date in year
 	 *  @param day day
