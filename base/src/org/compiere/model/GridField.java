@@ -803,7 +803,6 @@ public class GridField
 	}
 	
 	/**
-	/**
 	 * 	Get Variable Value (Evaluatee)
 	 *	@param variableName name
 	 *	@return value

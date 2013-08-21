@@ -27,6 +27,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.adempiere.util.Services;
 import org.adempiere.webui.ZkContextProvider;
 import org.adempiere.webui.window.ZkJRViewerProvider;
 import org.adempiere.webui.window.ZkReportViewerProvider;
@@ -38,6 +39,9 @@ import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.Ini;
 import org.zkoss.zk.ui.http.DHtmlLayoutServlet;
+
+import de.metas.adempiere.form.IClientUI;
+import de.metas.adempiere.form.zk.ZKClientUI;
 
 /**
  * 
@@ -68,6 +72,8 @@ public class WebUIServlet extends DHtmlLayoutServlet
         ServerContext.newInstance();
         Env.setContextProvider(new ZkContextProvider());
         
+		Services.registerService(IClientUI.class, new ZKClientUI());
+
         /**
          * Start ADempiere
          */
