@@ -39,8 +39,6 @@ class Base
 	 */
 	public static void test()
 	{
-		//
-		//
 		System.out.println("** Before Init **"); //$NON-NLS-1$
 		getMemoryUsed();
 		Properties ctx = Login.initTest(false);
