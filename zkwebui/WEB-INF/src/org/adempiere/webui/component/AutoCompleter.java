@@ -39,6 +39,17 @@ public abstract class AutoCompleter extends AutoComplete implements EventListene
 	private static final int PopupDelayMillis = 500;
 	/** Minimum chars required to popup */
 	public static final int DEFAULT_PopupMinimumChars = 2;
+	private int m_popupMinimumChars = DEFAULT_PopupMinimumChars;
+
+	public void setPopupMinimumChars(int m_popupMinimumChars)
+	{
+		this.m_popupMinimumChars = m_popupMinimumChars;
+	}
+
+	public int getPopupMinimumChars()
+	{
+		return m_popupMinimumChars;
+	}
 
 	public static final String ITEM_More = "...";
 
@@ -83,6 +94,15 @@ public abstract class AutoCompleter extends AutoComplete implements EventListene
 
 	private void showPopupDelayed()
 	{
+		log.finest("showPopupDelayed..");
+		// Popup only if we a minimum number of characters - 2009_0017_AP1_G42_CR048
+		final String search = getText();
+		if (search != null && search.trim().length() < m_popupMinimumChars)
+		{
+			setVisible(false);
+			return;
+		}
+		
 		timer.setRepeats(false);
 		timer.start();
 	}
@@ -121,8 +141,7 @@ public abstract class AutoCompleter extends AutoComplete implements EventListene
 		if (userObject == null)
 			return false;
 
-		String s1 = Util
-				.stripDiacritics(convertUserObjectForTextField(userObject));
+		String s1 = Util.stripDiacritics(convertUserObjectForTextField(userObject));
 		String s2 = Util.stripDiacritics(search);
 
 		return s1.equalsIgnoreCase(s2);

@@ -39,24 +39,25 @@ import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
 import org.compiere.util.ValueNamePair;
 
-public class VLookupAutoCompleter extends FieldAutoCompleter {
-	
+public class VLookupAutoCompleter extends FieldAutoCompleter
+{
+
 	/**
 	 * Alters text from accented to unaccented or vice-versa
 	 * 
-	 * Params: String - text to be altered
-	 *         numeric - 1 for accented->unaccented ; 2 for unaccented->accented
+	 * Params: String - text to be altered numeric - 1 for accented->unaccented ; 2 for unaccented->accented
 	 */
-	
+
 	public static final String FUNC_unaccent_string = "unaccent_string";
-	
+
 	private final VLookup editor;
 	private final MLookup lookup;
 	private final String[] searchColumns;
 	private final String[] searchColumnsSQL;
 
 	public VLookupAutoCompleter(JTextComponent comp, VLookup editor,
-			MLookup lookup) {
+			MLookup lookup)
+	{
 		super(comp);
 		this.editor = editor;
 		this.lookup = lookup;
@@ -64,13 +65,18 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 		MTable table = MTable.get(Env.getCtx(), lookup.getTableName());
 		List<String> searchList = new ArrayList<String>();
 		List<String> searchSQLList = new ArrayList<String>();
-		for (MColumn c : table.getColumns(false)) {
+		for (MColumn c : table.getColumns(false))
+		{
 			if (DisplayType.isText(c.getAD_Reference_ID())
-					&& (c.isIdentifier() || c.isSelectionColumn())) {
+					&& (c.isIdentifier() || c.isSelectionColumn()))
+			{
 				searchList.add(c.getColumnName());
-				if (c.isVirtualColumn()) {
+				if (c.isVirtualColumn())
+				{
 					searchSQLList.add(c.getColumnSQL());
-				} else {
+				}
+				else
+				{
 					searchSQLList.add(c.getColumnName());
 				}
 			}
@@ -82,7 +88,8 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 		// Set Popup Mininum Chars:
 		final int popupMinimumChars = POWrapper.create(table, I_AD_Table.class)
 				.getACTriggerLength();
-		if (popupMinimumChars > 0) {
+		if (popupMinimumChars > 0)
+		{
 			setPopupMinimumChars(popupMinimumChars);
 		}
 
@@ -99,15 +106,19 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 	}
 
 	@Override
-	protected Object fetchUserObject(ResultSet rs) throws SQLException {
+	protected Object fetchUserObject(ResultSet rs) throws SQLException
+	{
 		final boolean isNumber = lookup.getColumnName().endsWith("_ID");
 
 		String name = rs.getString(3);
-		if (isNumber) {
+		if (isNumber)
+		{
 			int key = rs.getInt(1);
 			KeyNamePair p = new KeyNamePair(key, name);
 			return p;
-		} else {
+		}
+		else
+		{
 			String value = rs.getString(2);
 			ValueNamePair p = new ValueNamePair(value, name);
 			return p;
@@ -126,7 +137,7 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 		{
 			search = searchInput;
 		}
-		
+
 		String searchSQL = search;
 		if (!searchSQL.startsWith("%"))
 		{
@@ -151,7 +162,7 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 				{
 					sql_where.append(" OR ");
 				}
-				sql_where.append("UPPER("+FUNC_unaccent_string+"(");
+				sql_where.append("UPPER(" + FUNC_unaccent_string + "(");
 				if (searchColumns[i].equals(searchColumnsSQL[i]))
 				{
 					sql_select.append(lookup.getTableName()).append(".").append(searchColumnsSQL[i]).append(" AS ").append(searchColumns[i]);
@@ -162,12 +173,12 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 					sql_select.append(searchColumnsSQL[i]).append(" AS ").append(searchColumns[i]);
 					sql_where.append(lookup.getTableName()).append(".").append(searchColumns[i]);
 				}
-				sql_where.append(", 1)) LIKE UPPER("+FUNC_unaccent_string+"(?, 1)) ");
+				sql_where.append(", 1)) LIKE UPPER(" + FUNC_unaccent_string + "(?, 1)) ");
 				// .append(") LIKE "+DB.TO_STRING(searchSQL));
 				params.add(searchSQL);
 			}
 			// Full generated identifier search
-			sql_where.append(" OR UPPER("+FUNC_unaccent_string+"(ZZ_DisplayName, 1)) LIKE UPPER("+FUNC_unaccent_string+"(?, 1))");
+			sql_where.append(" OR UPPER(" + FUNC_unaccent_string + "(ZZ_DisplayName, 1)) LIKE UPPER(" + FUNC_unaccent_string + "(?, 1))");
 			params.add(searchSQL);
 			//
 			sql_where.append(") ");
@@ -234,33 +245,43 @@ public class VLookupAutoCompleter extends FieldAutoCompleter {
 	}
 
 	@Override
-	public boolean isEnabled() {
+	public boolean isEnabled()
+	{
 		return this.textBox.hasFocus();
 	}
 
 	@Override
-	public void setUserObject(Object userObject) {
+	public void setUserObject(Object userObject)
+	{
 		String textOld = textBox.getText();
 		int caretPosition = textBox.getCaretPosition();
 		//
 		super.setUserObject(userObject);
 		// Object valueOld = editor.getValue();
 		Object value = null;
-		if (userObject == null) {
+		if (userObject == null)
+		{
 			editor.setValue(null);
-		} else if (userObject instanceof ValueNamePair) {
-			ValueNamePair vnp = (ValueNamePair) userObject;
+		}
+		else if (userObject instanceof ValueNamePair)
+		{
+			ValueNamePair vnp = (ValueNamePair)userObject;
 			value = vnp.getValue();
-		} else if (userObject instanceof KeyNamePair) {
-			KeyNamePair knp = (KeyNamePair) userObject;
+		}
+		else if (userObject instanceof KeyNamePair)
+		{
+			KeyNamePair knp = (KeyNamePair)userObject;
 			value = knp.getKey();
-		} else {
+		}
+		else
+		{
 			log.warning("Not supported - " + userObject + ", class="
 					+ userObject.getClass());
 			return;
 		}
 		editor.actionCombo(value);
-		if (value == null) {
+		if (value == null)
+		{
 			textBox.setText(textOld);
 			textBox.setCaretPosition(caretPosition);
 		}

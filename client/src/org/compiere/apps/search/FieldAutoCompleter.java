@@ -54,8 +54,7 @@ import org.compiere.util.DB;
 import org.compiere.util.Util;
 
 /**
- * @author Santhosh Kumar T - santhosh@in.fiorano.com <li>Initial contribution - http
- *         ://www.jroller.com/santhosh/date/20050620#file_path_autocompletion
+ * @author Santhosh Kumar T - santhosh@in.fiorano.com <li>Initial contribution - http ://www.jroller.com/santhosh/date/20050620#file_path_autocompletion
  * @author Teo Sarca <li>added timed triggering <li>refactored <li>friendly database lookup
  * @author Cristina Ghita , www.arhipac.ro <li>refactored
  */
@@ -248,7 +247,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 		}
 		textBox.requestFocus();
 	}
-	
+
 	protected void hidePopup()
 	{
 		popup.setVisible(false);
@@ -307,8 +306,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 	};
 
 	/**
-	 * Selects the next item in the list. It won't change the selection if the currently selected item is already the
-	 * last item.
+	 * Selects the next item in the list. It won't change the selection if the currently selected item is already the last item.
 	 */
 	protected void selectNextPossibleValue()
 	{
@@ -322,8 +320,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 	}
 
 	/**
-	 * Selects the previous item in the list. It won't change the selection if the currently selected item is already
-	 * the first item.
+	 * Selects the previous item in the list. It won't change the selection if the currently selected item is already the first item.
 	 */
 	protected void selectPreviousPossibleValue()
 	{
@@ -430,7 +427,6 @@ public abstract class FieldAutoCompleter implements MouseListener
 		}
 
 		// If the list has only one item, but that item is not equals with
-		// m_city
 		// return false to not show any popup
 		userObject = getUserOject();
 		if (!truncated && list.size() == 1 && userObject != null
@@ -439,15 +435,6 @@ public abstract class FieldAutoCompleter implements MouseListener
 			log.finest("nothing to do 1");
 			return false;
 		}
-
-		// If there is one result then we select it - CR088
-		// metas: tsa: commented per
-		// http://dewiki908/mediawiki/index.php/Ti54_02027:_Autocomplete_bei_einem_Treffer_anpassen_%282011082210000075%29
-		// if (!truncated && list.size() == 1)
-		// {
-		// setUserObject(list.get(0));
-		// return false;
-		// }
 
 		// if first list item matched then select it
 		if (isMatching(list.get(0), search))
@@ -537,7 +524,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 			return;
 		}
 
-		popup.setVisible(false); // ti54_02027: tsa: hide popup when an item is selected
+		popup.setVisible(false); // hide popup when an item is selected
 
 		Object selected = listBox.getSelectedValue();
 		setUserObject(selected);
