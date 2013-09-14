@@ -54,6 +54,7 @@ import org.zkoss.zk.ui.event.Events;
  * Web UI port of search type VLookup
  *
  * @author Ashley G Ramdass
+ * @author Cristina Ghita, metas.ro - add autocomplete for search fields
  *
  */
 public class WSearchEditor extends WEditor implements ContextMenuListener, ValueChangeListener, IZoomableEditor
