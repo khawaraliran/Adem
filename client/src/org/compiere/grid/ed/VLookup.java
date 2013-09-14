@@ -686,7 +686,8 @@ public class VLookup extends JComponent
 		
 		if (mField != null && mField.isAutocomplete()
 				&& m_lookup instanceof MLookup
-				&& m_lookup.getDisplayType() == DisplayType.Search) {
+				&& m_lookup.getDisplayType() == DisplayType.Search)
+		{
 			enableLookupAutocomplete();
 		}
 	}   //  setField
