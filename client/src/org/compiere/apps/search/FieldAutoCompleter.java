@@ -13,10 +13,14 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,    *
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *                                                                            *
- * @author <autor name>, <autor@email.com>                                    *
- * BF [ <number> ] or FR [ <number> ] Description about the bug tracker       *
- * URL of Tracker                                                             *
- *  			                                                       *
+ * @author Santhosh Kumar T, santhosh@in.fiorano.com                          *
+ * <li>Initial contribution  												  *
+ * <li>http ://www.jroller.com/santhosh/date/20050620#file_path_autocompletion*
+ * @author Teo Sarca <li>added timed triggering <li>refactored  			  * 
+ *                   <li>friendly database lookup							  *	
+ * @author Cristina Ghita , www.arhipac.ro <li>refactored					  *
+ * @author Cristina Ghita , c.ghita@metas.ro , METAS GROUP <li>refactored 	  *
+ *  			                                                       		  *
  *****************************************************************************/
 package org.compiere.apps.search;
 
@@ -57,16 +61,9 @@ import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Util;
 
-/**
- * @author Santhosh Kumar T - santhosh@in.fiorano.com <li>Initial contribution - http ://www.jroller.com/santhosh/date/20050620#file_path_autocompletion
- * @author Teo Sarca <li>added timed triggering <li>refactored <li>friendly database lookup
- * @author Cristina Ghita , www.arhipac.ro <li>refactored
- */
 public abstract class FieldAutoCompleter implements MouseListener
 {
-	private static final String AUTOCOMPLETER = FieldAutoCompleter.class
-			.getCanonicalName()
-			+ "AUTOCOMPLETER"; // NOI18N
+	private static final String AUTOCOMPLETER = FieldAutoCompleter.class.getCanonicalName()	+ "AUTOCOMPLETER"; // NOI18N
 	private static final int PopupDelayMillis = 500;
 	/** Minimum chars required to popup */
 	public static final int DEFAULT_PopupMinimumChars = 3;
@@ -171,8 +168,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 			}
 			else
 			{
-				completer
-						.acceptedListItem(completer.listBox.getSelectedValue());
+				completer.acceptedListItem(completer.listBox.getSelectedValue());
 			}
 		}
 	};
@@ -191,6 +187,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 
 		public void changedUpdate(DocumentEvent e)
 		{
+			// nothing to do
 		}
 	};
 
@@ -233,8 +230,6 @@ public abstract class FieldAutoCompleter implements MouseListener
 			int x = 0;
 			try
 			{
-				// int pos = Math.min(textBox.getCaret().getDot(),
-				// textBox.getCaret().getMark());
 				x = textBox.getUI().modelToView(textBox, 0).x;
 			}
 			catch (BadLocationException e)

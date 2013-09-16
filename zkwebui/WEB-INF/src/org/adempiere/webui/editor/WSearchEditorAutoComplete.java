@@ -14,8 +14,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *                                                                            *
  * @author Cristina Ghita, c.ghita@metas.ro,  METAS GROUP  					  *
- * FR ADEMPIERE-191 Autocomplete functionality       							  *
- * https://adempiere.atlassian.net/browse/ADEMPIERE-190                                                             *
+ * FR ADEMPIERE-191 Autocomplete functionality       						  *
+ * https://adempiere.atlassian.net/browse/ADEMPIERE-190                       *
  *  			                                                       		  *
  *****************************************************************************/
 package org.adempiere.webui.editor;
