@@ -196,7 +196,7 @@ public abstract class FieldAutoCompleter implements MouseListener
 		if (!isEnabled())
 			return;
 		log.finest("showPopupDelayed..");
-		// Popup only if we a minimum number of characters - 2009_0017_AP1_G42_CR048
+		// Popup only if we a minimum number of characters 
 		final String search = textBox.getText();
 		if (search != null && search.trim().length() < m_popupMinimumChars)
 		{
