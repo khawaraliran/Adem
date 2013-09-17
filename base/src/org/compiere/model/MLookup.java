@@ -263,6 +263,10 @@ public final class MLookup extends Lookup implements Serializable
 		}
 	}   //  containsKey
 
+	public MLookupInfo getLookupInfo() {
+		return m_info;
+	}
+	
 	/**
 	 * @return  a string representation of the object.
 	 */

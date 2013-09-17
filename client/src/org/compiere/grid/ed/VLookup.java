@@ -683,6 +683,13 @@ public class VLookup extends JComponent
 		
 		if (m_mField != null)
 			FieldRecordInfo.addMenu(this, popupMenu);
+		
+		if (mField != null && mField.isAutocomplete()
+				&& m_lookup instanceof MLookup
+				&& m_lookup.getDisplayType() == DisplayType.Search)
+		{
+			enableLookupAutocomplete();
+		}
 	}   //  setField
 
 	@Override
@@ -773,7 +780,7 @@ public class VLookup extends JComponent
 	 *  </pre>
 	 *  @param value new value
 	 */
-	private void actionCombo (Object value)
+	protected void actionCombo (Object value)
 	{
 		log.fine("Value=" + value);
 		try
@@ -1659,5 +1666,13 @@ public class VLookup extends JComponent
 		m_stopediting = stopediting;
 	}
 
+	public void enableLookupAutocomplete()
+	{
+		if (m_lookup instanceof MLookup
+				&& m_lookup.getDisplayType() == DisplayType.Search)
+		{
+			new VLookupAutoCompleter(this.m_text, this, (MLookup) m_lookup);
+		}
+	}
 
 }	//	VLookup

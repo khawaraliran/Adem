@@ -48,12 +48,14 @@ import org.compiere.util.Msg;
 import org.compiere.util.Util;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.Events;
+import org.zkoss.zk.ui.event.InputEvent;
 
 /**
  * Search Editor for web UI.
  * Web UI port of search type VLookup
  *
  * @author Ashley G Ramdass
+ * @author Cristina Ghita, c.ghita@metas.ro, METAS GROUP - add autocomplete for search fields
  *
  */
 public class WSearchEditor extends WEditor implements ContextMenuListener, ValueChangeListener, IZoomableEditor
@@ -66,6 +68,7 @@ public class WSearchEditor extends WEditor implements ContextMenuListener, Value
 	private WEditorPopupMenu	popupMenu;
     private Object              value;
     private InfoPanel			infoPanel = null;
+    private WSearchEditorAutoComplete autoComplete = null;
 
 	private static CLogger log = CLogger.getCLogger(WSearchEditor.class);
 
@@ -77,6 +80,13 @@ public class WSearchEditor extends WEditor implements ContextMenuListener, Value
 		
 		if (lookup != null)
 			columnName = lookup.getColumnName();
+		
+		if (gridField != null && gridField.isAutocomplete()
+				&& lookup instanceof MLookup
+				&& lookup.getDisplayType() == DisplayType.Search)
+		{
+			autoComplete = new WSearchEditorAutoComplete(this, (MLookup)lookup);
+		}
 		
 		init();
 	}
@@ -171,7 +181,7 @@ public class WSearchEditor extends WEditor implements ContextMenuListener, Value
 		{
 			WFieldRecordInfo.addMenu(popupMenu);
 		}
-
+		
 		return;
 	}
 
@@ -215,8 +225,12 @@ public class WSearchEditor extends WEditor implements ContextMenuListener, Value
 
 	public void onEvent(Event e)
 	{
+
 		if (Events.ON_CHANGE.equals(e.getName()) )
 		{
+			autoComplete.setValue(getComponent().getText());
+			autoComplete.setSearchText(getComponent().getText());
+			
 			if (infoPanel != null)
 		 	{
 				infoPanel.detach();
