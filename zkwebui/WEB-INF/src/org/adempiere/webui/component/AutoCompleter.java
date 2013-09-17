@@ -1,18 +1,22 @@
 /******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
- * Copyright (C) 1999-2006 ComPiere, Inc. All Rights Reserved.                *
- * This program is free software; you can redistribute it and/or modify it    *
- * under the terms version 2 of the GNU General Public License as published   *
- * by the Free Software Foundation. This program is distributed in the hope   *
- * that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           *
+ * Copyright (C) <Company or Author Name> All Rights Reserved.                *
+ * This program is free software; you can redistribute it and/or              *
+ * modify it under the terms of the GNU General Public License                *
+ * as published by the Free Software Foundation; either version 2             *
+ * of the License, or (at your option) any later version.                     *
+ * This program is distributed in the hope that it will be useful,            *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                       *
  * See the GNU General Public License for more details.                       *
  * You should have received a copy of the GNU General Public License along    *
  * with this program; if not, write to the Free Software Foundation, Inc.,    *
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
- * For the text or an alternative of this public license, you may reach us    *
- * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
- * or via info@compiere.org or http://www.compiere.org/license.html           *
+ *                                                                            *
+ * @author Cristina Ghita, c.ghita@metas.ro,  METAS GROUP  					  *
+ * FR ADEMPIERE-191 Autocomplete functionality       						  *
+ * https://adempiere.atlassian.net/browse/ADEMPIERE-190                       *
+ *  			                                                       		  *
  *****************************************************************************/
 package org.adempiere.webui.component;
 
@@ -27,10 +31,6 @@ import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.event.InputEvent;
 import org.zkoss.zul.Timer;
 
-/**
- * @author Cristina Ghita, metas.ro
- * 
- */
 public abstract class AutoCompleter extends AutoComplete implements EventListener
 {
 

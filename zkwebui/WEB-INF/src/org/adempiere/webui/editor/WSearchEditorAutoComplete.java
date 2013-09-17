@@ -63,6 +63,7 @@ public class WSearchEditorAutoComplete extends AutoCompleter
 
 	public WSearchEditorAutoComplete(WSearchEditor editor, MLookup lookup)
 	{
+		super();
 		this.editor = editor;
 		this.lookup = lookup;
 		//
