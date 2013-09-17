@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
@@ -112,8 +113,8 @@ public class ProcessInfo implements Serializable
 	/**	Log Info					*/
 	private ArrayList<ProcessInfoLog> m_logs = null;
 
-	/**	Log Info					*/
-	private ProcessInfoParameter[]	m_parameter = null;
+	/**	Parameters					*/
+	private ArrayList<ProcessInfoParameter>	m_parameter = null;
 	
 	/** Transaction Name 			*/
 	private String				m_transactionName = null;
@@ -127,7 +128,7 @@ public class ProcessInfo implements Serializable
 	/**
 	 * If the process fails with an Throwable, the Throwable is caught and stored here
 	 */
-	// mo73_03152: motivation to add this is that now in ait we can assert that a certain exception was thrown.
+	// 03152: motivation to add this is that now in ait we can assert that a certain exception was thrown.
 	private Throwable			m_throwable = null;
 	
 	/**
@@ -512,7 +513,12 @@ public class ProcessInfo implements Serializable
 	 */
 	public ProcessInfoParameter[] getParameter()
 	{
-		return m_parameter;
+		if (m_parameter == null)
+			return null;
+		
+		ProcessInfoParameter[] ret = new ProcessInfoParameter[m_parameter.size()];
+		m_parameter.toArray(ret);
+		return ret;
 	}	//	getParameter
 
 	/**
@@ -521,7 +527,7 @@ public class ProcessInfo implements Serializable
 	 */
 	public void setParameter (ProcessInfoParameter[] parameter)
 	{
-		m_parameter = parameter;
+		m_parameter = new ArrayList<ProcessInfoParameter>(Arrays.asList(parameter));
 	}	//	setParameter
 
 	
@@ -680,6 +686,19 @@ public class ProcessInfo implements Serializable
 	{
 		return m_pdf_report;
 	}	
+	
+	public void addParameter(String name, Object value, String info)
+	{
+		if (value == null)
+			return;
+		if (value instanceof String && Util.isEmpty((String) value))
+			return;
+		if (m_parameter == null)
+			m_parameter = new ArrayList<ProcessInfoParameter>();
+		ProcessInfoParameter para = new ProcessInfoParameter(name, value, null, info, null);
+		m_parameter.add(para);
+		return;
+	}
 		
 // metas: begin
 	/** Org_ID        				*/
@@ -708,7 +727,7 @@ public class ProcessInfo implements Serializable
 // metas: end
 
 	//metas: t.schoeneberg@metas.de
-	//mo73_03152
+	//03152
 	/**
 	 * If the process has failed with a Throwable, that Throwable can be retrieved using this getter.
 	 * 
@@ -726,7 +745,7 @@ public class ProcessInfo implements Serializable
 	// metas: end
 	
 	//metas: cg
-	//mo73_03040
+	//03040
 	/**
 	 * @return the m_windowNo
 	 */

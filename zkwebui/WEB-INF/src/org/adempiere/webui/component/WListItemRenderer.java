@@ -168,6 +168,8 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 			listcell = getCellComponent(table, field, rowIndex, colIndex);
 			listcell.setParent(item);
 			listcell.addEventListener(Events.ON_DOUBLE_CLICK, cellListener);
+			listcell.setAttribute("zk_component_ID", "ListItem_R" + rowIndex + "_C" + colIndex);
+
 			colIndex++;
 		}
 
@@ -250,6 +252,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				if (isCellEditable)
 				{
 					Datebox datebox = new Datebox();
+					datebox.setFormat(dateFormat.toPattern());
 					datebox.setValue(new Date(((Timestamp)field).getTime()));
 					datebox.addEventListener(Events.ON_CHANGE, this);
 					listcell.appendChild(datebox);
@@ -295,6 +298,8 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 			listcell.setLabel("");
 			listcell.setValue("");
 		}
+
+		listcell.setAttribute("zk_component_ID", "ListItem_Cell_" + rowIndex + "_" + columnIndex);
 
 		return listcell;
 	}
@@ -379,7 +384,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
         	if (classType != null && classType.isAssignableFrom(IDColumn.class))
         	{
         		header = new ListHeader("");
-        		header.setWidth("20px");
+        		header.setWidth("35px");
         	}
         	else
         	{
@@ -427,6 +432,8 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
                 header.setLabel(headerText);
             }
         }
+
+        header.setAttribute("zk_component_ID", "ListItem_Header_C" + headerIndex);
 
 		return header;
 	}
@@ -571,18 +578,21 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 				tableColumn = m_tableColumns.get(0);
 				for (int i = 0; i < cnt; i++) {
 					IDColumn idcolumn = (IDColumn) table.getValueAt(i, 0);
-					Listitem item = table.getItemAtIndex(i);
-
-					value = item.isSelected();
-					Boolean old = idcolumn.isSelected();
-
-					if (!old.equals(value)) {
-						vcEvent = new TableValueChangeEvent(source,
-								tableColumn.getHeaderValue().toString(),
-								i, 0,
-								old, value);
-
-						fireTableValueChange(vcEvent);
+					if (idcolumn != null)
+					{
+						Listitem item = table.getItemAtIndex(i);
+	
+						value = item.isSelected();
+						Boolean old = idcolumn.isSelected();
+	
+						if (!old.equals(value)) {
+							vcEvent = new TableValueChangeEvent(source,
+									tableColumn.getHeaderValue().toString(),
+									i, 0,
+									old, value);
+	
+							fireTableValueChange(vcEvent);
+						}
 					}
 				}
 			}
