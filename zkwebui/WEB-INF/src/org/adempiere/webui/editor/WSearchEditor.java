@@ -106,10 +106,10 @@ public class WSearchEditor extends WEditor implements ContextMenuListener, Value
 			m_columnName = m_lookup.getColumnName();
 		
 		if (gridField != null && gridField.isAutocomplete()
-				&& lookup instanceof MLookup
-				&& lookup.getDisplayType() == DisplayType.Search)
+				&& m_lookup instanceof MLookup
+				&& m_lookup.getDisplayType() == DisplayType.Search)
 		{
-			autoComplete = new WSearchEditorAutoComplete(this, (MLookup)lookup);
+			autoComplete = new WSearchEditorAutoComplete(this, (MLookup)m_lookup);
 		}
 		
 		init();
