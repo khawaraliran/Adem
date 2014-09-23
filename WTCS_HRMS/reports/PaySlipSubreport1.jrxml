@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- $Id: PaySlipSubreport1.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="PaySlipSubreport1"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="535"
+		 pageHeight="802"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<subDataset name="attendence" >
+
+		<queryString><![CDATA[SELECT cct.name AS CategoryName,cc.name AS ConceptName,hrm.qty,hrm.HR_Process_ID
+FROM HR_Movement hrm
+JOIN HR_Concept_Category cc ON (cc.HR_Concept_Category_ID = hrm.HR_Concept_Category_ID)
+JOIN HR_Concept cct ON (cct.HR_Concept_ID = hrm.HR_Concept_ID)
+WHERE hrm.C_BPartner_ID=1000030 AND hrm.HR_PRocess_ID=1000009 AND 
+(hrm.HR_Concept_Category_ID =(SELECT HR_Concept_Category_ID FROM HR_Concept_Category hrcc WHERE hrcc.name='Attendence' ))
+AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Working Days' OR 
+hrc.name='Absent Days' OR hrc.name='Weekly off' OR  hrc.name='Present Days' OR
+  hrc.name='Late Comming'))]]></queryString>
+
+		<field name="categoryname" class="java.lang.String"/>
+		<field name="conceptname" class="java.lang.String"/>
+		<field name="qty" class="java.math.BigDecimal"/>
+		<field name="hr_process_id" class="java.math.BigDecimal"/>
+
+	</subDataset>
+
+	<parameter name="C_BPartner_ID" isForPrompting="true" class="java.math.BigDecimal"/>
+	<parameter name="HR_Process_ID" isForPrompting="true" class="java.math.BigDecimal"/>
+	<queryString><![CDATA[SELECT CASE 
+WHEN cct.name='ActualPresentedDays' THEN 'Actual Present Days' 
+WHEN cct.name='PresentedWeeklyOffs' THEN 'Presented Weekly Offs'
+ELSE cct.name END AS CategoryName, 
+cc.name AS ConceptName, 
+(CASE WHEN cct.columntype='A' Then (COALESCE(hrm.amount,0)) ELSE (COALESCE(hrm.qty,0)) END) AS qty, hrm.HR_Process_ID
+FROM HR_Movement hrm
+JOIN HR_Concept_Category cc ON (cc.HR_Concept_Category_ID = hrm.HR_Concept_Category_ID)
+JOIN HR_Concept cct ON (cct.HR_Concept_ID = hrm.HR_Concept_ID)
+WHERE hrm.C_BPartner_ID=$P{C_BPartner_ID} AND hrm.HR_Process_ID=$P{HR_Process_ID} AND 
+(hrm.HR_Concept_Category_ID =(SELECT HR_Concept_Category_ID FROM HR_Concept_Category hrcc WHERE hrcc.name='Attendence' ))
+AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Working Days' OR 
+hrc.name='Absent Days' OR hrc.name='Weekly off' OR  hrc.name='Present Days' OR hrc.name='Late Comming' OR hrc.name='PresentedWeeklyOffs' OR hrc.name='ActualPresentedDays'))]]></queryString>
+
+	<field name="categoryname" class="java.lang.String"/>
+	<field name="conceptname" class="java.lang.String"/>
+	<field name="qty" class="java.math.BigDecimal"/>
+	<field name="hr_process_id" class="java.math.BigDecimal"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="52"  isSplitAllowed="true" >
+				<crosstab >
+					<reportElement
+						x="4"
+						y="0"
+						width="521"
+						height="51"
+						key="crosstab-1"/>
+					<crosstabHeaderCell>						<cellContents backcolor="#ECF26B" mode="Transparent">
+					<box></box>
+				<staticText>
+					<reportElement
+						x="2"
+						y="0"
+						width="88"
+						height="15"
+						key="staticText-1"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Bottom">
+						<font pdfFontName="Helvetica-BoldOblique" size="10" isBold="true" isItalic="true"/>
+					</textElement>
+				<text><![CDATA[Attendence]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="17"
+						width="100"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+					</crosstabHeaderCell>					<rowGroup name="categoryname" width="100" totalPosition="End">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{categoryname}]]></bucketExpression>
+						</bucket>
+						<crosstabRowHeader>
+						<cellContents backcolor="#EAF455" mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="100"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{categoryname}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+						</crosstabRowHeader>
+					</rowGroup>
+					<columnGroup name="conceptname" height="19" totalPosition="End" headerPosition="Center">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{conceptname}]]></bucketExpression>
+						</bucket>
+						<crosstabColumnHeader>
+						<cellContents backcolor="#ECF442" mode="Transparent">
+					<box></box>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="17"
+						width="102"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</line>
+						</cellContents>
+						</crosstabColumnHeader>
+					</columnGroup>
+
+					<measure name="qty_Count" class="java.math.BigDecimal">
+						<measureExpression><![CDATA[$F{qty}]]></measureExpression>
+					</measure>
+					<crosstabCell width="102" height="16">
+						<cellContents backcolor="#EDEB3D" mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="102"
+						height="15"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{qty_Count}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="0" height="16" columnTotalGroup="conceptname">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="102" height="0" rowTotalGroup="categoryname">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="0" height="0" rowTotalGroup="categoryname" columnTotalGroup="conceptname">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<whenNoDataCell>						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</whenNoDataCell>					</crosstab>
+			</band>
+		</summary>
+</jasperReport>

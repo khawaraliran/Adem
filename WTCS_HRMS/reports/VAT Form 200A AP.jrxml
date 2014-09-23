@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: VAT Form 200A AP.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="VAT Form 200A AP" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<parameter name="AD_Client_ID" class="java.math.BigDecimal"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT cs.tax_division,cs.tax_circle,cs.registration_number,c.name,cs.registered_address ,vp.C_Period_ID,vp.startdate,
+op.enddate
+FROM WTC_ClientStatutory cs, AD_Client c ,
+
+( SELECT cp1.C_Period_ID,cp1.startdate
+    FROM C_Period cp1
+    WHERE cp1.C_Year_ID = (SELECT cc.C_Year_ID
+                           FROM C_Year cc
+                           WHERE  cc.fiscalyear= CAST(date_part('year',CAST($P{FromDate} as date)) as text)
+                           )
+    AND  ( $P{FromDate} BETWEEN cp1.startdate and cp1.enddate )
+)  vp ,
+
+( SELECT cp.enddate
+   FROM C_Period cp
+   WHERE cp.C_Year_ID = ( SELECT cc1.C_Year_ID
+                            FROM C_Year cc1
+                            WHERE cc1.fiscalyear= CAST(date_part('year',CAST($P{ToDate} as date) ) as text)
+                        )
+    AND ( $P{ToDate} BETWEEN cp.startdate and cp.enddate )
+)  op
+
+WHERE cs.registration_name = 'VAT' AND c.AD_Client_ID=$P{AD_Client_ID} AND c.AD_Client_ID=cs.AD_Client_ID;]]>
+	</queryString>
+	<field name="tax_division" class="java.lang.String"/>
+	<field name="tax_circle" class="java.lang.String"/>
+	<field name="registration_number" class="java.lang.String"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="registered_address" class="java.lang.String"/>
+	<field name="startdate" class="java.sql.Timestamp"/>
+	<field name="enddate" class="java.sql.Timestamp"/>
+	<field name="C_Period_ID" class="java.math.BigDecimal"/>
+	<variable name="InputCredit" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[]]></variableExpression>
+	</variable>
+	<variable name="TotalTaxAmt" class="java.math.BigDecimal"/>
+	<variable name="AmountToPay" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[($V{TotalTaxAmt}).add($V{InputCredit})]]></variableExpression>
+	</variable>
+	<variable name="payable" class="java.math.BigDecimal"/>
+	<variable name="FinalAmountToPay" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[(($V{payable}.compareTo(java.math.BigDecimal.ZERO) == -1 ) ? java.math.BigDecimal.ZERO :$V{payable}).subtract($V{AmountToPay})]]></variableExpression>
+	</variable>
+	<variable name="TaxToPay" class="java.math.BigDecimal">
+		<initialValueExpression><![CDATA[]]></initialValueExpression>
+	</variable>
+	<variable name="Carryforward" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="196" splitType="Stretch">
+			<rectangle>
+				<reportElement key="rectangle-2" x="263" y="62" width="258" height="20"/>
+			</rectangle>
+			<rectangle>
+				<reportElement key="rectangle-1" x="0" y="98" width="535" height="91"/>
+				<graphicElement>
+					<pen lineWidth="1.0"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement key="staticText-1" x="0" y="28" width="535" height="34"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[FORM VAT 200 A
+MONTHLY RETURN FOR VALUE ADDED TAX]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-2" x="0" y="2" width="78" height="15"/>
+				<textElement>
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Division ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" x="0" y="18" width="78" height="15"/>
+				<textElement>
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[CIRCLE   ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-4" x="0" y="67" width="95" height="15"/>
+				<textElement textAlignment="Justified">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TIN]]></text>
+			</staticText>
+			<elementGroup>
+				<staticText>
+					<reportElement key="staticText-6" mode="Opaque" x="274" y="83" width="46" height="14" isPrintInFirstWholeBand="true"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<text><![CDATA[From :]]></text>
+				</staticText>
+				<staticText>
+					<reportElement key="staticText-7" mode="Opaque" x="408" y="83" width="46" height="14" isPrintInFirstWholeBand="true"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="false" pdfFontName="Helvetica"/>
+					</textElement>
+					<text><![CDATA[To :]]></text>
+				</staticText>
+			</elementGroup>
+			<staticText>
+				<reportElement key="staticText-8" x="7" y="105" width="108" height="16"/>
+				<textElement/>
+				<text><![CDATA[Name Of Enterprise]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-9" x="7" y="130" width="50" height="16"/>
+				<textElement/>
+				<text><![CDATA[Address]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-10" x="7" y="168" width="30" height="16"/>
+				<textElement/>
+				<text><![CDATA[FAX :]]></text>
+			</staticText>
+			<line>
+				<reportElement key="line-4" x="38" y="182" width="164" height="1"/>
+			</line>
+			<line>
+				<reportElement key="line-5" x="351" y="182" width="164" height="1"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-11" x="299" y="168" width="52" height="16"/>
+				<textElement/>
+				<text><![CDATA[Phone  :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-5" mode="Opaque" x="272" y="63" width="243" height="18"/>
+				<box leftPadding="1" rightPadding="1"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Period by this Return]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="95" y="3" width="151" height="15"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[":  "+$F{tax_division}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="95" y="18" width="100" height="18"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[":  "+$F{tax_circle}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="82" width="149" height="16"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{registration_number}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="127" y="105" width="399" height="18"/>
+				<textElement>
+					<font isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[": "+$F{name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement key="textField" mode="Opaque" x="127" y="130" width="399" height="18"/>
+				<textElement>
+					<font isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[": "+$F{registered_address}]]></textFieldExpression>
+			</textField>
+			<elementGroup/>
+			<line direction="BottomUp">
+				<reportElement key="line-6" x="1" y="123" width="534" height="1"/>
+			</line>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="318" y="85" width="77" height="14"/>
+				<textElement/>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{startdate}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="443" y="85" width="92" height="15"/>
+				<textElement/>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{enddate}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="327" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-12" x="8" y="9" width="255" height="15"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Input Tax Credit From Previous Month ]]></text>
+			</staticText>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-1" positionType="Float" x="12" y="89" width="497" height="41"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="VATOnly">
+					<subreportParameterExpression><![CDATA["N"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ToDate">
+					<subreportParameterExpression><![CDATA[$F{enddate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WTC_TaxIndicator_ID">
+					<subreportParameterExpression><![CDATA[$P{WTC_TaxIndicator_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_Period_ID">
+					<subreportParameterExpression><![CDATA[$F{C_Period_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_Client_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Client_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="isSoTrx">
+					<subreportParameterExpression><![CDATA["Y"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FromDate">
+					<subreportParameterExpression><![CDATA[$F{startdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="TotalTaxAmt" toVariable="payable"/>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "VAT_FORM_200A_SubReport.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-2" positionType="Float" x="7" y="32" width="497" height="41"/>
+				<subreportParameter name="VATOnly">
+					<subreportParameterExpression><![CDATA["Y"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WTC_TaxIndicator_ID">
+					<subreportParameterExpression><![CDATA[$P{WTC_TaxIndicator_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ToDate">
+					<subreportParameterExpression><![CDATA[$F{enddate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_Period_ID">
+					<subreportParameterExpression><![CDATA[$F{C_Period_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_Client_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Client_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="isSoTrx">
+					<subreportParameterExpression><![CDATA["N"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FromDate">
+					<subreportParameterExpression><![CDATA[$F{startdate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="TotalTaxAmt" toVariable="TotalTaxAmt"/>
+				<returnValue subreportVariable="InputCredit" toVariable="InputCredit"/>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "VAT_FORM_200A_SubReport.jasper"]]></subreportExpression>
+			</subreport>
+			<staticText>
+				<reportElement key="staticText-13" positionType="Float" x="19" y="147" width="217" height="18"/>
+				<textElement/>
+				<text><![CDATA[Amount To Pay ( Output Tax - Input Tax)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-14" positionType="Float" x="8" y="175" width="527" height="13"/>
+				<textElement>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ Payment / Allocation Details:]]></text>
+			</staticText>
+			<line>
+				<reportElement key="line-7" positionType="Float" x="11" y="142" width="524" height="1" forecolor="#150909"/>
+			</line>
+			<line>
+				<reportElement key="line-8" positionType="Float" x="11" y="166" width="524" height="1" forecolor="#150909"/>
+			</line>
+			<textField evaluationTime="Band">
+				<reportElement x="433" y="9" width="100" height="20"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{InputCredit} == null ? java.math.BigDecimal.ZERO : $V{InputCredit}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement positionType="Float" x="0" y="198" width="533" height="50"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WTC_TaxIndicator_ID">
+					<subreportParameterExpression><![CDATA[$P{WTC_TaxIndicator_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ToDate">
+					<subreportParameterExpression><![CDATA[$P{ToDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FromDate">
+					<subreportParameterExpression><![CDATA[$P{FromDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="Carryforward" toVariable="Carryforward"/>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "VAT_FORM_2000AP_Payments_subReport.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport>
+				<reportElement positionType="Float" x="1" y="270" width="407" height="54"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WTC_TaxIndicator_ID">
+					<subreportParameterExpression><![CDATA[$P{WTC_TaxIndicator_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ToDate">
+					<subreportParameterExpression><![CDATA[$P{ToDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FromDate">
+					<subreportParameterExpression><![CDATA[$P{FromDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "VAT_FROM_2000AP_Payment_Allocation.jasper"]]></subreportExpression>
+			</subreport>
+			<staticText>
+				<reportElement key="staticText-30" positionType="Float" x="1" y="256" width="170" height="14"/>
+				<textElement verticalAlignment="Bottom">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ Allocation Details:]]></text>
+			</staticText>
+			<textField evaluationTime="Band">
+				<reportElement x="295" y="143" width="100" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{InputCredit}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Band">
+				<reportElement x="297" y="168" width="100" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalTaxAmt}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Band" pattern="###0.00;-###0.00" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="435" y="144" width="100" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[($V{payable}==null ? java.math.BigDecimal.ZERO : $V{payable}).subtract(($V{InputCredit}.add( $V{TotalTaxAmt} )))]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Band">
+				<reportElement x="220" y="142" width="100" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{payable}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="282" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-37" x="11" y="4" width="514" height="56"/>
+				<textElement/>
+				<text><![CDATA[        If Total Amount of Input Tax  exceeds Total Amount of output tax (or the payament and adjustment put together exceed the tax due (Amount To Pay ))and you have declared exports and not adjusting the excess amount against tax liability if any under the CST Act, you can claim a refund Given Below or carry a credit forward.
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-38" x="12" y="67" width="514" height="56"/>
+				<textElement/>
+				<text><![CDATA[       If you have declared no exports  you must carry the credit forward in Below Box. unless
+you have carried forward a tax credit and not adjusting the excess amount against the tax liability if any under the CST Act.
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-39" x="12" y="132" width="75" height="15"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Refund]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-40" x="274" y="132" width="123" height="15"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Credit carried forward]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-41" x="12" y="161" width="329" height="42"/>
+				<textElement/>
+				<text><![CDATA[If you want to adjust the exccss amount against the libility under
+the CST Act please fill The Below Two Boxes
+Tax due under  the CST Act and adjusted against the excess amount in "Credit carried forward".
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-42" x="12" y="225" width="262" height="25"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[
+Net credit carried forward]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement key="rectangle-8" x="90" y="132" width="115" height="15"/>
+			</rectangle>
+			<textField pattern="###0.00;-###0.00">
+				<reportElement x="405" y="132" width="121" height="15"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[( ( $V{payable} == null ? java.math.BigDecimal.ZERO : $V{payable} ).subtract( ( $V{TotalTaxAmt} == null ? java.math.BigDecimal.ZERO : $V{TotalTaxAmt} ).add( $V{InputCredit} == null ? java.math.BigDecimal.ZERO : $V{InputCredit} ) ) ).compareTo(java.math.BigDecimal.ZERO) == 1 ?  java.math.BigDecimal.ZERO  : ( ( $V{payable} == null ? java.math.BigDecimal.ZERO : $V{payable} ).subtract( ( $V{TotalTaxAmt} == null ? java.math.BigDecimal.ZERO : $V{TotalTaxAmt} ).add( $V{InputCredit} == null ? java.math.BigDecimal.ZERO : $V{InputCredit} ) ) )]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="371" y="162" width="100" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{InputCredit}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="371" y="183" width="100" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalTaxAmt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="371" y="203" width="100" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[(($V{payable}.compareTo(java.math.BigDecimal.ZERO) == -1) ? java.math.BigDecimal.ZERO : $V{payable} ).subtract((($V{TotalTaxAmt}.compareTo(java.math.BigDecimal.ZERO) == -1 ) ? java.math.BigDecimal.ZERO :$V{TotalTaxAmt} ).add( ($V{InputCredit}.compareTo(java.math.BigDecimal.ZERO) == -1 ) ? java.math.BigDecimal.ZERO : $V{InputCredit} ) )]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="471" y="163" width="64" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{payable}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="471" y="183" width="62" height="20">
+					<printWhenExpression><![CDATA[Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{FinalAmountToPay}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.00;-###0.00">
+				<reportElement x="405" y="233" width="121" height="17"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[( ( $V{payable} == null ? java.math.BigDecimal.ZERO : $V{payable} ).subtract( ( $V{TotalTaxAmt} == null ? java.math.BigDecimal.ZERO : $V{TotalTaxAmt} ).add( $V{InputCredit} == null ? java.math.BigDecimal.ZERO : $V{InputCredit} ) ) ).compareTo(java.math.BigDecimal.ZERO) == 1 ?  java.math.BigDecimal.ZERO  : ( ( $V{payable} == null ? java.math.BigDecimal.ZERO : $V{payable} ).subtract( ( $V{TotalTaxAmt} == null ? java.math.BigDecimal.ZERO : $V{TotalTaxAmt} ).add( $V{InputCredit} == null ? java.math.BigDecimal.ZERO : $V{InputCredit} ) ) )]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

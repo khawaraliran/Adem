@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: clientaddress.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="clientaddress" pageWidth="535" pageHeight="842" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="AD_Org_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT cl.legal_name,
+coalesce(loc.Address1 ,'') ||
+	', ' || coalesce(loc.Address2,'') ||
+	', ' || coalesce(loc.Address3,'') ||
+	', ' || coalesce(loc.Address4,'') ||
+	', ' || coalesce(loc.city,'') || '-' || coalesce(loc.Postal,'') ||
+	', ' || coalesce(loc.RegionName,'') ||
+	', ' || coalesce(c.description,'') as compaddress
+
+FROM AD_Client cl
+JOIN AD_OrgInfo org ON org.ad_client_id = cl.ad_client_id
+JOIN C_Location loc ON loc.c_location_id = org.c_location_id
+JOIN C_Country c on c.c_country_id = loc.c_country_id
+WHERE org.ad_org_id = $P{AD_Org_ID}]]>
+	</queryString>
+	<field name="legal_name" class="java.lang.String"/>
+	<field name="compaddress" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="55" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" mode="Opaque" x="0" y="6" width="535" height="18" forecolor="#D40E0E" backcolor="#FFFFFF"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{legal_name}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" x="0" y="28" width="535" height="18" forecolor="#D40E0E"/>
+				<textElement textAlignment="Center">
+					<font size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{compaddress}]]></textFieldExpression>
+			</textField>
+			<line direction="BottomUp">
+				<reportElement key="line-1" x="0" y="49" width="535" height="1"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

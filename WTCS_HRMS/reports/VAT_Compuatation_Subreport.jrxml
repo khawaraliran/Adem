@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: VAT_Compuatation_Subreport.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="VAT_Compuatation_Subreport" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="isSoTrx" class="java.lang.String"/>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<parameter name="AD_Client_ID" class="java.math.BigDecimal"/>
+	<parameter name="ExcessCredit" class="java.math.BigDecimal"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT SUM( @ cit.taxAmt) AS VATclaimed,SUM( @ cit.taxbaseamt) as excludingVAT,ct.name ,ct.rate
+FROM C_InvoiceTax cit
+JOIN C_Invoice c ON (c.C_Invoice_ID=cit.C_Invoice_ID)
+JOIN C_Tax ct ON ( ct.C_Tax_ID=cit.C_Tax_ID)
+JOIN WTC_TaxIndicator wti ON ( wti.WTC_TaxIndicator_ID= ct.WTC_TaxIndicator_ID)
+WHERE ct.WTC_TaxIndicator_ID= $P{WTC_TaxIndicator_ID}
+AND (
+CASE WHEN $P{isSoTrx}='Y' THEN
+   ( CASE WHEN wti.collectableon ='SO' THEN
+        c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('ARI','APC') )
+   ELSE
+	( CASE WHEN ct.isSalesTax ='N' THEN  c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('API','ARC') )
+	ELSE
+	1=2
+	END) END )
+ELSE
+  ( CASE WHEN ct.isSalesTax ='N' THEN
+      (  CASE WHEN wti.collectableon ='PO' THEN
+           c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('ARI','APC') )
+         ELSE
+	 ( CASE WHEN ct.isSalesTax ='N' THEN  c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('API','ARC') )
+	ELSE
+	1=2
+	END) END
+      )
+   ELSE
+     1=2
+   END )
+
+END )
+AND c.dateInvoiced >= $P{FromDate} AND c.dateInvoiced <= $P{ToDate}
+AND c.ad_client_id = $P{AD_Client_ID}
+AND c.DocStatus IN ('CO','CL')
+GROUP BY ct.name,ct.rate]]>
+	</queryString>
+	<field name="vatclaimed" class="java.math.BigDecimal"/>
+	<field name="excludingvat" class="java.math.BigDecimal"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="rate" class="java.math.BigDecimal"/>
+	<variable name="TatalAssessableValue" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{excludingvat}]]></variableExpression>
+	</variable>
+	<variable name="TotalTaxAmount" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{vatclaimed}]]></variableExpression>
+	</variable>
+	<variable name="ReturnValue" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[( $P{isSoTrx}.equals("N") ? $V{TotalTaxAmount}.add($P{ExcessCredit})  : $V{TotalTaxAmount} )]]></variableExpression>
+		<initialValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="30" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="493" y="14" width="81" height="13">
+					<printWhenExpression><![CDATA[$P{isSoTrx}.equals("N") ? Boolean.TRUE : Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$P{ExcessCredit}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-2" x="15" y="14" width="229" height="13">
+					<printWhenExpression><![CDATA[$P{isSoTrx}.equals("N") ? Boolean.TRUE : Boolean.FALSE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<text><![CDATA[Excess Input Credit Brought Forward]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="19" splitType="Stretch">
+			<textField pattern="##0.00" isBlankWhenNull="false">
+				<reportElement key="textField" x="73" y="0" width="48" height="19"/>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{rate}]]></textFieldExpression>
+			</textField>
+			<textField pattern="##0.00" isBlankWhenNull="false">
+				<reportElement key="textField" x="393" y="0" width="81" height="19"/>
+				<textElement/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{excludingvat}]]></textFieldExpression>
+			</textField>
+			<textField pattern="##0.00" isBlankWhenNull="false">
+				<reportElement key="textField" x="474" y="0" width="100" height="19"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{vatclaimed}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="15" y="0" width="58" height="19"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="30" splitType="Stretch">
+			<line>
+				<reportElement key="line-2" x="385" y="22" width="194" height="1"/>
+			</line>
+			<line>
+				<reportElement key="line-3" x="385" y="24" width="194" height="1"/>
+			</line>
+			<line>
+				<reportElement key="line-4" x="384" y="3" width="194" height="1"/>
+			</line>
+			<textField pattern="##0.00" isBlankWhenNull="false">
+				<reportElement key="textField" x="393" y="7" width="81" height="15"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TatalAssessableValue}]]></textFieldExpression>
+			</textField>
+			<textField pattern="##0.00" isBlankWhenNull="false">
+				<reportElement key="textField" x="486" y="7" width="88" height="15"/>
+				<textElement textAlignment="Right">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[( $P{isSoTrx}.equals("N") ? $V{TotalTaxAmount}.add($P{ExcessCredit})  : $V{TotalTaxAmount} )]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-1" x="121" y="7" width="253" height="14"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[( $P{isSoTrx}.equals("N") ? "Total Input Credit "  : "Total Output Tax" )]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="50">
+			<staticText>
+				<reportElement x="168" y="12" width="173" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[Data not availbale]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: IncompleteTimesheetReport.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="IncompleteTimesheetReport" pageWidth="700" pageHeight="612" orientation="Landscape" columnWidth="660" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<queryString>
+		<![CDATA[SELECT cbp.name AS EmployeeName ,
+       dep.name AS DepartmentName ,
+       ( getNumberOfWorkingDays($P{FromDate} ::Date ,$P{ToDate} ::Date) ) AS NumberofWorkingDays ,
+       ( getprestDays($P{FromDate} ::Date ,$P{ToDate} ::Date, cbp.C_BPartner_ID ) ) AS PresentDays ,
+       ( getNumberDaysRecordedInTimeSheet($P{FromDate} ::Date ,$P{ToDate} ::Date, cbp.C_BPartner_ID ) ) AS timeSheetDays ,
+       (getnonbusinessdays($P{FromDate},$P{ToDate} ) ) AS nonworkingdays,
+       ( getNumberofLeavesAvailed($P{FromDate} ::Date ,$P{ToDate} ::Date, cbp.C_BPartner_ID) ) AS leavesAvailed
+    FROM C_BPartner cbp
+    JOIN HR_Department dep ON cbp.HR_Department_ID = dep.HR_Department_ID
+GROUP BY cbp.C_BPartner_ID , cbp.HR_Department_ID ,cbp.name , dep.name
+ORDER BY dep.name]]>
+	</queryString>
+	<field name="employeename" class="java.lang.String"/>
+	<field name="departmentname" class="java.lang.String"/>
+	<field name="numberofworkingdays" class="java.math.BigDecimal"/>
+	<field name="presentdays" class="java.math.BigDecimal"/>
+	<field name="timesheetdays" class="java.math.BigDecimal"/>
+	<field name="leavesavailed" class="java.math.BigDecimal"/>
+	<field name="nonworkingdays" class="java.math.BigDecimal"/>
+	<variable name="Incompletedays" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[($F{numberofworkingdays}.subtract( $F{timesheetdays}.add($F{leavesavailed} ) ) ).compareTo(BigDecimal.ZERO) < 0 ?  BigDecimal.ZERO : ($F{numberofworkingdays}.subtract( $F{timesheetdays}.add($F{leavesavailed} ) ) )]]></variableExpression>
+	</variable>
+	<variable name="DepDaysPrest" class="java.math.BigDecimal" resetType="Group" resetGroup="DepartmentName" calculation="Sum">
+		<variableExpression><![CDATA[$F{presentdays}]]></variableExpression>
+	</variable>
+	<variable name="DepTimeSheetDays" class="java.math.BigDecimal" resetType="Group" resetGroup="DepartmentName" calculation="Sum">
+		<variableExpression><![CDATA[$F{timesheetdays}]]></variableExpression>
+	</variable>
+	<variable name="DepLeaveAvailedDays" class="java.math.BigDecimal" resetType="Group" resetGroup="DepartmentName" calculation="Sum">
+		<variableExpression><![CDATA[$F{leavesavailed}]]></variableExpression>
+	</variable>
+	<variable name="DepIncompleDays" class="java.math.BigDecimal" resetType="Group" resetGroup="DepartmentName" calculation="Sum">
+		<variableExpression><![CDATA[$V{Incompletedays}]]></variableExpression>
+	</variable>
+	<variable name="GrandDaysPrest" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{presentdays}]]></variableExpression>
+	</variable>
+	<variable name="GrandTimeSheetDays" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{timesheetdays}]]></variableExpression>
+	</variable>
+	<variable name="GroupLeaveAvailedDays" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{leavesavailed}]]></variableExpression>
+	</variable>
+	<variable name="GrandIncompleDays" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$V{Incompletedays}]]></variableExpression>
+	</variable>
+	<group name="DepartmentName">
+		<groupExpression><![CDATA[$F{departmentname}]]></groupExpression>
+		<groupHeader>
+			<band/>
+		</groupHeader>
+		<groupFooter>
+			<band height="23">
+				<staticText>
+					<reportElement x="0" y="0" width="250" height="23"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+						<rightPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Department Total  ]]></text>
+				</staticText>
+				<textField pattern="###0;-###0">
+					<reportElement x="250" y="0" width="100" height="23"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+						<rightPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{DepDaysPrest}]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0;-###0">
+					<reportElement x="350" y="0" width="100" height="23"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+						<rightPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{DepTimeSheetDays}]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0;-###0">
+					<reportElement x="450" y="0" width="100" height="23"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+						<rightPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{DepLeaveAvailedDays}]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0;-###0">
+					<reportElement x="550" y="0" width="100" height="23"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+						<rightPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{DepIncompleDays}.compareTo(BigDecimal.ZERO) < 0 ?  BigDecimal.ZERO : $V{DepIncompleDays}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="90" splitType="Stretch">
+			<staticText>
+				<reportElement x="144" y="5" width="385" height="44"/>
+				<textElement>
+					<font size="24" isBold="false"/>
+				</textElement>
+				<text><![CDATA[   Incomplete Timesheet Report]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="17" y="49" width="100" height="15"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ From Date  :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="504" y="50" width="69" height="15"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ To Date :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="17" y="70" width="179" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ Number of working days :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="196" y="70" width="154" height="20"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{numberofworkingdays}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="101" y="51" width="100" height="20"/>
+				<textElement/>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$P{FromDate}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="565" y="52" width="100" height="20"/>
+				<textElement/>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$P{ToDate}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="36" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="128" height="36"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[  Department Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="250" y="0" width="100" height="36"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[  Days Present]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="450" y="0" width="100" height="36"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ Number of
+ Leaves Availed]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="128" y="0" width="122" height="36"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ Employee Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="350" y="0" width="100" height="36"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ Number of days
+ Recorded in
+ Timesheet]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="550" y="0" width="100" height="36"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ Net Incomplete
+ Days]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="27" splitType="Stretch">
+			<textField>
+				<reportElement x="128" y="0" width="122" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{employeename}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="128" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{departmentname}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="250" y="0" width="100" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{presentdays}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="350" y="0" width="100" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{timesheetdays}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="450" y="0" width="100" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{leavesavailed}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="550" y="0" width="100" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{Incompletedays}.compareTo(BigDecimal.ZERO) < 0 ?  BigDecimal.ZERO :$V{Incompletedays}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="25" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="250" height="25"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Net Total]]></text>
+			</staticText>
+			<textField pattern="###0;-###0">
+				<reportElement x="250" y="0" width="100" height="25"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandDaysPrest}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="350" y="0" width="100" height="25"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandTimeSheetDays}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="450" y="0" width="100" height="25"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GroupLeaveAvailedDays}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0;-###0">
+				<reportElement x="550" y="0" width="100" height="25"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandIncompleDays}.compareTo(BigDecimal.ZERO) < 0 ?  BigDecimal.ZERO :$V{GrandIncompleDays}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: ComparePriceNew.jrxml 1124 2012-03-09 04:58:14Z arun $ -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ComparePriceNew" pageWidth="1500" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="1440" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="52"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="M_Product_ID" class="java.math.BigDecimal"/>
+	<parameter name="AD_PInstance_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_Order_ID" class="java.math.BigDecimal"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="Parent_Org_ID" class="java.math.BigDecimal"/>
+	<parameter name="M_PriceList_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT mp.name AS itemName, COALESCE(vb.breakvalue,0) AS qtyOrdered, bp.name AS suppliername , COALESCE(vb.pricestd,0) AS price
+
+FROM M_Product mp JOIN C_OrderLine col  ON col.M_Product_ID=mp.M_product_ID
+                  JOIN C_Order co  ON co.C_Order_ID=col.C_Order_ID
+                  JOIN C_BPartner bp  ON co.C_BPartner_ID= bp.C_BPartner_ID
+
+
+                  JOIN m_productpricevendorbreak vb ON ((bp.C_BPartner_ID=vb.C_BPartner_ID)  AND  (mp.M_Product_ID=vb.M_Product_ID))
+WHERE vb.M_priceList_Version_ID IN ( SELECT M_PriceList_Version_ID FROM M_PriceList_Version WHERE M_PriceList_ID =$P{M_PriceList_ID} and isactive='Y') AND bp.C_BPartner_ID in (SELECT t_selection_id FROM T_Selection WHERE ad_pinstance_id =$P{AD_PInstance_ID}  )  and (CASE WHEN $P{M_Product_ID} =0 THEN 1=1 ELSE mp.m_product_id = $P{M_Product_ID} END)]]>
+	</queryString>
+	<field name="itemname" class="java.lang.String"/>
+	<field name="suppliername" class="java.lang.String"/>
+	<field name="price" class="java.math.BigDecimal"/>
+	<field name="qtyordered" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="40" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-1" x="478" y="0" width="339" height="34"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Quotation Comparitive Statements]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="86" splitType="Stretch">
+			<crosstab>
+				<reportElement key="crosstab-1" x="11" y="0" width="1417" height="85"/>
+				<crosstabHeaderCell>
+					<cellContents mode="Transparent">
+						<staticText>
+							<reportElement key="staticText-2" x="0" y="34" width="100" height="17"/>
+							<box>
+								<leftPen lineWidth="1.0" lineStyle="Solid"/>
+								<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+								<rightPen lineWidth="1.0" lineStyle="Solid"/>
+							</box>
+							<textElement textAlignment="Center" verticalAlignment="Middle"/>
+							<text><![CDATA[Item Name]]></text>
+						</staticText>
+						<staticText>
+							<reportElement key="staticText-2" x="100" y="34" width="100" height="17"/>
+							<box>
+								<leftPen lineWidth="1.0" lineStyle="Solid"/>
+								<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+								<rightPen lineWidth="1.0" lineStyle="Solid"/>
+							</box>
+							<textElement textAlignment="Center" verticalAlignment="Middle"/>
+							<text><![CDATA[Ordered Quantity]]></text>
+						</staticText>
+						<rectangle>
+							<reportElement key="rectangle-1" x="0" y="0" width="200" height="33"/>
+						</rectangle>
+					</cellContents>
+				</crosstabHeaderCell>
+				<rowGroup name="itemname" width="100" totalPosition="End">
+					<bucket>
+						<bucketExpression class="java.lang.String"><![CDATA[$F{itemname}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Transparent">
+							<textField isBlankWhenNull="true">
+								<reportElement key="textField" x="0" y="0" width="100" height="30"/>
+								<box>
+									<leftPen lineWidth="1.0" lineStyle="Solid"/>
+									<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression class="java.lang.String"><![CDATA[$V{itemname}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="qtyordered" width="100" totalPosition="End">
+					<bucket>
+						<bucketExpression class="java.math.BigDecimal"><![CDATA[$F{qtyordered}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Transparent">
+							<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+								<reportElement key="textField" x="0" y="0" width="100" height="30"/>
+								<box>
+									<leftPen lineWidth="1.0" lineStyle="Solid"/>
+									<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{qtyordered}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents mode="Transparent"/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="suppliername" height="52" totalPosition="End" headerPosition="Center">
+					<bucket>
+						<bucketExpression class="java.lang.String"><![CDATA[$F{suppliername}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents mode="Transparent">
+							<textField isBlankWhenNull="true">
+								<reportElement key="textField" x="0" y="0" width="113" height="33"/>
+								<box>
+									<topPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression class="java.lang.String"><![CDATA[$V{suppliername}]]></textFieldExpression>
+							</textField>
+							<staticText>
+								<reportElement key="staticText-2" x="0" y="33" width="113" height="18"/>
+								<box>
+									<topPen lineWidth="1.0" lineStyle="Solid"/>
+									<leftPen lineWidth="1.0" lineStyle="Solid"/>
+									<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Price]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents/>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="price" class="java.math.BigDecimal">
+					<measureExpression><![CDATA[$F{price}]]></measureExpression>
+				</measure>
+				<measure name="Discount" class="java.math.BigDecimal">
+					<measureExpression><![CDATA[]]></measureExpression>
+				</measure>
+				<crosstabCell width="113" height="30">
+					<cellContents mode="Transparent">
+						<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+							<reportElement key="textField" x="0" y="0" width="113" height="30"/>
+							<box>
+								<leftPen lineWidth="1.0" lineStyle="Solid"/>
+								<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+								<rightPen lineWidth="1.0" lineStyle="Solid"/>
+							</box>
+							<textElement textAlignment="Center" verticalAlignment="Middle"/>
+							<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{price}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="0" height="30" columnTotalGroup="suppliername">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<crosstabCell width="113" height="1" rowTotalGroup="qtyordered">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<crosstabCell width="0" height="1" rowTotalGroup="qtyordered" columnTotalGroup="suppliername">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<crosstabCell width="113" height="0" rowTotalGroup="itemname">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<crosstabCell width="0" height="0" rowTotalGroup="itemname" columnTotalGroup="suppliername">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<whenNoDataCell>
+					<cellContents mode="Transparent"/>
+				</whenNoDataCell>
+			</crosstab>
+		</band>
+	</summary>
+	<noData>
+		<band height="36">
+			<staticText>
+				<reportElement x="493" y="16" width="400" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="16"/>
+				</textElement>
+				<text><![CDATA[Data not available]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

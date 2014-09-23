@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- $Id: PaySlipSubreport_wageCalcBackLogAndOtherEarnings.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="PaySlipSubreport_wageCalcBackLogAndOtherEarnings"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="535"
+		 pageHeight="802"
+		 columnWidth="535"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="HR_Process_ID" isForPrompting="true" class="java.math.BigDecimal"/>
+	<parameter name="C_BPartner_ID" isForPrompting="true" class="java.math.BigDecimal"/>
+	<queryString><![CDATA[SELECT cct.name  AS CategoryName,
+cc.name AS ConceptName,
+(CASE WHEN cct.columntype='A' Then round(COALESCE(hrm.amount,0)) ELSE round(COALESCE(hrm.qty,0)) END) AS amount,
+emp.hasoptedpf,
+hrm.HR_Process_ID,
+(select round(COALESCE(sum(COALESCE(hrm1.amount,0)),0)) FROM HR_Movement hrm1 WHERE 
+      (hrm1.HR_Concept_ID=hrm.HR_Concept_ID)  
+AND   (hrm1.C_BPartner_ID=hrm.C_BPartner_ID) 
+AND   HR_Process_ID in ( select HR_Process_ID from HR_Process HRP 
+                                              where HRP.hr_period_id in (select HR_Period_ID from HR_Period 
+                                                                                         where HR_Year_ID=(SELECT HR_Year_ID FROM HR_Period 
+                                                                                                                             WHERE HR_Period_ID=(SELECT HR_Period_ID FROM HR_Process 
+                                                                                                                                                                WHERE HR_Process_ID=$P{HR_Process_ID}
+                                                                                                                                                ) 
+                                                                                                          ) 
+                                                                                         and PeriodNo<= ( select PeriodNo from HR_Period 
+                                                                                                                         where HR_Period_ID=(SELECT HR_Period_ID FROM HR_Process 
+                                                                                                                                                                WHERE HR_Process_ID=$P{HR_Process_ID}  
+                                                                                                                                            ) 
+                                                                                                       ) 
+                                                                        ) 
+                                              AND   HRP.payrollprocesstype= ( select payrollprocesstype from HR_Process where HR_Process_ID=$P{HR_Process_ID} )                       
+                       )  ) AS YTD  
+FROM HR_Movement hrm
+JOIN HR_Concept_Category cc ON (cc.HR_Concept_Category_ID = hrm.HR_Concept_Category_ID)
+JOIN HR_Concept cct ON (cct.HR_Concept_ID = hrm.HR_Concept_ID)
+JOIN C_BPartner cb ON hrm.C_BPartner_ID =cb.C_BPartner_ID 
+JOIN HR_Employee emp ON cb.C_BPartner_ID = emp.C_BPartner_ID 
+WHERE  hrm.C_BPartner_ID=$P{C_BPartner_ID} AND hrm.HR_Process_ID=$P{HR_Process_ID} AND 
+(hrm.HR_Concept_Category_ID =(SELECT HR_Concept_Category_ID FROM HR_Concept_Category hrcc WHERE hrcc.name='Wage Calculation' ))
+AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE 
+(hrc.name='Back Logs'  OR  hrc.name='Other Earnings'  ) 
+))]]></queryString>
+
+	<field name="categoryname" class="java.lang.String"/>
+	<field name="conceptname" class="java.lang.String"/>
+	<field name="amount" class="java.math.BigDecimal"/>
+	<field name="hr_process_id" class="java.math.BigDecimal"/>
+	<field name="ytd" class="java.math.BigDecimal"/>
+	<field name="hasoptedpf" class="java.lang.Boolean"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="1"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="49"  isSplitAllowed="true" >
+				<crosstab >
+					<reportElement
+						x="7"
+						y="0"
+						width="509"
+						height="49"
+						key="crosstab-1"/>
+					<crosstabHeaderCell>						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabHeaderCell>					<rowGroup name="categoryname" width="116" totalPosition="End">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{categoryname}]]></bucketExpression>
+						</bucket>
+						<crosstabRowHeader>
+						<cellContents mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="116"
+						height="17"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$V{categoryname}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+						</crosstabRowHeader>
+					</rowGroup>
+					<columnGroup name="conceptname" height="0" totalPosition="End" headerPosition="Center">
+						<bucket>
+							<bucketExpression class="java.lang.String"><![CDATA[$F{conceptname}]]></bucketExpression>
+						</bucket>
+					</columnGroup>
+
+					<measure name="GrossSalary" class="java.math.BigDecimal" calculation="Sum">
+						<measureExpression><![CDATA[$F{amount}]]></measureExpression>
+					</measure>
+					<measure name="GrossEarnings" class="java.math.BigDecimal" calculation="Sum">
+						<measureExpression><![CDATA[$F{amount}]]></measureExpression>
+					</measure>
+					<measure name="YTD" class="java.math.BigDecimal">
+						<measureExpression><![CDATA[$F{ytd}]]></measureExpression>
+					</measure>
+					<measure name="YTDGross" class="java.math.BigDecimal" calculation="Sum">
+						<measureExpression><![CDATA[$F{ytd}]]></measureExpression>
+					</measure>
+					<crosstabCell width="177" height="17">
+						<cellContents mode="Transparent">
+					<box></box>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="0"
+						width="95"
+						height="17"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{GrossSalary}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="104"
+						y="0"
+						width="73"
+						height="17"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{YTD}]]></textFieldExpression>
+				</textField>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="0" height="17" columnTotalGroup="conceptname">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="177" height="0" rowTotalGroup="categoryname">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<crosstabCell width="0" height="0" rowTotalGroup="categoryname" columnTotalGroup="conceptname">
+						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</crosstabCell>
+					<whenNoDataCell>						<cellContents mode="Transparent">
+					<box></box>
+						</cellContents>
+					</whenNoDataCell>					</crosstab>
+			</band>
+		</summary>
+</jasperReport>

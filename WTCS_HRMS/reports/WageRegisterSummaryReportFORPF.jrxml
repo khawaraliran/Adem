@@ -1,0 +1,1251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: WageRegisterSummaryReportFORPF.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WageRegisterSummaryReportFORPF" pageWidth="2300" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="2300" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="590"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="HR_Period_ID" class="java.math.BigDecimal"/>
+	<parameter name="HR_Employee_Type_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[new BigDecimal(0)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="Parent_Org_ID" class="java.math.BigDecimal"/>
+	<parameter name="AD_Org_ID" class="java.math.BigDecimal"/>
+	<parameter name="PF_Non_PF" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+        dept.name AS Department ,
+
+        (SELECT name FROM AD_Org WHERE AD_Org_ID=$P{AD_Org_ID} ) AS Division,
+        (SELECT round(COALESCE(hrm.amount,0)) FROM HR_Movement hrm
+                     WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_Process_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID}  AND  payrollprocesstype='General')
+                     AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Effective Salary Days') )
+         ) AS PresentDays ,
+        (SELECT (Case WHEN cb.Hr_Employee_Type_ID =(SELECT HR_Employee_Type_ID FROM HR_Employee_Type WHERE UPPER(name) like ('STAFF') )
+                      THEN ( hre.monthly_salary )
+                      ELSE ( hre.daily_salary ) END)
+         FROM HR_Employee hre WHERE hre.C_BPartner_ID=cb.C_BPartner_ID
+        ) AS Salary ,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+              WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT pro.HR_Process_ID FROM HR_Process pro WHERE pro.HR_Period_ID=$P{HR_Period_ID} AND  pro.payrollprocesstype='General')
+              AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Basic') )
+        ) AS BasicSalary,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+              WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT pro.HR_Process_ID FROM HR_Process pro WHERE pro.HR_Period_ID=$P{HR_Period_ID} AND  pro.payrollprocesstype='General')
+              AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='HRA') )
+        ) AS HRA,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='MedicalAllowance') )
+        ) AS MedicalAllowance,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Conveyance Allowance') )
+        ) AS ConveyanceAllowance,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Special Allowance') )
+        ) AS SpecialAllowance,
+        (SELECT round(COALESCE(hrm.qty,0)) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Working Days') )
+        ) AS WorkingDays,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Earned Salary') )
+        ) AS EarnedSalary,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Attendance Incentive') )
+        ) AS AttendanceIncentive,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='OnTime Incentive') )
+        ) AS OnTimeIncentive,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Three Month Incentive') )
+        ) AS ThreeMonthIncentive,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='OverTime Incentive') )
+        ) AS OverTimeIncentive,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Weekly Incentive') )
+        ) AS WeeklyIncentive,
+          (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='PF') )
+        ) AS PF,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='ESI') )
+        ) AS ESI,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='ProfessionalTax') )
+        ) AS ProfessionalTax,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN  (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Insurance') )
+        ) AS LIC,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Advance Payment') )
+        ) AS AdvancePayment,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Canteen') )
+        ) AS CANTEEN,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='StoreAmount') )
+        ) AS StoreAmount,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Fine Amount') )
+        ) AS FineAmount,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='GrossSalary') )
+        ) AS GrossSalary,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='GrossDeductions') )
+        ) AS GrossDeductions,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Back Logs') )
+        ) AS BackLogs,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Other Earnings') )
+        ) AS OtherEarnings,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Other Deductions') )
+        ) AS OtherDeductions,
+       (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                    WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                    AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Power') )
+        ) AS powerBill,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Dish') )
+        ) AS DishBill  ,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='TDS') )
+        ) AS TDS,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID  IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='ShiftChangeAbsentDeduction') )
+        ) AS ShiftChangeAbsentDeduction,
+        (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Late Coming Deduction') )
+        ) AS LateComingDeduction ,
+
+       (SELECT round(COALESCE(hrm.amount,0),2) FROM HR_Movement hrm
+                           WHERE  hrm.C_BPartner_ID=cb.C_BPartner_ID  AND hrm.HR_PRocess_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID=$P{HR_Period_ID} AND payrollprocesstype='General')
+                           AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='PartialNetAmount') )
+        ) AS PartialNetAmount
+ FROM C_BPartner cb
+ JOIN HR_Designation hd ON cb.HR_Designation_ID=hd.HR_Designation_ID
+ JOIN HR_Employee hre ON ( hre.C_BPartner_ID=cb.C_BPartner_ID ) AND (hre.hasoptedpf='Y')
+ JOIN Hr_Employee_Type ety ON (cb.HR_Employee_Type_ID=ety.HR_Employee_Type_ID) AND (CASE WHEN ($P{HR_Employee_Type_ID}=0) THEN (1=1) ELSE (cb.Hr_Employee_Type_ID=$P{HR_Employee_Type_ID}) END)
+ JOIN HR_Department dept ON (dept.HR_Department_ID=cb.HR_Department_ID)
+ WHERE  (cb.ad_org_ID =$P{AD_Org_ID})
+AND
+  (CASE WHEN (cb.relievingdate IS NULL) THEN (cb.relieveemployee='N') ELSE (cb.relievingdate > (SELECT enddate FROM HR_Period WHERE HR_Period_ID=$P{HR_Period_ID})) END )
+AND
+  ( cb.isemployee='Y' )
+AND
+  (cb.joiningdate<=(SELECT enddate FROM HR_Period WHERE HR_Period_ID=$P{HR_Period_ID} ))
+AND
+  (hre.hasoptedpf='Y')
+AND
+   EXISTS (SELECT 1 FROM HR_Movement hrm WHERE C_BPartner_ID = cb.C_BPartner_ID AND HR_Process_ID IN (SELECT HR_Process_ID FROM HR_Process WHERE HR_Period_ID = $P{HR_Period_ID}))
+ Order by Department]]>
+	</queryString>
+	<field name="department" class="java.lang.String"/>
+	<field name="division" class="java.lang.String"/>
+	<field name="presentdays" class="java.math.BigDecimal"/>
+	<field name="salary" class="java.math.BigDecimal"/>
+	<field name="basicsalary" class="java.math.BigDecimal"/>
+	<field name="hra" class="java.math.BigDecimal"/>
+	<field name="medicalallowance" class="java.math.BigDecimal"/>
+	<field name="conveyanceallowance" class="java.math.BigDecimal"/>
+	<field name="specialallowance" class="java.math.BigDecimal"/>
+	<field name="workingdays" class="java.math.BigDecimal"/>
+	<field name="earnedsalary" class="java.math.BigDecimal"/>
+	<field name="attendanceincentive" class="java.math.BigDecimal"/>
+	<field name="ontimeincentive" class="java.math.BigDecimal"/>
+	<field name="threemonthincentive" class="java.math.BigDecimal"/>
+	<field name="overtimeincentive" class="java.math.BigDecimal"/>
+	<field name="weeklyincentive" class="java.math.BigDecimal"/>
+	<field name="pf" class="java.math.BigDecimal"/>
+	<field name="esi" class="java.math.BigDecimal"/>
+	<field name="professionaltax" class="java.math.BigDecimal"/>
+	<field name="lic" class="java.math.BigDecimal"/>
+	<field name="advancepayment" class="java.math.BigDecimal"/>
+	<field name="canteen" class="java.math.BigDecimal"/>
+	<field name="storeamount" class="java.math.BigDecimal"/>
+	<field name="fineamount" class="java.math.BigDecimal"/>
+	<field name="grosssalary" class="java.math.BigDecimal"/>
+	<field name="grossdeductions" class="java.math.BigDecimal"/>
+	<field name="backlogs" class="java.math.BigDecimal"/>
+	<field name="otherearnings" class="java.math.BigDecimal"/>
+	<field name="otherdeductions" class="java.math.BigDecimal"/>
+	<field name="powerbill" class="java.math.BigDecimal"/>
+	<field name="dishbill" class="java.math.BigDecimal"/>
+	<field name="tds" class="java.math.BigDecimal"/>
+	<field name="shiftchangeabsentdeduction" class="java.math.BigDecimal"/>
+	<field name="latecomingdeduction" class="java.math.BigDecimal"/>
+	<field name="PartialNetAmount" class="java.math.BigDecimal"/>
+	<variable name="currentDateTime" class="java.lang.String">
+		<variableExpression><![CDATA[(new SimpleDateFormat("dd/MM/yyyy hh:mm:ss aaa z")).format(new Date())]]></variableExpression>
+	</variable>
+	<variable name="AttendenceIncentive" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{attendanceincentive}.add( $F{ontimeincentive}.add( $F{threemonthincentive} ) )]]></variableExpression>
+	</variable>
+	<variable name="NetSalary" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{grosssalary}.subtract( $F{grossdeductions} )]]></variableExpression>
+	</variable>
+	<variable name="GrandSalary" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{salary}]]></variableExpression>
+	</variable>
+	<variable name="GrandBasic" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{basicsalary}]]></variableExpression>
+	</variable>
+	<variable name="GrandHRA" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{hra}]]></variableExpression>
+	</variable>
+	<variable name="GrandMedical" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{medicalallowance}]]></variableExpression>
+	</variable>
+	<variable name="GrandConveyance" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{conveyanceallowance}]]></variableExpression>
+	</variable>
+	<variable name="GrandSpecial" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{specialallowance}]]></variableExpression>
+	</variable>
+	<variable name="GrandEarned" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{earnedsalary}]]></variableExpression>
+	</variable>
+	<variable name="GrandAttendence" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$V{AttendenceIncentive}]]></variableExpression>
+	</variable>
+	<variable name="GrandOverTime" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{overtimeincentive}]]></variableExpression>
+	</variable>
+	<variable name="GrandWeekly" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{weeklyincentive}]]></variableExpression>
+	</variable>
+	<variable name="GrandGrossEarnings" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{grosssalary}]]></variableExpression>
+	</variable>
+	<variable name="GrandPF" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{pf}]]></variableExpression>
+	</variable>
+	<variable name="GrandESI" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{esi}]]></variableExpression>
+	</variable>
+	<variable name="GrandPTax" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{professionaltax}]]></variableExpression>
+	</variable>
+	<variable name="GrandLIC" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{lic}]]></variableExpression>
+	</variable>
+	<variable name="GrandAdvance" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{advancepayment}]]></variableExpression>
+	</variable>
+	<variable name="GrandCanteen" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{canteen}]]></variableExpression>
+	</variable>
+	<variable name="GrandStorage" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{storeamount}]]></variableExpression>
+	</variable>
+	<variable name="GrandFine" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{fineamount}]]></variableExpression>
+	</variable>
+	<variable name="GrandPower" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{powerbill}]]></variableExpression>
+	</variable>
+	<variable name="GrandTotalDeduction" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{grossdeductions}]]></variableExpression>
+	</variable>
+	<variable name="GrandNetAmount" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$V{NetSalary}]]></variableExpression>
+	</variable>
+	<variable name="GrandBackLogs" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{backlogs}]]></variableExpression>
+	</variable>
+	<variable name="GrandOtherEarnings" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{otherearnings}]]></variableExpression>
+	</variable>
+	<variable name="GrandOtherDeductions" class="java.math.BigDecimal" resetType="Group" resetGroup="GroupDepartment" calculation="Sum">
+		<variableExpression><![CDATA[$F{otherdeductions}]]></variableExpression>
+	</variable>
+	<variable name="GrandDish" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{dishbill}]]></variableExpression>
+	</variable>
+	<variable name="GrandTDS" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{tds}]]></variableExpression>
+	</variable>
+	<variable name="GRandSCAD" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{shiftchangeabsentdeduction}]]></variableExpression>
+	</variable>
+	<variable name="GrandLateDedcution" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{latecomingdeduction}]]></variableExpression>
+	</variable>
+	<variable name="GrandPartialPayroll" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{PartialNetAmount}]]></variableExpression>
+	</variable>
+	<group name="GroupDepartment">
+		<groupExpression><![CDATA[$F{department}]]></groupExpression>
+		<groupHeader>
+			<band height="26" splitType="Stretch">
+				<staticText>
+					<reportElement key="element-111" x="0" y="0" width="120" height="26"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[Department   : ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement key="textField" x="127" y="0" width="148" height="26"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{department}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement key="rectangle-1" mode="Transparent" x="0" y="0" width="2298" height="26"/>
+				</rectangle>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="27" splitType="Stretch">
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="120" y="0" width="73" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandSalary}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="193" y="0" width="62" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandBasic}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="255" y="0" width="55" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandHRA}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="310" y="0" width="78" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandMedical}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="388" y="0" width="78" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandConveyance}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="466" y="0" width="78" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandSpecial}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="544" y="0" width="87" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandEarned}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="631" y="0" width="99" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandAttendence}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="730" y="0" width="96" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandOverTime}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="826" y="0" width="83" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandWeekly}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1069" y="0" width="79" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandGrossEarnings}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1148" y="0" width="53" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandPF}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1201" y="0" width="52" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandESI}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1253" y="0" width="56" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandPTax}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1309" y="0" width="43" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandLIC}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1352" y="0" width="54" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandAdvance}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1406" y="0" width="59" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandCanteen}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1465" y="0" width="59" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandStorage}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1524" y="0" width="62" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandFine}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1854" y="0" width="54" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandPower}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="2198" y="0" width="100" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandNetAmount}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="909" y="0" width="81" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandBackLogs}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="990" y="0" width="79" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandOtherEarnings}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1966" y="0" width="70" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandOtherDeductions}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement key="element-113" x="0" y="0" width="120" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1908" y="0" width="58" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandDish}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1586" y="0" width="70" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandTDS}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1656" y="0" width="104" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GRandSCAD}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="1760" y="0" width="94" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandLateDedcution}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField-1" x="2036" y="0" width="74" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandPartialPayroll}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true">
+					<reportElement key="textField" x="2110" y="0" width="88" height="27"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{GrandTotalDeduction}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="52" splitType="Stretch">
+			<staticText>
+				<reportElement key="element-90" x="631" y="17" width="99" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ATTEN/PROD INCENTIVE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-90" x="730" y="17" width="96" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[OVERTIME INCENTIVE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-90" x="826" y="17" width="83" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[WEEKLY INCENTIVE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-90" x="909" y="17" width="81" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BACK LOGS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-90" x="990" y="17" width="79" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[OTHERS ( + )]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-11" x="631" y="0" width="438" height="17"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[INCENTIVE EARNINGS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-12" x="1069" y="0" width="79" height="52"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[GROSS EARNINGS ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-91" x="1309" y="17" width="43" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[L . I . C]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-92" x="1352" y="17" width="54" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ADVANCE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-93" x="1406" y="17" width="59" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[CANTEEN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-94" x="1465" y="17" width="59" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[STORE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-95" x="1524" y="17" width="62" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[FINE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-96" x="1854" y="17" width="54" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[POWER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-13" x="1148" y="0" width="962" height="17"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[DEDUCTIONS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-14" x="2110" y="0" width="87" height="52"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TOTAL DEDUCTIONS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-15" x="2197" y="0" width="101" height="52"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[NET SALARY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-97" x="1966" y="17" width="70" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[OTHERS (-)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-17" x="544" y="0" width="87" height="52"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[EARNED SALARY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-101" x="120" y="17" width="73" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SALARY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-102" x="193" y="17" width="62" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[BASIC PAY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-103" x="255" y="17" width="55" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[H.R.A]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-104" x="310" y="17" width="78" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[MEDICAL ALLOWANCE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-18" x="120" y="0" width="424" height="17"/>
+				<box leftPadding="1" rightPadding="1">
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SALARY STRUCTUR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-105" x="388" y="17" width="78" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[CONVEYANCE ALLOWANCE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-106" x="466" y="17" width="78" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SPECIAL ALLOWANCE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-107" x="1253" y="17" width="56" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[P . TAX]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-108" x="1201" y="17" width="52" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[E . S . I]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-109" x="1148" y="17" width="53" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[P . F]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-112" x="0" y="0" width="120" height="52"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-114" x="1908" y="17" width="58" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[DISH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-115" x="1760" y="17" width="94" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[LATE COMING DEDUCTION]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-116" x="1656" y="17" width="104" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SHIFT CHANGE ABSENT DEDUCTION]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-117" x="1586" y="17" width="70" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[TDS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-118" x="2036" y="17" width="74" height="35"/>
+				<box leftPadding="1" rightPadding="1">
+					<pen lineWidth="0.0" lineStyle="Solid" lineColor="#110909"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#110909"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[PARTIAL PAYROLL AMOUNT]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="50" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-2" x="822" y="0" width="535" height="50"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[Data Not Available]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

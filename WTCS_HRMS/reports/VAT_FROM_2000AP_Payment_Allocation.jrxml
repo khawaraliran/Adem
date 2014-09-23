@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: VAT_FROM_2000AP_Payment_Allocation.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="VAT_FROM_2000AP_Payment_Allocation" language="java" pageWidth="500" pageHeight="572" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="500" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_Period_ID" class="java.math.BigDecimal"/>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<queryString>
+		<![CDATA[SELECT cpa.C_PaymentAllocate_ID , cpa.amount
+             FROM C_PaymentAllocate cpa
+             WHERE    cpa.C_Payment_ID IN (
+                                            	  SELECT  cp.C_Payment_ID
+ 	                        	        FROM C_Payment cp WHERE cp.AD_Table_ID = 1000012
+     			        AND cp.payment_ref_id  IN  ( SELECT trf.WTC_TaxReturnForm_ID
+                                      	         				 FROM WTC_TaxReturnForm trf
+                                                     				 WHERE trf.WTC_TaxIndicator_ID = $P{WTC_TaxIndicator_ID}
+ 		          				 AND trf.C_Period_ID IN (     select cper.C_Period_ID
+                                                                                                 				from C_Period cper
+                                                                                                 				where ( cper.startdate >=$P{FromDate} AND cper.startdate <=$P{ToDate} )
+                                                                                                     				OR ( cper.enddate >= $P{FromDate} AND cper.enddate <= $P{ToDate} )
+                                                                                       				              )
+                                          				     )
+		              )
+
+Order by cpa.C_Payment_ID ;
+
+
+]]>
+	</queryString>
+	<field name="C_PaymentAllocate_ID" class="java.math.BigDecimal"/>
+	<field name="amount" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="24" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-31" x="1" y="0" width="171" height="24"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Allocation Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-33" x="172" y="0" width="229" height="24"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Amount]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="1" y="0" width="171" height="20"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{C_PaymentAllocate_ID}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="172" y="0" width="229" height="20"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{amount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="1" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="30">
+			<staticText>
+				<reportElement x="90" y="0" width="298" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[DATA NOT AVAILABLE]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

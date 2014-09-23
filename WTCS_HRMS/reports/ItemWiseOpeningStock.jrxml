@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: ItemWiseOpeningStock.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ItemWiseOpeningStock" pageWidth="750" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="690" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AD_Org_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_AcctSchema_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT COALESCE(pro.value,'') As ItemCode,
+pro.name As ItemName ,
+COALESCE(dr.drawing_number,'') AS DrawingNumber ,
+COALESCE((SELECT SUM(COALESCE(mcd1.Qty,0))/( SELECT    COUNT(DISTINCT (mcd11.M_CostElement_ID ))
+                                     FROM M_CostDetail mcd11
+                                     WHERE  (mcd11.dateacct <'$P!{FromDate}')
+                                     AND (pro.M_Product_ID=mcd11.M_Product_ID )
+                                     AND (mcd11.C_AcctSchema_ID = $P{C_AcctSchema_ID})
+                                     AND mcd11.M_Costtype_ID IN (SELECT M_Costtype_ID FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+                                     AND mcd11.costingmethod IN (SELECT costingmethod FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+                                 )
+                FROM M_CostDetail mcd1
+                 WHERE  (mcd1.dateacct <'$P!{FromDate}')
+                  AND (pro.M_Product_ID=mcd1.M_Product_ID )
+                  AND (mcd1.C_AcctSchema_ID = $P{C_AcctSchema_ID})
+                  AND mcd1.M_Costtype_ID IN (SELECT M_Costtype_ID FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+                  AND mcd1.costingmethod IN (SELECT costingmethod FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )  )
+       ,0     ) AS openstock ,
+       COALESCE((SELECT SUM(COALESCE(mcd2.Amt,0)) from M_CostDetail mcd2
+                                         WHERE  (mcd2.dateacct <'$P!{FromDate}')
+                                         AND (pro.M_Product_ID=mcd2.M_Product_ID )
+                                         AND (mcd2.C_AcctSchema_ID = $P{C_AcctSchema_ID})
+                                         AND mcd2.M_Costtype_ID IN (SELECT M_Costtype_ID FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+                                         AND mcd2.costingmethod IN (SELECT costingmethod FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+       ),0) AS amount
+  FROM M_Product pro
+  LEFT OUTER JOIN WTC_Drawing_Number dr ON pro.WTC_Drawing_Number_ID=dr.WTC_Drawing_Number_ID
+  JOIN M_CostDetail cd ON  cd.M_Product_ID=pro.M_Product_ID
+  Where cd.dateacct < '$P!{FromDate}'
+  AND (cd.C_AcctSchema_ID = $P{C_AcctSchema_ID})
+  AND cd.M_Costtype_ID IN (SELECT M_Costtype_ID FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+  AND cd.costingmethod IN (SELECT costingmethod FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID} )
+GROUP BY  pro.value, pro.name, dr.drawing_number , pro.M_Product_ID]]>
+	</queryString>
+	<field name="itemcode" class="java.lang.String"/>
+	<field name="itemname" class="java.lang.String"/>
+	<field name="drawingnumber" class="java.lang.String"/>
+	<field name="openstock" class="java.math.BigDecimal"/>
+	<field name="amount" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="132" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-1" x="154" y="70" width="336" height="31"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[PRODUCT WISE OPENING STOCK]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-11" x="2" y="114" width="213" height="16"/>
+				<textElement>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ PRODUCT WISE OPENING STOCK ON DATE :]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="215" y="114" width="100" height="16"/>
+				<textElement>
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$P{FromDate}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="26" y="0" width="648" height="60"/>
+				<subreportParameter name="AD_Org_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Org_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "clientaddress.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="1" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="41" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-2" x="0" y="0" width="132" height="41"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ITEM CODE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-3" x="132" y="0" width="174" height="41"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[ITEM NAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-4" x="306" y="0" width="218" height="41"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[DRAWING NO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-7" x="524" y="0" width="150" height="19"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[OPENING]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-8" x="524" y="19" width="75" height="22"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[STOCK]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-9" x="599" y="19" width="75" height="22"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[VALUES]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="25" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="0" y="0" width="132" height="25"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{itemcode}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="132" y="0" width="174" height="25"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{itemname}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="306" y="0" width="218" height="25"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{drawingnumber}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="524" y="0" width="75" height="25"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{openstock}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="599" y="0" width="75" height="25"/>
+				<box>
+					<topPen lineWidth="1.0" lineStyle="Solid"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{amount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="1" splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="45" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-10" x="139" y="4" width="442" height="37"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="24"/>
+				</textElement>
+				<text><![CDATA[  "DATA NOT AVAILABLE "]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

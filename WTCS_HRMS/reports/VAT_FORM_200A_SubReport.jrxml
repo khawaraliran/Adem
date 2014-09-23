@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: VAT_FORM_200A_SubReport.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="VAT_FORM_200A_SubReport" pageWidth="620" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="620" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="isSoTrx" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Y"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<parameter name="VATOnly" class="java.lang.String"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_Period_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT (CASE WHEN ct.WTC_TaxIndicator_ID= $P{WTC_TaxIndicator_ID} THEN SUM(cit.taxAmt) ELSE null END) AS VATclaimed,
+SUM(cit.taxbaseamt) as excludingVAT,
+ct.name ,
+ct.WTC_TaxIndicator_ID ,
+( SELECT COALESCE(carryforward,0) FROM WTC_TaxReturnForm
+              WHERE C_Period_ID =( SELECT cp.C_Period_ID FROM C_Period cp
+                                                        WHERE ( CAST( $P{FromDate} as date) - INTERVAL '15' ) BETWEEN cp.startdate AND cp.enddate ) AND WTC_TaxIndicator_ID=$P{WTC_TaxIndicator_ID}
+) as InputCredit
+FROM C_InvoiceTax cit
+JOIN C_Invoice c ON (c.C_Invoice_ID=cit.C_Invoice_ID)
+JOIN C_Tax ct ON ( ct.C_Tax_ID=cit.C_Tax_ID)
+JOIN WTC_TaxIndicator wti ON (wti.WTC_TaxIndicator_ID=ct.WTC_TaxIndicator_ID)
+WHERE  (
+CASE WHEN $P{isSoTrx}='Y' THEN
+   ( CASE WHEN wti.collectableon ='SO' THEN
+        c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('ARI','APC') )
+   ELSE
+	( CASE WHEN ct.isSalesTax ='N' THEN  c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('API','ARC') )
+	ELSE
+	1=2
+	END) END)
+ELSE
+  (
+      (  CASE WHEN wti.collectableon ='PO' THEN
+           c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('ARI','APC') )
+         ELSE
+	( CASE WHEN ct.isSalesTax ='N' THEN  c.C_DocType_ID IN (select cd.C_DocType_ID from C_DocType cd where cd.docbasetype in ('API','ARC') )
+	ELSE
+	1=2
+	END) END
+      )
+   )
+
+END
+AND c.dateAcct BETWEEN $P{FromDate} AND $P{ToDate}
+AND CASE WHEN $P{VATOnly} ='Y' THEN
+     wti.WTC_TaxIndicator_ID= $P{WTC_TaxIndicator_ID}
+    ELSE
+      wti.WTC_TaxIndicator_ID IN ( SELECT wtt1.WTC_TaxIndicator_ID FROM WTC_TaxIndicator wtt1 WHERE wtt1.code IN ('VAT','CST','IE'))
+    END
+AND c.docstatus='CO' )
+GROUP BY ct.name,ct.WTC_TaxIndicator_ID]]>
+	</queryString>
+	<field name="vatclaimed" class="java.math.BigDecimal"/>
+	<field name="excludingvat" class="java.math.BigDecimal"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="wtc_taxindicator_id" class="java.math.BigDecimal"/>
+	<field name="InputCredit" class="java.math.BigDecimal"/>
+	<variable name="So" class="java.lang.String">
+		<variableExpression><![CDATA[$P{isSoTrx}]]></variableExpression>
+		<initialValueExpression><![CDATA["Y"]]></initialValueExpression>
+	</variable>
+	<variable name="TotalTaxAmt" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{vatclaimed}]]></variableExpression>
+	</variable>
+	<variable name="vatpayable" class="java.math.BigDecimal" incrementType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{vatclaimed}]]></variableExpression>
+	</variable>
+	<variable name="InputCredit" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{InputCredit}==null ?  java.math.BigDecimal.ZERO : $F{InputCredit}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="31" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-2" x="6" y="0" width="222" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[( $P{isSoTrx}.equals("N") ? " PURCHASES IN THE MONTH (INPUT) "  : " SALES IN THE MONTH (OUTPUT)" )]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-3" x="228" y="0" width="146" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[  Value Excluding VAT]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-3" x="374" y="0" width="152" height="30"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[( $P{isSoTrx}.equals("N") ? " VAT Claimed "  : "  VAT Due  " )]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="13" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="228" y="0" width="146" height="13"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{excludingvat}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="###0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="374" y="0" width="152" height="13"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{vatclaimed}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="6" y="0" width="222" height="13"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA["  "+$F{name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="12" splitType="Prevent">
+			<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField" x="374" y="0" width="152" height="12"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[( $P{isSoTrx}.equals("N") ? ($F{InputCredit} ==null? $V{TotalTaxAmt} :$V{TotalTaxAmt}.add($F{InputCredit}.abs())  ): $V{TotalTaxAmt} )]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-4" x="6" y="0" width="368" height="12"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[( $P{isSoTrx}.equals("N") ? "  Total Amount of Input Tax + Input TaxCredit Of previous Month "  : "  Total Amount of Output Tax" )]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+	<noData>
+		<band height="50">
+			<textField>
+				<reportElement x="19" y="0" width="550" height="39">
+					<printWhenExpression><![CDATA[$F{name}==null]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="none"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[( $P{isSoTrx}.equals("N") ? " NO PURCHASES(INPUT) IN THE Given Period  "  : " No SALES (OUTPUT) IN THE Given Period " )]]></textFieldExpression>
+			</textField>
+		</band>
+	</noData>
+</jasperReport>

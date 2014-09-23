@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="DateWiseAndFinancialHeadWiseConsumption" pageWidth="900" pageHeight="842" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="840" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="WTC_REPORT_NAME" class="java.lang.String" isForPrompting="false">
+		<parameterDescription><![CDATA[Report name]]></parameterDescription>
+		<defaultValueExpression><![CDATA["Sample Report Title"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AD_Org_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_AcctSchema_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[new BigDecimal(101)]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT SUM(ll.Amount) as Amount,
+       ProductCategory,
+       ll.IndentDate
+
+       FROM ( SELECT  DISTINCT mi.movementdate AS IndentDate ,
+                                       mpc.name As ProductCategory ,
+                                       COALESCE( (SELECT SUM(COALESCE(mcd2.Amt,0)) from M_CostDetail mcd2
+                                                   WHERE  (mcd2.dateacct BETWEEN '$P!{FromDate}' and '$P!{ToDate}')
+                                                   AND (mp.M_Product_ID=mcd2.M_Product_ID )
+                                                   AND  (mpc.M_Product_Category_ID   =( SELECT M_Product_Category_ID FROM M_Product Where M_Product_ID = mcd2.M_Product_ID ))
+                                                   AND mcd2.M_InventoryLine_ID=mil.M_InventoryLine_ID
+                                                   AND (mcd2.C_AcctSchema_ID =  $P{C_AcctSchema_ID})
+                                                   AND mcd2.M_Costtype_ID IN (SELECT M_Costtype_ID FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID})
+                                                   AND mcd2.costingmethod IN (SELECT costingmethod FROM  C_AcctSchema WHERE C_AcctSchema_ID = $P{C_AcctSchema_ID})
+                                                  ),0) AS Amount
+                                       ,mil.M_InventoryLine_ID
+
+                                FROM  M_Inventory mi
+                                JOIN  M_InventoryLine mil ON mil.M_Inventory_ID=mi.M_Inventory_ID
+                                JOIN  M_Product mp ON mil.M_Product_ID=mp.M_Product_ID
+                                JOIN  M_Product_Category  mpc ON mpc.M_Product_Category_ID=mp.M_Product_Category_ID
+                                Where ( mi.movementdate BETWEEN '$P!{FromDate}' and '$P!{ToDate}')
+                                AND mi.movementtype IN ('I-' , 'I+')
+                                AND mi.docstatus IN ('CO','CL')
+                                AND mil.currentcostprice =0
+                                GROUP BY mi.movementdate,mpc.name,mp.M_Product_ID,mpc.M_Product_Category_ID ,mil.M_InventoryLine_ID
+                                 ) ll
+GROUP BY ll.ProductCategory,ll.IndentDate
+;]]>
+	</queryString>
+	<field name="indentdate" class="java.sql.Timestamp"/>
+	<field name="productcategory" class="java.lang.String"/>
+	<field name="amount" class="java.math.BigDecimal"/>
+	<variable name="currentDate" class="java.lang.String">
+		<variableExpression><![CDATA[(new SimpleDateFormat("dd/MM/yyyy")).format(new Date())]]></variableExpression>
+	</variable>
+	<variable name="currentDateTime" class="java.lang.String">
+		<variableExpression><![CDATA[(new SimpleDateFormat("dd/MM/yyyy hh:mm:ss aaa z")).format(new Date())]]></variableExpression>
+	</variable>
+	<variable name="noData" class="java.lang.String">
+		<variableExpression><![CDATA["Data Not Available FROM "+(new SimpleDateFormat("dd/MM/yyyy")).format(new Date())+" TO "+(new SimpleDateFormat("dd/MM/yyyy")).format(new Date())]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="97" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-1" x="6" y="74" width="52" height="23"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[FROM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-2" x="196" y="74" width="35" height="23"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[To]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="58" y="79" width="124" height="18"/>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$P{FromDate}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="237" y="79" width="136" height="18"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$P{ToDate}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="0" y="0" width="799" height="60"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_Org_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Org_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "clientaddress.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="70" splitType="Stretch">
+			<crosstab>
+				<reportElement key="crosstab-1" x="6" y="3" width="826" height="65"/>
+				<crosstabHeaderCell>
+					<cellContents mode="Transparent">
+						<staticText>
+							<reportElement key="staticText-4" x="0" y="0" width="100" height="25"/>
+							<box>
+								<topPen lineWidth="1.0" lineStyle="Solid"/>
+								<leftPen lineWidth="1.0" lineStyle="Solid"/>
+								<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+								<rightPen lineWidth="1.0" lineStyle="Solid"/>
+							</box>
+							<textElement textAlignment="Center" verticalAlignment="Middle"/>
+							<text><![CDATA[INDENT DATE]]></text>
+						</staticText>
+					</cellContents>
+				</crosstabHeaderCell>
+				<rowGroup name="indentdate" width="100" totalPosition="End">
+					<bucket>
+						<bucketExpression class="java.sql.Timestamp"><![CDATA[$F{indentdate}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents mode="Transparent">
+							<textField pattern="dd/MM/yyyy" isBlankWhenNull="false">
+								<reportElement key="textField" x="0" y="0" width="100" height="30"/>
+								<box>
+									<topPen lineWidth="1.0" lineStyle="Solid"/>
+									<leftPen lineWidth="1.0" lineStyle="Solid"/>
+									<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression class="java.sql.Timestamp"><![CDATA[$V{indentdate}]]></textFieldExpression>
+							</textField>
+							<staticText>
+								<reportElement key="staticText-5" x="65" y="19" width="0" height="0"/>
+								<textElement/>
+								<text><![CDATA[Static Text]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents mode="Transparent"/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="productcategory" height="25" totalPosition="End" headerPosition="Center">
+					<bucket>
+						<bucketExpression class="java.lang.String"><![CDATA[$F{productcategory}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents mode="Transparent">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+								<reportElement key="textField" x="0" y="0" width="135" height="25"/>
+								<box>
+									<topPen lineWidth="1.0" lineStyle="Solid"/>
+									<leftPen lineWidth="1.0" lineStyle="Solid"/>
+									<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression class="java.lang.String"><![CDATA[$V{productcategory}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents mode="Transparent">
+							<staticText>
+								<reportElement key="staticText-4" x="0" y="0" width="132" height="25"/>
+								<box>
+									<topPen lineWidth="1.0" lineStyle="Solid"/>
+									<leftPen lineWidth="1.0" lineStyle="Solid"/>
+									<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+									<rightPen lineWidth="1.0" lineStyle="Solid"/>
+								</box>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[TOTAL]]></text>
+							</staticText>
+						</cellContents>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="amount_Nothing" class="java.math.BigDecimal">
+					<measureExpression><![CDATA[$F{amount}]]></measureExpression>
+				</measure>
+				<measure name="TotalSum" class="java.math.BigDecimal" calculation="Sum">
+					<measureExpression><![CDATA[$F{amount}]]></measureExpression>
+				</measure>
+				<crosstabCell width="135" height="30">
+					<cellContents mode="Transparent">
+						<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+							<reportElement key="textField" x="0" y="0" width="135" height="30"/>
+							<box>
+								<topPen lineWidth="1.0" lineStyle="Solid"/>
+								<leftPen lineWidth="1.0" lineStyle="Solid"/>
+								<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+								<rightPen lineWidth="1.0" lineStyle="Solid"/>
+							</box>
+							<textElement textAlignment="Center" verticalAlignment="Middle"/>
+							<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{amount_Nothing}.negate()]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="132" height="30" columnTotalGroup="productcategory">
+					<cellContents mode="Transparent">
+						<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true">
+							<reportElement key="textField" x="0" y="0" width="132" height="30"/>
+							<box>
+								<topPen lineWidth="1.0" lineStyle="Solid"/>
+								<leftPen lineWidth="1.0" lineStyle="Solid"/>
+								<bottomPen lineWidth="1.0" lineStyle="Solid"/>
+								<rightPen lineWidth="1.0" lineStyle="Solid"/>
+							</box>
+							<textElement textAlignment="Center" verticalAlignment="Middle"/>
+							<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalSum}.negate()]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="135" height="1" rowTotalGroup="indentdate">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<crosstabCell width="132" height="1" rowTotalGroup="indentdate" columnTotalGroup="productcategory">
+					<cellContents mode="Transparent"/>
+				</crosstabCell>
+				<whenNoDataCell>
+					<cellContents mode="Transparent"/>
+				</whenNoDataCell>
+			</crosstab>
+		</band>
+	</summary>
+	<noData>
+		<band height="50" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-3" x="114" y="8" width="595" height="40"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="18" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[  "DATA NOT AVAILABLE "]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

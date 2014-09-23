@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: TdsSummaryReport.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="TdsSummaryReport" pageWidth="595" pageHeight="842" whenNoDataType="NoDataSection" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="C_Year_ID" class="java.math.BigDecimal"/>
+	<parameter name="Quarter" class="java.lang.String"/>
+	<parameter name="IsSOTrx" class="java.lang.String"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT * FROM ( ( SELECT   cit.taxamt as taxAmt ,cb.name as name,c.DateInvoiced as dateinvoiced ,c.DocumentNo as documentno,
+( CASE WHEN cit.iscalconpayment ='Y' THEN c.GrandTotal
+ELSE ( c.GrandTotal + cit.taxamt) END ) as grandtotal
+
+
+,( SELECT fiscalyear from C_year where C_Year_ID=$P{C_Year_ID}) As Year ,
+ ( CASE WHEN ( c.C_DocType_ID IN ( SELECT C_DocType_ID FROM C_DocType WHERE docbasetype IN ('API','ARC') ) ) THEN 'N' ELSE 'Y' END ) as type
+ FROM lco_invoicewithholding cit
+JOIN  C_Invoice c ON ( c.C_INvoice_Id=cit.C_invoice_ID)
+JOIN C_BPartner cb ON ( cb.C_Bpartner_Id=c.C_Bpartner_ID)
+JOIN C_Tax ct ON ( ct.C_Tax_Id=cit.C_Tax_ID)
+JOIN WTC_TaxIndicator witc ON (witc.WTC_TaxIndicator_ID=ct.WTC_TaxIndicator_ID)
+
+WHERE
+
+
+ witc.WTC_TaxIndicator_ID= $P{WTC_TaxIndicator_ID}
+
+AND c.Docstatus IN ('CO','CL')
+AND (CASE WHEN $P{Quarter}='1' THEN
+		( c.dateinvoiced >= (SELECT startdate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =1)
+   	 AND
+   		  c.dateinvoiced <= (SELECT enddate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =3) )
+    ELSE
+	( CASE WHEN $P{Quarter}='2' THEN
+			( c.dateinvoiced >= (SELECT startdate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =4)
+   	 		AND
+   		  	c.dateinvoiced <= (SELECT enddate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =6) )
+	ELSE
+		( CASE WHEN $P{Quarter}='3' THEN
+			( c.dateinvoiced >= (SELECT startdate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =7)
+   	 		AND
+   		  	c.dateinvoiced <= (SELECT enddate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =9) )
+		  ELSE
+			( c.dateinvoiced >= (SELECT startdate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =10)
+   	 		AND
+   		  	c.dateinvoiced <= (SELECT enddate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =12) )
+		  END )
+	END )
+    END )
+
+ORDER BY cb.name  )
+
+UNION ALL
+
+( SELECT hm.amount as taxAmt,cb.name As name ,hp.startdate,  ps.HR_PaySlip_ID :: text As documentno,ps.grosssalary as grandtotal,( SELECT fiscalyear from C_year where C_Year_ID=$P{C_Year_ID}) As Year , 'O' as type
+FROM HR_Period hp
+JOIN HR_PaySlip ps ON ( ps.HR_Period_ID=hp.HR_Period_ID)
+JOIN C_BPartner cb ON (cb.C_BPartner_ID=ps.C_BPartner_ID)
+JOIN HR_Movement hm ON (   ps.HR_Process_ID = hm.HR_Process_ID AND cb.C_Bpartner_Id=hm.C_Bpartner_ID)
+
+JOIN HR_Concept hc ON ( hc.HR_Concept_ID=hm.HR_Concept_ID  )
+WHERE
+hc.name='TDS' AND
+  hm.amount > 0 AND
+ps.ismock='N' AND
+CASE WHEN $P{Quarter}='1' THEN
+		( (  hp.HR_Period_ID IN (SELECT hr.HR_Period_ID from HR_Period hr WHERE hr.C_Period_ID IN
+ (SELECT p.C_Period_ID FROM C_Period p WHERE p.C_Year_ID=$P{C_Year_ID} and p.periodno >= 1 and p.periodno <=3  ) ) )
+)ELSE (
+CASE WHEN $P{Quarter}='2' THEN
+((  hp.HR_Period_ID IN (SELECT hr.HR_Period_ID from HR_Period hr WHERE hr.C_Period_ID IN
+ (SELECT p.C_Period_ID FROM C_Period p WHERE p.C_Year_ID=$P{C_Year_ID} and p.periodno >= 4 and p.periodno <=6 )  ) ) )
+  ELSE (
+    CASE WHEN $P{Quarter}='3' THEN
+((  hp.HR_Period_ID IN (SELECT hr.HR_Period_ID from HR_Period hr WHERE hr.C_Period_ID IN
+ (SELECT p.C_Period_ID FROM C_Period p WHERE p.C_Year_ID=$P{C_Year_ID} and p.periodno >= 7 and p.periodno <=9  )  ) ) )
+ELSE
+(  hp.HR_Period_ID IN (SELECT hr.HR_Period_ID from HR_Period hr WHERE hr.C_Period_ID IN
+ (SELECT p.C_Period_ID FROM C_Period p WHERE p.C_Year_ID=$P{C_Year_ID} and p.periodno >= 10 and p.periodno <=12 )  ) )
+END
+) END
+)END ORDER BY cb.name) ) As l
+WHERE type=$P{IsSOTrx}]]>
+	</queryString>
+	<field name="taxamt" class="java.math.BigDecimal"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="dateinvoiced" class="java.sql.Timestamp"/>
+	<field name="documentno" class="java.lang.String"/>
+	<field name="grandtotal" class="java.math.BigDecimal"/>
+	<field name="Year" class="java.lang.String"/>
+	<variable name="TotalInvoice" class="java.math.BigDecimal" resetType="Group" resetGroup="name" calculation="Sum">
+		<variableExpression><![CDATA[$F{grandtotal}]]></variableExpression>
+	</variable>
+	<variable name="TotalTds" class="java.math.BigDecimal" resetType="Group" resetGroup="name" calculation="Sum">
+		<variableExpression><![CDATA[$F{taxamt}]]></variableExpression>
+	</variable>
+	<group name="name">
+		<groupExpression><![CDATA[$F{name}]]></groupExpression>
+		<groupHeader>
+			<band height="20">
+				<staticText>
+					<reportElement x="101" y="0" width="200" height="20"/>
+					<box>
+						<leftPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="301" y="0" width="200" height="20"/>
+					<box>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" markup="none"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="0" width="100" height="20"/>
+					<box>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{name}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="41">
+				<textField pattern="###0.0000">
+					<reportElement x="401" y="20" width="100" height="20"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalTds}]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0.0000">
+					<reportElement x="301" y="0" width="100" height="20"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalInvoice}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="101" y="0" width="200" height="20"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" markup="none">
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$P{IsSOTrx}.equalsIgnoreCase( "O" ) ? "Total Salary" : "Total Invoice Amount"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="101" y="20" width="200" height="20"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total TDS Amount ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="401" y="0" width="100" height="20"/>
+					<box>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="301" y="20" width="100" height="20"/>
+					<box>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1" y="0" width="100" height="20"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1" y="20" width="100" height="20"/>
+					<box>
+						<topPen lineWidth="0.25" lineStyle="Solid"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					</box>
+					<textElement/>
+					<text><![CDATA[]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="21" splitType="Stretch">
+			<staticText>
+				<reportElement x="165" y="0" width="194" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[TDS Summary Report]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="56" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="68" height="14" forecolor="#1C0E22"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Parameters :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="15" width="112" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<text><![CDATA[Year                      >]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="35" width="112" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<text><![CDATA[Quarter                 >]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="112" y="15" width="100" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{Year}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="112" y="35" width="100" height="20" forecolor="#1C0E22"/>
+				<textElement markup="none"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{Quarter}.equalsIgnoreCase( "1" ) ? "1st Quarter" :($P{Quarter}.equalsIgnoreCase( "2" ) ? "2nd Quarter " : ( $P{Quarter}.equalsIgnoreCase( "3" ) ? "3rd Quarter" : "4th Quarter" ))]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="289" y="14" width="150" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<text><![CDATA[Sales/Purchase/Others    >]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="439" y="14" width="100" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{IsSOTrx}.equalsIgnoreCase( "Y" ) ? "Sales" : ($P{IsSOTrx}.equalsIgnoreCase( "O" ) ? "Others" :  "Purchase" )]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="26" splitType="Stretch">
+			<textField>
+				<reportElement x="301" y="0" width="100" height="26"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" markup="none">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{IsSOTrx}.equalsIgnoreCase( "O" ) ? "Gross Salary" : "Invoice Amount"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="401" y="0" width="100" height="26"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TDS Amount]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="201" y="0" width="100" height="26"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" markup="none">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{IsSOTrx}.equalsIgnoreCase( "O" ) ? "PaySlip ID" : "Invoice Number"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="101" y="0" width="100" height="26"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" markup="none">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{IsSOTrx}.equalsIgnoreCase( "O" ) ? "PaySlip Date" : "Invoice Date"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="0" width="100" height="26"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Business Partner ]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="23" splitType="Stretch">
+			<textField>
+				<reportElement x="201" y="0" width="100" height="23"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{documentno}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.0000">
+				<reportElement x="301" y="0" width="100" height="23"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{grandtotal}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="101" y="0" width="100" height="23"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{dateinvoiced}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.0000">
+				<reportElement x="401" y="0" width="100" height="23"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{taxamt}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="0" width="100" height="23"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle" markup="none"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+		</band>
+	</detail>
+	<noData>
+		<band height="20">
+			<staticText>
+				<reportElement x="192" y="0" width="170" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Data not available]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

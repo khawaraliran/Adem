@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: InputCreditSummary.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="InputCreditSummary" language="java" pageWidth="612" pageHeight="792" whenNoDataType="NoDataSection" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_Year_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_Period_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT @ SUM(cit.taxAmt) AS Inputcredit , UPPER( to_char(   c.dateInvoiced , 'month') ) as month,date_part( 'year',  c.dateInvoiced ) as year ,ct.name AS Tax , ti.name AS TaxIndicator FROM
+C_InvoiceTax cit
+JOIN C_Invoice c ON ( c.C_Invoice_ID = cit.C_Invoice_ID )
+JOIN C_Tax ct ON ( ct.C_Tax_ID = cit.C_Tax_ID )
+JOIN WTC_TaxIndicator ti ON ( ti.WTC_TaxIndicator_ID = ct.WTC_TaxIndicator_ID )
+
+WHERE
+
+CASE WHEN ti.CollectableOn ='SO' THEN
+c.C_DocType_ID IN ( SELECT C_DocType_ID FROM C_DocType WHERE docbasetype IN ('API','ARC') )
+ELSE
+c.C_DocType_ID IN ( SELECT C_DocType_ID FROM C_DocType WHERE docbasetype IN ('ARI','APC') ) END
+AND c.isPaid='Y'
+AND ti.WTC_TaxIndicator_ID= $P{WTC_TaxIndicator_ID}
+AND
+  CASE WHEN $P{C_Period_ID} = 0 THEN
+
+    ( c.dateinvoiced >= (SELECT startdate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =1)
+    AND
+     c.dateinvoiced <= (SELECT enddate from C_Period WHERE C_Year_ID=$P{C_Year_ID} and periodno =12) )
+  ELSE
+   ( c.dateinvoiced >= (SELECT startdate from C_Period WHERE C_Period_ID=$P{C_Period_ID})
+    AND
+   c.dateinvoiced <= (SELECT enddate from C_Period WHERE C_Period_ID=$P{C_Period_ID}) )
+  END
+GROUP BY  c.dateinvoiced,ti.name , ct.name]]>
+	</queryString>
+	<field name="inputcredit" class="java.math.BigDecimal"/>
+	<field name="tax" class="java.lang.String"/>
+	<field name="TaxIndicator" class="java.lang.String"/>
+	<field name="month" class="java.lang.String"/>
+	<field name="year" class="java.lang.Integer"/>
+	<variable name="TotalInputCredit" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{inputcredit}]]></variableExpression>
+	</variable>
+	<variable name="MonthTotal" class="java.math.BigDecimal" resetType="Group" resetGroup="Month" calculation="Sum">
+		<variableExpression><![CDATA[$F{inputcredit}]]></variableExpression>
+	</variable>
+	<group name="Year">
+		<groupExpression><![CDATA[$F{year}]]></groupExpression>
+	</group>
+	<group name="Month">
+		<groupExpression><![CDATA[$F{month}]]></groupExpression>
+		<groupHeader>
+			<band height="21">
+				<textField>
+					<reportElement x="0" y="0" width="278" height="21"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Justified"/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{month}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="21">
+				<textField pattern="###0.0000">
+					<reportElement x="151" y="0" width="127" height="21"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{MonthTotal}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+					<reportElement positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="151" height="21"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" markup="none"/>
+					<textFieldExpression class="java.lang.String"><![CDATA["Month Total ="]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="38" splitType="Stretch">
+			<staticText>
+				<reportElement x="176" y="9" width="221" height="20"/>
+				<textElement>
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[Input Credit Summary Report]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="56" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="68" height="14" forecolor="#1C0E22"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Parameters :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="15" width="112" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<text><![CDATA[Tax Indicator        >]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="112" y="15" width="100" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{TaxIndicator}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="231" y="15" width="76" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<text><![CDATA[Year        >]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="320" y="14" width="100" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$F{year}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="35" width="112" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<text><![CDATA[Month                   >]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="112" y="35" width="100" height="20" forecolor="#1C0E22"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{C_Period_ID}.compareTo( java.math.BigDecimal.ZERO )== 0 ? "Nil" :$F{month}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="22" splitType="Stretch">
+			<staticText>
+				<reportElement x="151" y="0" width="127" height="22"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[  Input Credit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="0" width="151" height="22"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Tax]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="29" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="151" height="29"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{tax}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0.0000">
+				<reportElement x="151" y="0" width="127" height="29"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{inputcredit}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="22" splitType="Stretch">
+			<textField pattern="###0.0000">
+				<reportElement x="151" y="0" width="127" height="20"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalInputCredit}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="0" width="151" height="20"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Grand Total =]]></text>
+			</staticText>
+		</band>
+	</summary>
+	<noData>
+		<band height="50">
+			<staticText>
+				<reportElement x="198" y="13" width="173" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14"/>
+				</textElement>
+				<text><![CDATA[Data not availbale]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

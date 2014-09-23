@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: VAT_FORM_2000AP_Payments_subReport.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="VAT_FORM_2000AP_Payments_subReport" language="java" pageWidth="510" pageHeight="572" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="510" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="WTC_TaxIndicator_ID" class="java.math.BigDecimal"/>
+	<parameter name="C_Period_ID" class="java.math.BigDecimal"/>
+	<parameter name="FromDate" class="java.sql.Timestamp"/>
+	<parameter name="ToDate" class="java.sql.Timestamp"/>
+	<queryString>
+		<![CDATA[SELECT   COALESCE(cp.payAmt,0) AS Amount  ,
+             cp.dateacct as Dated ,
+             (CASE WHEN cp.tendertype ='K' THEN 'Check' ELSE 'Cash' END ) AS PaymentDetails,
+             (CASE WHEN cp.tendertype ='K' THEN (COALESCE(cp.checkno,'No Information'))   ELSE '-------' END ) AS checknumber,
+             (CASE WHEN cp.tendertype = 'K' THEN ( SELECT bank.name
+			       from C_Bank bank  Where bank.C_Bank_ID = ( SELECT bact.C_Bank_ID
+     	   			               		          FROM c_bankaccount bact
+				               		          WHERE bact.c_bankaccount_id = cp.c_bankaccount_id
+				   		        )
+                                                                       )
+                                                               ELSE  (
+                                                                             SELECT cash.name
+                                                                             from C_CashBook cash Where cash.C_CashBook_ID = cp.C_CashBook_ID
+                                                                        )
+              END ) AS  TresuryName,
+              ( SELECT trf1.carryforward
+                                      	          FROM WTC_TaxReturnForm trf1
+                                                      WHERE trf1.WTC_TaxIndicator_ID = $P{WTC_TaxIndicator_ID}
+ 		          AND trf1.C_Period_ID = $P{C_Period_ID}
+              ) AS Carryforward
+
+
+  FROM C_Payment cp WHERE cp.AD_Table_ID = 1000012
+  AND cp.payment_ref_id IN  ( SELECT trf.WTC_TaxReturnForm_ID
+                                      	          FROM WTC_TaxReturnForm trf
+                                                      WHERE trf.WTC_TaxIndicator_ID = $P{WTC_TaxIndicator_ID}
+ 		          AND trf.C_Period_ID IN (     select cper.C_Period_ID
+                                                                                                 from C_Period cper
+                                                                                                 where ( cper.startdate >=$P{FromDate} AND cper.startdate <=$P{ToDate} )
+                                                                                                     OR ( cper.enddate >= $P{FromDate} AND cper.enddate <= $P{ToDate} )
+                                                                                        )
+                                          )
+
+
+Order by  cp.payment_ref_id
+;]]>
+	</queryString>
+	<field name="Amount" class="java.math.BigDecimal"/>
+	<field name="Dated" class="java.sql.Timestamp"/>
+	<field name="PaymentDetails" class="java.lang.String"/>
+	<field name="TresuryName" class="java.lang.String"/>
+	<field name="checknumber" class="java.lang.String"/>
+	<field name="Carryforward" class="java.math.BigDecimal"/>
+	<variable name="TotalAmount" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{Amount}]]></variableExpression>
+	</variable>
+	<variable name="Carryforward" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{Carryforward}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="33" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-21" positionType="Float" x="404" y="0" width="84" height="33"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Amount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-18" positionType="Float" x="271" y="0" width="133" height="33"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Bank/Treasury]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-19" positionType="Float" x="202" y="0" width="69" height="33"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Dated]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-15" positionType="Float" x="0" y="0" width="93" height="33"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Payment Details.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-19" positionType="Float" x="93" y="0" width="109" height="33"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Check Number]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="27" splitType="Stretch">
+			<textField>
+				<reportElement x="404" y="0" width="84" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{Amount}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="202" y="0" width="69" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{Dated}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="93" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{PaymentDetails}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="271" y="0" width="133" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{TresuryName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="93" y="0" width="109" height="27"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{checknumber}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="22" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="404" height="22"/>
+				<graphicElement>
+					<pen lineWidth="0.25"/>
+				</graphicElement>
+			</rectangle>
+			<textField>
+				<reportElement x="404" y="0" width="84" height="22"/>
+				<box>
+					<topPen lineWidth="0.25" lineStyle="Solid"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{TotalAmount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+	<noData>
+		<band height="24">
+			<staticText>
+				<reportElement x="93" y="4" width="298" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[DATA NOT AVAILABLE]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: PaySlip.jrxml 1009 2012-02-09 09:16:13Z suman $ --> 
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PaySlip" pageWidth="750" pageHeight="842" columnWidth="690" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="DisplayNone" isDefault="false" isBlankWhenNull="true"/>
+	<subDataset name="attendance">
+		<parameter name="C_BPartner_ID" class="java.math.BigDecimal" isForPrompting="false"/>
+		<parameter name="HR_Process_ID" class="java.math.BigDecimal" isForPrompting="false"/>
+		<queryString>
+			<![CDATA[SELECT cct.name AS CategoryName,cc.name AS ConceptName,hrm.qty,hrm.HR_Process_ID,C_BPartner_ID
+FROM HR_Movement hrm
+JOIN HR_Concept_Category cc ON (cc.HR_Concept_Category_ID = hrm.HR_Concept_Category_ID)
+JOIN HR_Concept cct ON (cct.HR_Concept_ID = hrm.HR_Concept_ID)
+WHERE hrm.C_BPartner_ID=$P{C_BPartner_ID} AND hrm.HR_PRocess_ID=$P{HR_Process_ID} AND
+(hrm.HR_Concept_Category_ID =(SELECT HR_Concept_Category_ID FROM HR_Concept_Category hrcc WHERE hrcc.name='Attendence' ))
+AND (hrm.HR_Concept_ID IN (SELECT HR_Concept_ID FROM HR_Concept hrc WHERE hrc.name='Working Days' OR
+hrc.name='Absent Days' OR hrc.name='Weekly off' OR  hrc.name='Present Days' OR
+  hrc.name='Late Comming'))]]>
+		</queryString>
+		<field name="categoryname" class="java.lang.String"/>
+		<field name="conceptname" class="java.lang.String"/>
+		<field name="qty" class="java.math.BigDecimal"/>
+		<field name="hr_process_id" class="java.math.BigDecimal"/>
+		<field name="c_bpartner_id" class="java.math.BigDecimal"/>
+		<group name="Category">
+			<groupExpression><![CDATA[$F{categoryname}]]></groupExpression>
+		</group>
+		<group name="ConceptName">
+			<groupExpression><![CDATA[$F{conceptname}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="C_BPartner_ID" class="java.math.BigDecimal"/>
+	<parameter name="HR_Process_ID" class="java.math.BigDecimal"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PaySlip_subreport2" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="HR_Department_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[new BigDecimal(0)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AD_Org_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[new BigDecimal(0)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="HR_Period_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[new BigDecimal(0)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="HR_Employee_Type_ID" class="java.math.BigDecimal">
+		<defaultValueExpression><![CDATA[new BigDecimal(0)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="IsAllEmployee" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new Boolean(false)]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT distinct(bp.C_BPartner_ID),bp.ad_org_ID, bp.HR_department_ID, bp.name AS EmployeeName,bp.employee_code AS EmployeeId,
+hrm.validfrom AS Date,hrd.name AS Department,hrdes.name AS Designation,
+hre.hasoptedpf,prs.payrollprocesstype,etype.name AS EmployeeType,
+hrwg.name AS WGroup,org.name as Division, hrd.Name as Department, bp.joiningdate As JoingDate,hre.date_of_birth AS DateOFBirth , COALESCE(hre.gender,'') AS Gender ,
+COALESCE(hre.fathers_name,'') AS FathersName ,COALESCE(bp.pannumber , '' ) AS PAN ,COALESCE(hre.pfnumber,'') AS PFNumber
+FROM C_BPartner bp
+JOIN HR_Employee_Type etype ON (bp.HR_Employee_Type_ID = etype.HR_Employee_Type_ID)
+JOIN HR_Movement hrm ON (bp.C_BPartner_ID = hrm.C_BPartner_ID AND hrm.HR_Process_ID= $P{HR_Process_ID})
+JOIN HR_Department hrd ON (bp.HR_Department_ID = hrd.HR_Department_ID)
+JOIN HR_Designation hrdes ON (bp.HR_Designation_ID=hrdes.HR_Designation_ID)
+JOIN HR_Work_Group hrwg ON (bp.HR_Work_Group_ID = hrwg.HR_Work_Group_ID)
+JOIN HR_Employee hre ON (bp.C_BPartner_ID=hre.C_BPartner_ID)
+JOIN HR_Process prs ON (hrm.HR_Process_ID= prs.HR_Process_ID)
+JOIN HR_Period period ON (prs.HR_Period_ID = period.HR_Period_ID)
+JOIN AD_Org org ON (bp.AD_Org_ID = org.AD_Org_ID)
+ WHERE
+    (CASE WHEN $P{C_BPartner_ID} = 0 THEN 1=1  ELSE bp.C_BPartner_ID = $P{C_BPartner_ID} END)
+AND (CASE WHEN $P{HR_Department_ID} = 0 THEN 1=1  ELSE hrd.HR_Department_ID = $P{HR_Department_ID} END)
+AND (CASE WHEN $P{AD_Org_ID} = 0 THEN 1=1  ELSE org.AD_Org_ID = $P{AD_Org_ID} END)
+AND (CASE WHEN $P{HR_Employee_Type_ID} = 0 THEN 1=1  ELSE etype.HR_Employee_Type_ID = $P{HR_Employee_Type_ID} END)
+AND (CASE WHEN $P{HR_Period_ID} = 0 THEN 1=1  ELSE period.HR_Period_ID = $P{HR_Period_ID} END)
+
+Group BY hrd.HR_Department_ID, org.AD_Org_ID, bp.C_BPartner_ID, 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20;]]>
+	</queryString>
+	<field name="c_bpartner_id" class="java.math.BigDecimal"/>
+	<field name="ad_org_id" class="java.math.BigDecimal"/>
+	<field name="hr_department_id" class="java.math.BigDecimal"/>
+	<field name="employeename" class="java.lang.String"/>
+	<field name="employeeid" class="java.lang.String"/>
+	<field name="date" class="java.sql.Timestamp"/>
+	<field name="department" class="java.lang.String"/>
+	<field name="designation" class="java.lang.String"/>
+	<field name="hasoptedpf" class="java.lang.String"/>
+	<field name="payrollprocesstype" class="java.lang.String"/>
+	<field name="employeetype" class="java.lang.String"/>
+	<field name="wgroup" class="java.lang.String"/>
+	<field name="division" class="java.lang.String"/>
+	<field name="joingdate" class="java.sql.Timestamp"/>
+	<field name="dateofbirth" class="java.sql.Timestamp"/>
+	<field name="gender" class="java.lang.String"/>
+	<field name="fathersname" class="java.lang.String"/>
+	<field name="pan" class="java.lang.String"/>
+	<field name="pfnumber" class="java.lang.String"/>
+	<variable name="currentDateTime" class="java.lang.String">
+		<variableExpression><![CDATA[(new SimpleDateFormat("dd/MM/yyyy hh:mm:ss aaa z")).format(new Date())]]></variableExpression>
+	</variable>
+	<variable name="Performa" class="java.lang.String">
+		<variableExpression><![CDATA["Performa Payslip ON "+(($F{payrollprocesstype}.equals("General")? "":((new SimpleDateFormat("dd/MM/yyyy"))).format(new Date())))]]></variableExpression>
+		<initialValueExpression><![CDATA[""]]></initialValueExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="83" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="24" width="690" height="27" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font size="14" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[(($F{payrollprocesstype}.equals( "General" )? "Pay Slip" : "Performa PaySlip"))]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField" x="285" y="51" width="185" height="30" isRemoveLineWhenBlank="true">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[(($F{payrollprocesstype}.equals("General")? "":((new SimpleDateFormat("dd/MM/yyyy"))).format(new Date())))]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-12" x="70" y="0" width="620" height="21"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_Org_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Org_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} +"clientaddress.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="109" splitType="Stretch">
+			<textField pattern="MMM-yy" isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="604" y="86" width="62" height="13"/>
+				<textElement verticalAlignment="Top">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{date}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-3" x="15" y="5" width="91" height="17"/>
+				<textElement textAlignment="Left">
+					<font size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Emp.No]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="106" y="5" width="114" height="17"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{employeeid}.trim()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="581" y="41" width="85" height="16"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{department}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="106" y="78" width="114" height="17"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{designation}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="581" y="23" width="85" height="16"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{wgroup}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-7" x="245" y="5" width="67" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-8" style="DisplayNone" x="494" y="86" width="101" height="14"/>
+				<textElement textAlignment="Left">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[SALARY SLIP FOR]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-9" style="DisplayNone" x="494" y="41" width="82" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Department]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-10" style="DisplayNone" x="494" y="23" width="82" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Group]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-11" style="DisplayNone" x="15" y="78" width="91" height="17"/>
+				<textElement textAlignment="Left">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Designation]]></text>
+			</staticText>
+			<line>
+				<reportElement key="line-1" style="DisplayNone" x="0" y="108" width="690" height="1" isRemoveLineWhenBlank="true"/>
+				<graphicElement>
+					<pen lineWidth="1.0"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement key="staticText-12" style="DisplayNone" x="15" y="23" width="91" height="17"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Joing Date]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="MMMMM dd, yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="106" y="23" width="114" height="17"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{joingdate}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-13" style="DisplayNone" x="15" y="41" width="91" height="17"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Date Of Birth]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" pattern="MMMMM dd, yyyy" isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="106" y="41" width="114" height="17"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{dateofbirth}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-14" style="DisplayNone" x="15" y="59" width="91" height="17"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Gender]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="106" y="59" width="114" height="17"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font isBold="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{gender}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-15" style="DisplayNone" x="245" y="23" width="87" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Father's Name]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="349" y="23" width="100" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{fathersname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-16" style="DisplayNone" x="245" y="41" width="87" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Payment Mode]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="staticText-17" style="DisplayNone" x="245" y="61" width="67" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[PAN]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" style="DisplayNone" x="349" y="61" width="100" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{pan}]]></textFieldExpression>
+			</textField>
+			<line direction="BottomUp">
+				<reportElement key="line-2" style="DisplayNone" x="496" y="99" width="148" height="1"/>
+			</line>
+			<staticText>
+				<reportElement key="staticText-19" style="DisplayNone" x="494" y="61" width="87" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[Employee Type]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField-4" style="DisplayNone" x="581" y="61" width="109" height="16"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{employeetype}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-20" style="DisplayNone" x="245" y="81" width="67" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[PF Number]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField" x="349" y="80" width="100" height="18"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{pfnumber}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="textField" x="349" y="5" width="319" height="16"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font isBold="true" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{employeename}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band splitType="Stretch"/>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="28" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText-18" x="6" y="7" width="78" height="18">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Report run date: ]]></text>
+			</staticText>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-1" x="84" y="7" width="215" height="18">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$V{currentDateTime}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement key="line-3" mode="Transparent" x="-1" y="4" width="690" height="1">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+			</line>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-2" x="534" y="7" width="100" height="18">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="false">
+				<reportElement key="textField-3" x="634" y="7" width="53" height="18">
+					<printWhenExpression><![CDATA[$P{IsAllEmployee}.booleanValue() ? Boolean.FALSE : Boolean.TRUE]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER} + ""]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="254" splitType="Stretch">
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-9" style="DisplayNone" positionType="Float" x="381" y="164" width="289" height="16"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PaySlip_subreport2">
+					<subreportParameterExpression><![CDATA[$P{PaySlip_subreport2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreportGrossDeductions.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-2" style="DisplayNone" positionType="Float" x="34" y="223" width="299" height="28"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreport1.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-3" style="DisplayNone" positionType="Float" x="381" y="2" width="289" height="111"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PaySlip_subreport2">
+					<subreportParameterExpression><![CDATA[$P{PaySlip_subreport2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR}+"PaySlipSubreport2.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-4" style="DisplayNone" positionType="Float" x="34" y="23" width="305" height="32"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PaySlip_subreport2">
+					<subreportParameterExpression><![CDATA[$P{PaySlip_subreport2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreport3_wageCalc.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-5" style="DisplayNone" positionType="Float" x="381" y="185" width="288" height="16"/>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreportNetSal.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-6" style="DisplayNone" positionType="Float" x="34" y="130" width="305" height="37"/>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreport4_wageCalcIncentive.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-7" style="DisplayNone" positionType="Float" x="34" y="174" width="305" height="19"/>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreportGrossSal.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-8" style="DisplayNone" positionType="Float" x="381" y="212" width="302" height="33"/>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreportLeave.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-10" positionType="Float" x="34" y="55" width="305" height="26"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Department_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Department_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PaySlip_subreport2">
+					<subreportParameterExpression><![CDATA[$P{PaySlip_subreport2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Period_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Period_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Employee_Type_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Employee_Type_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_Org_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Org_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="IsAllEmployee">
+					<subreportParameterExpression><![CDATA[$P{IsAllEmployee}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreport_wageCalcBackLogAndOtherEarnings.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-11" x="34" y="2" width="305" height="21"/>
+				<subreportParameter name="SUBREPORT_DIR">
+					<subreportParameterExpression><![CDATA[$P{SUBREPORT_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Department_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Department_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PaySlip_subreport2">
+					<subreportParameterExpression><![CDATA[$P{PaySlip_subreport2}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Period_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Period_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Employee_Type_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Employee_Type_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="HR_Process_ID">
+					<subreportParameterExpression><![CDATA[$P{HR_Process_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_Org_ID">
+					<subreportParameterExpression><![CDATA[$P{AD_Org_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="IsAllEmployee">
+					<subreportParameterExpression><![CDATA[$P{IsAllEmployee}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPartner_ID">
+					<subreportParameterExpression><![CDATA[$P{C_BPartner_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{SUBREPORT_DIR} + "PaySlipSubreport3_wageEarnedSalAndWagePerDay.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</summary>
+</jasperReport>
