@@ -22,11 +22,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.adempiere.process.MigrationLoader;
+import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
@@ -39,6 +39,14 @@ import org.xml.sax.SAXException;
 
 public class MMigration extends X_AD_Migration {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5145941967716336078L;
+
+	/**	Logger	*/
+	private CLogger	log	= CLogger.getCLogger (MMigration.class);
+
 	public boolean isFailOnError() {
 		return isFailOnError;
 	}
@@ -48,18 +56,23 @@ public class MMigration extends X_AD_Migration {
 	}
 
 	private boolean isFailOnError = false;
+	private MigrationLoader loader;
 
 	public MMigration(Properties ctx, int AD_Migration_ID, String trxName) {
-		super(ctx, AD_Migration_ID, trxName);
+		super(ctx, AD_Migration_ID, trxName);		
 	}
 
 	public MMigration(Properties ctx, ResultSet rs, String trxName) {
 		super(ctx, rs, trxName);
 	}
 	
-	public void apply() throws SQLException {
-		for ( MMigrationStep step : getSteps(false) )
+	public void apply() throws AdempiereException {
+				
+		for ( MMigrationStep step : getSteps(false) )  // locks the AD_MigrationStep table
 		{
+			if (!step.isActive())
+				continue;
+			
 			try {
 				Trx.run(new StepRunner(step, false));
 			}
@@ -68,13 +81,22 @@ public class MMigration extends X_AD_Migration {
 					throw new AdempiereException(e);
 				// else continue processing
 			}
+			if (loader != null)
+				loader.syncColumns();
 		}
-		updateStatus(null);
+		Trx trx = Trx.get("Migration", true);
+		this.set_TrxName(trx.getTrxName());
+		updateStatus(this.get_TrxName());
+		trx.commit();
+		trx.close();
 	}
 	
 	public void rollback() throws SQLException {
 		for ( MMigrationStep step : getSteps(true) )
 		{
+			if (!step.isActive())
+				continue;
+
 			try {
 				Trx.run(new StepRunner(step, true));
 			} catch (Exception e) {
@@ -82,7 +104,15 @@ public class MMigration extends X_AD_Migration {
 					throw new AdempiereException(e);
 				// else continue
 			}
+			if (loader != null)
+				loader.syncColumns();
 		}
+
+		Trx trx = Trx.get("Migration", true);
+		this.set_TrxName(trx.getTrxName());
+		updateStatus(this.get_TrxName());
+		trx.commit();
+		trx.close();
 	}
 	
 	public void updateStatus(String trxName) {
@@ -91,41 +121,46 @@ public class MMigration extends X_AD_Migration {
 		" FROM AD_MigrationStep " +
 		" WHERE AD_Migration_ID = " + getAD_Migration_ID() +
 		" AND IsActive = 'Y'";
-		int total = DB.getSQLValue(null, base);
+		int total = DB.getSQLValue(trxName, base);
 
 		String sql = base + " AND StatusCode = 'A'";
 		int applied = DB.getSQLValue(trxName, sql);
 		
-		sql = base + " AND StatusCode = 'U'";
+		sql = base + " AND StatusCode IN ('F','U')";  //  Failed or Unapplied
 		int unapplied = DB.getSQLValue(trxName, sql);
-
+		String status = "";
+		
 		if ( applied == total && applied > 0 )
 		{
 			setStatusCode(MMigration.STATUSCODE_Applied);
 			setApply(MMigration.APPLY_Rollback);
+			status = "Applied";
 		}
 		else if ( unapplied == total && unapplied > 0 )
 		{
 			setStatusCode(MMigration.STATUSCODE_Unapplied);
 			setApply(MMigration.APPLY_Apply);
+			status = "Unapplied";
 		}
 		else if ( total > applied && applied > 0 )
 		{
 			setStatusCode(MMigration.STATUSCODE_PartiallyApplied);
 			setApply(MMigration.APPLY_Rollback);
+			status = "Partially Applied";
 		}
 		// overlaps with unapplied
 		//else if ( applied <= 0 )
 		//	setStatusCode(MMigration.STATUSCODE_Failed);
-		
 		saveEx();
+		log.log(Level.CONFIG, this.toString() + " ---> " + status + " (" + getStatusCode() + ")");
 	}
 	
 	private List<MMigrationStep> getSteps(boolean rollback) {
 		String where = "AD_Migration_ID = " + getAD_Migration_ID();
 		String order = rollback ? "SeqNo DESC" : "SeqNo ASC";
 		return MTable.get(getCtx(), MMigrationStep.Table_ID)
-		.createQuery(where, get_TrxName())
+		//.createQuery(where, get_TrxName())  // locks the table
+		.createQuery(where, null)  // won't lock the table
 		.setOnlyActiveRecords(true)
 		.setOrderBy(order)
 		.list();
@@ -134,7 +169,7 @@ public class MMigration extends X_AD_Migration {
 
 	public static boolean updated = false;
 	
-	public static MMigration fromXmlNode(Properties ctx, Element element, String trx)
+	public static MMigration fromXmlNode(Properties ctx, Element element, String trxName) throws SQLException
 	{
 		
 		if ( !updated )
@@ -143,7 +178,13 @@ public class MMigration extends X_AD_Migration {
 		if ( !"Migration".equals(element.getLocalName() ) )
 				return null;
 		
+		// Restrict the name field to the field length in case the xml has extra characters.
+		MColumn col = MColumn.get(ctx, MColumn.getColumn_ID("AD_Migration", "Name"));
+		int length = col.getFieldLength();
 		String name = element.getAttribute("Name");
+		if (name.length() > length)
+			name = name.substring(0,length);
+		
 		String seqNo = element.getAttribute("SeqNo");
 		String entityType = element.getAttribute("EntityType");
 		String releaseNo = element.getAttribute("ReleaseNo");
@@ -153,12 +194,12 @@ public class MMigration extends X_AD_Migration {
 			+ " AND SeqNo = ?"
 			+ " AND EntityType = ?";
 		Object[] params = new Object[] {name, Integer.parseInt(seqNo), entityType};
-		MMigration mmigration = new Query(ctx, MMigration.Table_Name, where, trx)
+		MMigration mmigration = new Query(ctx, MMigration.Table_Name, where, trxName)
 		.setParameters(params).firstOnly();
-		if ( mmigration != null )
-			return null;  // already exists (TODO: update?)
-		
-		mmigration = new MMigration(ctx, 0, trx);
+		if ( mmigration != null ) {
+			return mmigration;  // already exists (TODO: update?)
+		}
+		mmigration = new MMigration(ctx, 0, trxName);
 		
 		mmigration.setName(name);
 		mmigration.setSeqNo(Integer.parseInt(seqNo));
@@ -176,6 +217,7 @@ public class MMigration extends X_AD_Migration {
 			Element step = (Element) children.item(i);
 			if ( "Step".equals(step.getTagName()))
 				MMigrationStep.fromXmlNode(mmigration, step);
+				Trx.get(trxName, false).commit(true);
 		}
 		
 		mmigration.saveEx();
@@ -238,22 +280,63 @@ public class MMigration extends X_AD_Migration {
 		Object[] params = new Object[] { getAD_Migration_ID(), lastSeq, from.getAD_Migration_ID() };
 		DB.executeUpdateEx(updateSql, params, get_TrxName());
 		
-		from.deleteEx(false, get_TrxName());
+		try {
+			DB.commit(false, get_TrxName());
+			from.deleteEx(false, get_TrxName());
+		} catch (IllegalStateException | SQLException e) {
+			log.log(Level.SEVERE, "[" + get_TrxName() + "]", e);
+		}
+		
 	}
 	
-	private class StepRunner implements TrxRunnable {
+	class StepRunner implements TrxRunnable {
 		MMigrationStep step;
 		boolean rollback;
+			
 		public StepRunner(MMigrationStep step, boolean rollback) {
 			this.step = step;
 			this.rollback = rollback;
 		}
 		public void run(String trxName) {
+						
 			step.set_TrxName(trxName);
+			if ( loader != null)
+				step.set_ColSyncCallback(loader);
 			if ( rollback )
 				step.rollback();
 			else
-				step.apply();
+				step.apply();			
 		}
 	}
+	
+	/**
+	 * 	Before Delete
+	 *	@return true if it can be deleted
+	 */
+	protected boolean beforeDelete ()
+	{
+		for (MMigrationStep step : getSteps(false)) {
+			step.deleteEx(true);
+		}
+		return true;
+	}	//	beforeDelete
+
+	public void set_ColSyncCallback(MigrationLoader loader) {
+		this.loader = loader;
+	}
+
+	/**
+	 * 	Before Save
+	 *	@param newRecord new
+	 *	@return true
+	 */
+	protected boolean beforeSave (boolean newRecord)
+	{
+		if (this.getAD_Client_ID() > 0)
+			this.setAD_Client_ID(0); // Migrations are always owned by System
+		if (this.getAD_Org_ID() > 0)
+			this.setAD_Org_ID(0);
+		return true;
+	}	//	beforeSave
+
 }

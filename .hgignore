@@ -2,12 +2,21 @@ syntax: glob
 build
 
 extend/test.properties
+.settings/org.eclipse.ltk.core.refactoring.prefs
+.settings/org.zkoss.eclipse.preferences.prefs
+migration/oracle.properties
+migration/postgresql.properties
 syntax: regexp
 ^.DS_Store$
 ^tools/.DS_Store$
 ^bin
 ^adempiere$
 ^base/Base\.jar$
+^com\.kkalice\.adempiere\.migrate/apidoc/.*\.html$
+^com\.kkalice\.adempiere\.migrate/apidoc/package-list$
+^com\.kkalice\.adempiere\.migrate/apidoc/.*\.gif$
+^com\.kkalice\.adempiere\.migrate/apidoc/.*\.css$
+^com\.kkalice\.adempiere\.migrate/lib/migrate.jar
 ^extend/Extend\.jar$
 ^install/lib$
 ^install/CInstall\.jar$
@@ -34,12 +43,16 @@ syntax: regexp
 ^lib/CSTools\.jar$
 ^lib/glassfish\.jar$
 ^lib/jboss\.jar$
+^lib/migrate\.jar$
 ^lib/oracle\.jar$
 ^lib/posterita\.jar$
 ^lib/posterita\.war$
 ^lib/posteritaPatches\.jar$
 ^lib/postgresql\.jar$
 ^lib/webui\.war$
+^migration/dist/
+^mobile/dist/mobile\.war$
+^mobile/WEB-INF/classes/org/compiere/mobile/.*\.class
 ^posterita/posterita/dist$
 ^posterita/posterita/web/WEB-INF/classes$
 ^sqlj/sqlj\.jar$
@@ -48,4 +61,6 @@ syntax: regexp
 ^zkwebui/dist$
 ^zkwebui/WEB-INF/classes$
 ^migration/my_processes_post_migration$
-Adempiere.*\.properties
+
+syntax: regexp
+^lib/mobile\.war$
