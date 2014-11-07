@@ -205,6 +205,15 @@ public final class MPayment extends X_C_Payment
 		return "X".equals(getTenderType());
 	}	//	isCashTrx
 	
+	/**
+	 * 	Is Manual Deposit Trx
+	 *	@return true if Manual Deposit Trx
+	 */
+	public boolean isManualDepositTrx()
+	{
+		return "G".equals(getTenderType());
+	}	//	isManualDepositTrx
+
 	/**************************************************************************
 	 *  Set Credit Card.
 	 *  Need to set PatmentProcessor after Amount/Currency Set
@@ -571,8 +580,8 @@ public final class MPayment extends X_C_Payment
 				setIsPrepayment(false);
 			}
 		}
-		//	We need a BPartner
-		else if (getC_BPartner_ID() == 0 && !isCashTrx())
+		//	We need a BPartner except for internal cash and deposits
+		else if (getC_BPartner_ID() == 0 && !isCashTrx() && !isManualDepositTrx())
 		{
 			if (getC_Invoice_ID() != 0)
 				;

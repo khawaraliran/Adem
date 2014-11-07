@@ -1,4 +1,6 @@
 /******************************************************************************
+ * Product: Adempiere ERP & CRM Smart Business Solution                       *
+ * Copyright (C) 2014 Michae McKay                                            *
  * Copyright (C) 2009 Low Heng Sin                                            *
  * Copyright (C) 2009 Idalica Corporation                                     *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -20,7 +22,9 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.adempiere.webui.apps.AEnv;
-import org.compiere.grid.CreateFromStatement;
+import org.compiere.grid.CreateFrom;
+import org.compiere.grid.CreateFromDeposit;
+import org.adempiere.webui.apps.form.WCreateFromWindow;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.ConfirmPanel;
 import org.adempiere.webui.component.Grid;
@@ -55,13 +59,13 @@ import org.zkoss.zkex.zul.Borderlayout;
 import org.zkoss.zkex.zul.Center;
 import org.zkoss.zul.Hbox;
 
-public class WCreateFromStatementUI extends CreateFromStatement implements EventListener
+public class WCreateFromDepositUI extends CreateFromDeposit implements EventListener
 {
 	private static final long serialVersionUID = 1L;
 	
 	private WCreateFromWindow window;
 	
-	public WCreateFromStatementUI(GridTab tab) 
+	public WCreateFromDepositUI(GridTab tab) 
 	{
 		super(tab);
 		log.info(getGridTab().toString());
@@ -138,7 +142,7 @@ public class WCreateFromStatementUI extends CreateFromStatement implements Event
 		refreshButton.addEventListener(Events.ON_CLICK, this);
 		window.getConfirmPanel().addButton(refreshButton);
 				
-		if (getGridTab().getValue("C_BankStatement_ID") == null)
+		if (getGridTab().getValue("C_BankDeposit_ID") == null)
 		{
 			FDialog.error(0, window, "SaveErrorRowNotFound");
 			return false;
@@ -265,7 +269,7 @@ public class WCreateFromStatementUI extends CreateFromStatement implements Event
 	
 	protected void loadBankAccount()
 	{
-		loadTableOIS(this.getBankData(documentNoField.getValue().toString(), bPartnerLookup.getValue(), dateFromField.getValue(), dateToField.getValue(),
+		loadTableOIS(getBankData(documentNoField.getValue().toString(), bPartnerLookup.getValue(), dateFromField.getValue(), dateToField.getValue(),
 				amtFromField.getValue(), amtToField.getValue(), documentTypeField.getValue(), tenderTypeField.getValue(), creditCardTypeField.getValue(), 
 				authorizationField.getValue().toString()));
 	}

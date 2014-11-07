@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Migrations>
+  <Migration EntityType="D" Name="ADEMPIERE-302 Add Example Data for Bank Deposits" ReleaseNo="feature/ADEMPIERE-302" SeqNo="9935">
+    <Step SeqNo="10" StepType="AD">
+      <PO AD_Table_ID="335" Action="I" Record_ID="50003" Table="C_Payment">
+        <Data AD_Column_ID="5046" Column="TenderType">K</Data>
+        <Data AD_Column_ID="5044" Column="TrxType">S</Data>
+        <Data AD_Column_ID="5052" Column="A_City" isNewNull="true"/>
+        <Data AD_Column_ID="8213" Column="A_Country" isNewNull="true"/>
+        <Data AD_Column_ID="5029" Column="A_EMail" isNewNull="true"/>
+        <Data AD_Column_ID="5027" Column="A_Ident_DL" isNewNull="true"/>
+        <Data AD_Column_ID="5028" Column="A_Ident_SSN" isNewNull="true"/>
+        <Data AD_Column_ID="5050" Column="A_Name" isNewNull="true"/>
+        <Data AD_Column_ID="5053" Column="A_State" isNewNull="true"/>
+        <Data AD_Column_ID="5051" Column="A_Street" isNewNull="true"/>
+        <Data AD_Column_ID="5026" Column="A_Zip" isNewNull="true"/>
+        <Data AD_Column_ID="3874" Column="AccountNo" isNewNull="true"/>
+        <Data AD_Column_ID="3862" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="3863" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="9565" Column="AD_OrgTrx_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9566" Column="C_Activity_ID" isNewNull="true"/>
+        <Data AD_Column_ID="3880" Column="C_BankAccount_ID">100</Data>
+        <Data AD_Column_ID="5298" Column="C_BP_BankAccount_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5398" Column="C_BPartner_ID">118</Data>
+        <Data AD_Column_ID="9564" Column="C_Campaign_ID" isNewNull="true"/>
+        <Data AD_Column_ID="52117" Column="C_CashBook_ID">101</Data>
+        <Data AD_Column_ID="8984" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="10265" Column="C_ConversionType_ID">114</Data>
+        <Data AD_Column_ID="5299" Column="C_Currency_ID">102</Data>
+        <Data AD_Column_ID="5302" Column="C_DocType_ID">119</Data>
+        <Data AD_Column_ID="5355" Column="C_Invoice_ID">109</Data>
+        <Data AD_Column_ID="12925" Column="C_Order_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5043" Column="C_Payment_ID">50003</Data>
+        <Data AD_Column_ID="5300" Column="C_PaymentBatch_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8554" Column="C_Project_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8980" Column="ChargeAmt">0</Data>
+        <Data AD_Column_ID="5049" Column="CheckNo" isNewNull="true"/>
+        <Data AD_Column_ID="3865" Column="Created">2014-09-22 19:54:14.464</Data>
+        <Data AD_Column_ID="3866" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="3871" Column="CreditCardExpMM">1</Data>
+        <Data AD_Column_ID="3872" Column="CreditCardExpYY">3</Data>
+        <Data AD_Column_ID="3870" Column="CreditCardNumber" isNewNull="true"/>
+        <Data AD_Column_ID="3869" Column="CreditCardType">M</Data>
+        <Data AD_Column_ID="5047" Column="CreditCardVV" isNewNull="true"/>
+        <Data AD_Column_ID="12128" Column="DateAcct">2003-11-02 00:00:00.0</Data>
+        <Data AD_Column_ID="5399" Column="DateTrx">2003-11-02 00:00:00.0</Data>
+        <Data AD_Column_ID="12127" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="5301" Column="DiscountAmt">0</Data>
+        <Data AD_Column_ID="5401" Column="DocumentNo">400002</Data>
+        <Data AD_Column_ID="3864" Column="IsActive">true</Data>
+        <Data AD_Column_ID="3875" Column="IsApproved">false</Data>
+        <Data AD_Column_ID="8979" Column="IsDelayedCapture">false</Data>
+        <Data AD_Column_ID="5495" Column="IsOnline">false</Data>
+        <Data AD_Column_ID="7035" Column="IsOverUnderPayment">true</Data>
+        <Data AD_Column_ID="13045" Column="IsPrepayment">false</Data>
+        <Data AD_Column_ID="6216" Column="IsReceipt">true</Data>
+        <Data AD_Column_ID="8775" Column="IsSelfService">false</Data>
+        <Data AD_Column_ID="5048" Column="Micr" isNewNull="true"/>
+        <Data AD_Column_ID="5356" Column="OProcessing">N</Data>
+        <Data AD_Column_ID="5031" Column="Orig_TrxID" isNewNull="true"/>
+        <Data AD_Column_ID="7034" Column="OverUnderAmt">0</Data>
+        <Data AD_Column_ID="5303" Column="PayAmt">114.43</Data>
+        <Data AD_Column_ID="5032" Column="PONum" isNewNull="true"/>
+        <Data AD_Column_ID="5042" Column="Posted">false</Data>
+        <Data AD_Column_ID="3877" Column="Processing">false</Data>
+        <Data AD_Column_ID="5038" Column="R_AuthCode" isNewNull="true"/>
+        <Data AD_Column_ID="8981" Column="R_AuthCode_DC" isNewNull="true"/>
+        <Data AD_Column_ID="5039" Column="R_AvsAddr">X</Data>
+        <Data AD_Column_ID="5040" Column="R_AvsZip">X</Data>
+        <Data AD_Column_ID="8982" Column="R_CVV2Match">false</Data>
+        <Data AD_Column_ID="5041" Column="R_Info" isNewNull="true"/>
+        <Data AD_Column_ID="5035" Column="R_PnRef" isNewNull="true"/>
+        <Data AD_Column_ID="8983" Column="R_PnRef_DC" isNewNull="true"/>
+        <Data AD_Column_ID="5037" Column="R_RespMsg" isNewNull="true"/>
+        <Data AD_Column_ID="5036" Column="R_Result" isNewNull="true"/>
+        <Data AD_Column_ID="13705" Column="Ref_Payment_ID" isNewNull="true"/>
+        <Data AD_Column_ID="55309" Column="Reversal_ID" isNewNull="true"/>
+        <Data AD_Column_ID="3873" Column="RoutingNo" isNewNull="true"/>
+        <Data AD_Column_ID="8985" Column="Swipe" isNewNull="true"/>
+        <Data AD_Column_ID="5034" Column="TaxAmt">0</Data>
+        <Data AD_Column_ID="5400" Column="IsAllocated">true</Data>
+        <Data AD_Column_ID="3878" Column="Processed">true</Data>
+        <Data AD_Column_ID="5497" Column="DocAction">CL</Data>
+        <Data AD_Column_ID="3879" Column="IsReconciled">true</Data>
+        <Data AD_Column_ID="3867" Column="Updated">2014-09-22 19:54:14.464</Data>
+        <Data AD_Column_ID="3868" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="9563" Column="User1_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9567" Column="User2_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5030" Column="VoiceAuthCode" isNewNull="true"/>
+        <Data AD_Column_ID="6475" Column="WriteOffAmt">0</Data>
+        <Data AD_Column_ID="5496" Column="DocStatus">CO</Data>
+        <Data AD_Column_ID="59039" Column="ProcessedOn">1411430083240.239990234375</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="30" StepType="AD">
+      <PO AD_Table_ID="735" Action="I" Record_ID="50002" Table="C_AllocationHdr">
+        <Data AD_Column_ID="12328" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="12317" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="12327" Column="ApprovalAmt">0</Data>
+        <Data AD_Column_ID="12310" Column="C_AllocationHdr_ID">50002</Data>
+        <Data AD_Column_ID="12316" Column="C_Currency_ID">102</Data>
+        <Data AD_Column_ID="12326" Column="Created">2014-09-22 19:54:40.77</Data>
+        <Data AD_Column_ID="12325" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="12315" Column="DateAcct">2003-11-02 00:00:00.0</Data>
+        <Data AD_Column_ID="12308" Column="DateTrx">2003-11-02 00:00:00.0</Data>
+        <Data AD_Column_ID="12312" Column="Description">Payment: 400002 [1]</Data>
+        <Data AD_Column_ID="12323" Column="DocumentNo">100</Data>
+        <Data AD_Column_ID="12311" Column="IsActive">true</Data>
+        <Data AD_Column_ID="12318" Column="IsManual">false</Data>
+        <Data AD_Column_ID="12313" Column="Posted">false</Data>
+        <Data AD_Column_ID="12314" Column="Processing">false</Data>
+        <Data AD_Column_ID="12322" Column="Updated">2014-09-22 19:54:40.77</Data>
+        <Data AD_Column_ID="12321" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="12319" Column="DocAction">CO</Data>
+        <Data AD_Column_ID="12324" Column="DocStatus">DR</Data>
+        <Data AD_Column_ID="12320" Column="IsApproved">false</Data>
+        <Data AD_Column_ID="59034" Column="ProcessedOn" isNewNull="true"/>
+        <Data AD_Column_ID="12309" Column="Processed">false</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="40" StepType="AD">
+      <PO AD_Table_ID="390" Action="I" Record_ID="50002" Table="C_AllocationLine">
+        <Data AD_Column_ID="4875" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="4876" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="4885" Column="Amount">114.43</Data>
+        <Data AD_Column_ID="4874" Column="C_AllocationHdr_ID">50002</Data>
+        <Data AD_Column_ID="12331" Column="C_AllocationLine_ID">50002</Data>
+        <Data AD_Column_ID="5494" Column="C_BPartner_ID">118</Data>
+        <Data AD_Column_ID="5210" Column="C_CashLine_ID" isNewNull="true"/>
+        <Data AD_Column_ID="61804" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="4882" Column="C_Invoice_ID">109</Data>
+        <Data AD_Column_ID="4883" Column="C_Order_ID">108</Data>
+        <Data AD_Column_ID="4884" Column="C_Payment_ID">50003</Data>
+        <Data AD_Column_ID="4878" Column="Created">2014-09-22 19:54:41.546</Data>
+        <Data AD_Column_ID="4879" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="5519" Column="DateTrx" isNewNull="true"/>
+        <Data AD_Column_ID="4886" Column="DiscountAmt">0</Data>
+        <Data AD_Column_ID="4877" Column="IsActive">true</Data>
+        <Data AD_Column_ID="5520" Column="IsManual" isNewNull="true"/>
+        <Data AD_Column_ID="10762" Column="OverUnderAmt">0</Data>
+        <Data AD_Column_ID="4880" Column="Updated">2014-09-22 19:54:41.546</Data>
+        <Data AD_Column_ID="4881" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="4887" Column="WriteOffAmt">0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="50" StepType="AD">
+      <PO AD_Table_ID="735" Action="U" Record_ID="50002" Table="C_AllocationHdr">
+        <Data AD_Column_ID="12309" Column="Processed" oldValue="false">true</Data>
+        <Data AD_Column_ID="12320" Column="IsApproved" oldValue="false">true</Data>
+        <Data AD_Column_ID="12319" Column="DocAction" oldValue="CO">CL</Data>
+        <Data AD_Column_ID="12324" Column="DocStatus" oldValue="DR">CO</Data>
+        <Data AD_Column_ID="59034" Column="ProcessedOn" isOldNull="true">1411430082980.97998046875</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="60" StepType="AD">
+      <PO AD_Table_ID="291" Action="U" Record_ID="118" Table="C_BPartner">
+        <Data AD_Column_ID="2921" Column="SO_CreditUsed" oldValue="251.74">125.86</Data>
+        <Data AD_Column_ID="12533" Column="TotalOpenBalance" oldValue="503.48">125.86</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="90" StepType="AD">
+      <PO AD_Table_ID="407" Action="I" Record_ID="50001" Table="C_Cash">
+        <Data AD_Column_ID="5242" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="5243" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="9557" Column="AD_OrgTrx_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9562" Column="C_Activity_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9560" Column="C_Campaign_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5241" Column="C_Cash_ID">50001</Data>
+        <Data AD_Column_ID="5249" Column="C_CashBook_ID">101</Data>
+        <Data AD_Column_ID="9561" Column="C_Project_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5245" Column="Created">2014-09-22 19:55:37.119</Data>
+        <Data AD_Column_ID="5246" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="5253" Column="DateAcct">2003-11-27 00:00:00.0</Data>
+        <Data AD_Column_ID="5251" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="5244" Column="IsActive">true</Data>
+        <Data AD_Column_ID="5250" Column="Name">2003-11-27 00:00:00</Data>
+        <Data AD_Column_ID="5259" Column="Posted">false</Data>
+        <Data AD_Column_ID="5257" Column="Processing">false</Data>
+        <Data AD_Column_ID="5252" Column="StatementDate">2003-11-27 00:00:00.0</Data>
+        <Data AD_Column_ID="5256" Column="StatementDifference">0</Data>
+        <Data AD_Column_ID="5247" Column="Updated">2014-09-22 19:55:37.119</Data>
+        <Data AD_Column_ID="5248" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="9558" Column="User1_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9559" Column="User2_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5254" Column="BeginningBalance">161.12</Data>
+        <Data AD_Column_ID="5255" Column="EndingBalance">161.12</Data>
+        <Data AD_Column_ID="12124" Column="DocAction">CO</Data>
+        <Data AD_Column_ID="12125" Column="IsApproved">false</Data>
+        <Data AD_Column_ID="12126" Column="DocStatus">DR</Data>
+        <Data AD_Column_ID="5258" Column="Processed">false</Data>
+        <Data AD_Column_ID="59036" Column="ProcessedOn" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="110" StepType="AD">
+      <PO AD_Table_ID="335" Action="I" Record_ID="50004" Table="C_Payment">
+        <Data AD_Column_ID="5052" Column="A_City" isNewNull="true"/>
+        <Data AD_Column_ID="8213" Column="A_Country" isNewNull="true"/>
+        <Data AD_Column_ID="5029" Column="A_EMail" isNewNull="true"/>
+        <Data AD_Column_ID="5027" Column="A_Ident_DL" isNewNull="true"/>
+        <Data AD_Column_ID="5028" Column="A_Ident_SSN" isNewNull="true"/>
+        <Data AD_Column_ID="5050" Column="A_Name" isNewNull="true"/>
+        <Data AD_Column_ID="5053" Column="A_State" isNewNull="true"/>
+        <Data AD_Column_ID="5051" Column="A_Street" isNewNull="true"/>
+        <Data AD_Column_ID="5026" Column="A_Zip" isNewNull="true"/>
+        <Data AD_Column_ID="3874" Column="AccountNo" isNewNull="true"/>
+        <Data AD_Column_ID="3862" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="3863" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="9565" Column="AD_OrgTrx_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9566" Column="C_Activity_ID" isNewNull="true"/>
+        <Data AD_Column_ID="3880" Column="C_BankAccount_ID">100</Data>
+        <Data AD_Column_ID="5298" Column="C_BP_BankAccount_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5398" Column="C_BPartner_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9564" Column="C_Campaign_ID" isNewNull="true"/>
+        <Data AD_Column_ID="52117" Column="C_CashBook_ID">101</Data>
+        <Data AD_Column_ID="8984" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="10265" Column="C_ConversionType_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5299" Column="C_Currency_ID">100</Data>
+        <Data AD_Column_ID="5302" Column="C_DocType_ID">119</Data>
+        <Data AD_Column_ID="5355" Column="C_Invoice_ID" isNewNull="true"/>
+        <Data AD_Column_ID="12925" Column="C_Order_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5043" Column="C_Payment_ID">50004</Data>
+        <Data AD_Column_ID="5300" Column="C_PaymentBatch_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8554" Column="C_Project_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8980" Column="ChargeAmt" isNewNull="true"/>
+        <Data AD_Column_ID="5049" Column="CheckNo" isNewNull="true"/>
+        <Data AD_Column_ID="3865" Column="Created">2014-09-22 20:11:15.535</Data>
+        <Data AD_Column_ID="3866" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="3871" Column="CreditCardExpMM" isNewNull="true"/>
+        <Data AD_Column_ID="3872" Column="CreditCardExpYY" isNewNull="true"/>
+        <Data AD_Column_ID="3870" Column="CreditCardNumber" isNewNull="true"/>
+        <Data AD_Column_ID="3869" Column="CreditCardType" isNewNull="true"/>
+        <Data AD_Column_ID="5047" Column="CreditCardVV" isNewNull="true"/>
+        <Data AD_Column_ID="12128" Column="DateAcct">2003-11-27 00:00:00.0</Data>
+        <Data AD_Column_ID="5399" Column="DateTrx">2003-11-27 00:00:00.0</Data>
+        <Data AD_Column_ID="12127" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="5301" Column="DiscountAmt">0</Data>
+        <Data AD_Column_ID="5497" Column="DocAction">--</Data>
+        <Data AD_Column_ID="5496" Column="DocStatus">CL</Data>
+        <Data AD_Column_ID="5401" Column="DocumentNo">2003-11-27 00:00:00</Data>
+        <Data AD_Column_ID="3864" Column="IsActive">true</Data>
+        <Data AD_Column_ID="5400" Column="IsAllocated">true</Data>
+        <Data AD_Column_ID="3875" Column="IsApproved">false</Data>
+        <Data AD_Column_ID="8979" Column="IsDelayedCapture">false</Data>
+        <Data AD_Column_ID="5495" Column="IsOnline">false</Data>
+        <Data AD_Column_ID="7035" Column="IsOverUnderPayment">false</Data>
+        <Data AD_Column_ID="13045" Column="IsPrepayment">false</Data>
+        <Data AD_Column_ID="6216" Column="IsReceipt">true</Data>
+        <Data AD_Column_ID="8775" Column="IsSelfService">false</Data>
+        <Data AD_Column_ID="5048" Column="Micr" isNewNull="true"/>
+        <Data AD_Column_ID="5356" Column="OProcessing" isNewNull="true"/>
+        <Data AD_Column_ID="5031" Column="Orig_TrxID" isNewNull="true"/>
+        <Data AD_Column_ID="7034" Column="OverUnderAmt">0</Data>
+        <Data AD_Column_ID="5303" Column="PayAmt">150.000000000000</Data>
+        <Data AD_Column_ID="5032" Column="PONum" isNewNull="true"/>
+        <Data AD_Column_ID="5042" Column="Posted">true</Data>
+        <Data AD_Column_ID="3878" Column="Processed">true</Data>
+        <Data AD_Column_ID="59039" Column="ProcessedOn">1411431075552.552001953125</Data>
+        <Data AD_Column_ID="3877" Column="Processing">false</Data>
+        <Data AD_Column_ID="5038" Column="R_AuthCode" isNewNull="true"/>
+        <Data AD_Column_ID="8981" Column="R_AuthCode_DC" isNewNull="true"/>
+        <Data AD_Column_ID="5039" Column="R_AvsAddr">X</Data>
+        <Data AD_Column_ID="5040" Column="R_AvsZip">X</Data>
+        <Data AD_Column_ID="8982" Column="R_CVV2Match" isNewNull="true"/>
+        <Data AD_Column_ID="5041" Column="R_Info" isNewNull="true"/>
+        <Data AD_Column_ID="5035" Column="R_PnRef">2003-11-27 00:00:00</Data>
+        <Data AD_Column_ID="8983" Column="R_PnRef_DC" isNewNull="true"/>
+        <Data AD_Column_ID="5037" Column="R_RespMsg" isNewNull="true"/>
+        <Data AD_Column_ID="5036" Column="R_Result" isNewNull="true"/>
+        <Data AD_Column_ID="13705" Column="Ref_Payment_ID" isNewNull="true"/>
+        <Data AD_Column_ID="55309" Column="Reversal_ID" isNewNull="true"/>
+        <Data AD_Column_ID="3873" Column="RoutingNo" isNewNull="true"/>
+        <Data AD_Column_ID="8985" Column="Swipe" isNewNull="true"/>
+        <Data AD_Column_ID="5034" Column="TaxAmt">0</Data>
+        <Data AD_Column_ID="5046" Column="TenderType">X</Data>
+        <Data AD_Column_ID="5044" Column="TrxType">X</Data>
+        <Data AD_Column_ID="3867" Column="Updated">2014-09-22 20:11:15.535</Data>
+        <Data AD_Column_ID="3868" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="9563" Column="User1_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9567" Column="User2_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5030" Column="VoiceAuthCode" isNewNull="true"/>
+        <Data AD_Column_ID="6475" Column="WriteOffAmt">0</Data>
+        <Data AD_Column_ID="3879" Column="IsReconciled">true</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="120" StepType="AD">
+      <PO AD_Table_ID="410" Action="I" Record_ID="50001" Table="C_CashLine">
+        <Data AD_Column_ID="5284" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="5285" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="5297" Column="Amount">-150.000000000000</Data>
+        <Data AD_Column_ID="5295" Column="C_BankAccount_ID">100</Data>
+        <Data AD_Column_ID="5291" Column="C_Cash_ID">50001</Data>
+        <Data AD_Column_ID="5283" Column="C_CashLine_ID">50001</Data>
+        <Data AD_Column_ID="5296" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="54090" Column="C_Payment_ID">50004</Data>
+        <Data AD_Column_ID="6673" Column="C_Currency_ID">100</Data>
+        <Data AD_Column_ID="5354" Column="C_Invoice_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5294" Column="CashType">T</Data>
+        <Data AD_Column_ID="5287" Column="Created">2014-09-22 20:11:03.488</Data>
+        <Data AD_Column_ID="5288" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="5293" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="6477" Column="DiscountAmt">0</Data>
+        <Data AD_Column_ID="5286" Column="IsActive">true</Data>
+        <Data AD_Column_ID="6476" Column="IsGenerated">false</Data>
+        <Data AD_Column_ID="5292" Column="Line">10</Data>
+        <Data AD_Column_ID="5289" Column="Updated">2014-09-22 20:11:03.488</Data>
+        <Data AD_Column_ID="5290" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="6478" Column="WriteOffAmt">0</Data>
+        <Data AD_Column_ID="12062" Column="Processed">true</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="130" StepType="AD">
+      <PO AD_Table_ID="407" Action="U" Record_ID="50001" Table="C_Cash">
+        <Data AD_Column_ID="59036" Column="ProcessedOn" isOldNull="true">1411431076998.998046875</Data>
+        <Data AD_Column_ID="12125" Column="IsApproved" oldValue="false">true</Data>
+        <Data AD_Column_ID="5258" Column="Processed" oldValue="false">true</Data>
+        <Data AD_Column_ID="12124" Column="DocAction" oldValue="CO">CL</Data>
+        <Data AD_Column_ID="12126" Column="DocStatus" oldValue="DR">CO</Data>
+        <Data AD_Column_ID="5256" Column="StatementDifference" oldValue="0">-150.00</Data>
+        <Data AD_Column_ID="5255" Column="EndingBalance" oldValue="161.12">11.12</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="160" StepType="AD">
+      <PO AD_Table_ID="53844" Action="I" Record_ID="50001" Table="C_BankDeposit">
+        <Data AD_Column_ID="73814" Column="C_Payment_ID">50005</Data>
+        <Data AD_Column_ID="73694" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="73695" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="73702" Column="C_BankAccount_ID">100</Data>
+        <Data AD_Column_ID="73703" Column="C_BankDeposit_ID">50001</Data>
+        <Data AD_Column_ID="73697" Column="Created">2014-09-22 20:12:12.075</Data>
+        <Data AD_Column_ID="73699" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="73704" Column="CreateFrom">N</Data>
+        <Data AD_Column_ID="73765" Column="DateAcct">2003-11-29 00:00:00.0</Data>
+        <Data AD_Column_ID="73721" Column="DepositDate">2003-11-29 00:00:00.0</Data>
+        <Data AD_Column_ID="73705" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="73696" Column="IsActive">true</Data>
+        <Data AD_Column_ID="73712" Column="IsManual">true</Data>
+        <Data AD_Column_ID="73714" Column="Name">2003-11-29 00:00:00</Data>
+        <Data AD_Column_ID="73715" Column="Posted">false</Data>
+        <Data AD_Column_ID="73718" Column="Processing">false</Data>
+        <Data AD_Column_ID="73722" Column="TotalDeposit">0</Data>
+        <Data AD_Column_ID="73698" Column="Updated">2014-09-22 20:12:12.075</Data>
+        <Data AD_Column_ID="73700" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="73706" Column="DocAction">CO</Data>
+        <Data AD_Column_ID="73707" Column="DocStatus">DR</Data>
+        <Data AD_Column_ID="73717" Column="ProcessedOn" isNewNull="true"/>
+        <Data AD_Column_ID="73716" Column="Processed">false</Data>
+        <Data AD_Column_ID="73711" Column="IsApproved">false</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="170" StepType="AD">
+      <PO AD_Table_ID="53845" Action="I" Record_ID="50002" Table="C_BankDepositLine">
+        <Data AD_Column_ID="73738" Column="ChargeAmt">-5.00</Data>
+        <Data AD_Column_ID="73762" Column="DepositAmt">129.62</Data>
+        <Data AD_Column_ID="73723" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="73724" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="73730" Column="C_BankDeposit_ID">50001</Data>
+        <Data AD_Column_ID="73732" Column="C_BankDepositLine_ID">50002</Data>
+        <Data AD_Column_ID="74412" Column="C_BPartner_ID">118</Data>
+        <Data AD_Column_ID="73735" Column="C_Currency_ID">102</Data>
+        <Data AD_Column_ID="74413" Column="C_Invoice_ID">109</Data>
+        <Data AD_Column_ID="73726" Column="Created">2014-09-22 20:12:27.223</Data>
+        <Data AD_Column_ID="73728" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="73741" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="73725" Column="IsActive">true</Data>
+        <Data AD_Column_ID="73754" Column="IsManual" isNewNull="true"/>
+        <Data AD_Column_ID="73755" Column="IsReversal">false</Data>
+        <Data AD_Column_ID="73756" Column="Line">10</Data>
+        <Data AD_Column_ID="73758" Column="Memo" isNewNull="true"/>
+        <Data AD_Column_ID="73760" Column="ReferenceNo" isNewNull="true"/>
+        <Data AD_Column_ID="73763" Column="TrxAmt">114.43</Data>
+        <Data AD_Column_ID="73734" Column="C_Charge_ID">100</Data>
+        <Data AD_Column_ID="73737" Column="C_Payment_ID">50003</Data>
+        <Data AD_Column_ID="73759" Column="Processed">true</Data>
+        <Data AD_Column_ID="73727" Column="Updated">2014-09-22 20:12:27.223</Data>
+        <Data AD_Column_ID="73729" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="73764" Column="ValutaDate">2003-11-29 00:00:00.0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="180" StepType="AD">
+      <PO AD_Table_ID="53845" Action="I" Record_ID="50003" Table="C_BankDepositLine">
+        <Data AD_Column_ID="73723" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="73724" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="73730" Column="C_BankDeposit_ID">50001</Data>
+        <Data AD_Column_ID="73732" Column="C_BankDepositLine_ID">50003</Data>
+        <Data AD_Column_ID="74412" Column="C_BPartner_ID" isNewNull="true"/>
+        <Data AD_Column_ID="73734" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="73735" Column="C_Currency_ID">100</Data>
+        <Data AD_Column_ID="74413" Column="C_Invoice_ID" isNewNull="true"/>
+        <Data AD_Column_ID="73737" Column="C_Payment_ID">50004</Data>
+        <Data AD_Column_ID="73738" Column="ChargeAmt">0</Data>
+        <Data AD_Column_ID="73726" Column="Created">2014-09-22 20:12:28.119</Data>
+        <Data AD_Column_ID="73728" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="73762" Column="DepositAmt">150.000000000000</Data>
+        <Data AD_Column_ID="73741" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="73725" Column="IsActive">true</Data>
+        <Data AD_Column_ID="73754" Column="IsManual" isNewNull="true"/>
+        <Data AD_Column_ID="73755" Column="IsReversal">false</Data>
+        <Data AD_Column_ID="73756" Column="Line">20</Data>
+        <Data AD_Column_ID="73758" Column="Memo" isNewNull="true"/>
+        <Data AD_Column_ID="73760" Column="ReferenceNo" isNewNull="true"/>
+        <Data AD_Column_ID="73763" Column="TrxAmt">150.000000000000</Data>
+        <Data AD_Column_ID="73727" Column="Updated">2014-09-22 20:12:28.119</Data>
+        <Data AD_Column_ID="73729" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="73764" Column="ValutaDate">2003-11-29 00:00:00.0</Data>
+        <Data AD_Column_ID="73759" Column="Processed">true</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="190" StepType="AD">
+      <PO AD_Table_ID="335" Action="I" Record_ID="50005" Table="C_Payment">
+        <Data AD_Column_ID="5052" Column="A_City" isNewNull="true"/>
+        <Data AD_Column_ID="8213" Column="A_Country" isNewNull="true"/>
+        <Data AD_Column_ID="5029" Column="A_EMail" isNewNull="true"/>
+        <Data AD_Column_ID="5027" Column="A_Ident_DL" isNewNull="true"/>
+        <Data AD_Column_ID="5028" Column="A_Ident_SSN" isNewNull="true"/>
+        <Data AD_Column_ID="5050" Column="A_Name" isNewNull="true"/>
+        <Data AD_Column_ID="5053" Column="A_State" isNewNull="true"/>
+        <Data AD_Column_ID="5051" Column="A_Street" isNewNull="true"/>
+        <Data AD_Column_ID="5026" Column="A_Zip" isNewNull="true"/>
+        <Data AD_Column_ID="3874" Column="AccountNo" isNewNull="true"/>
+        <Data AD_Column_ID="3862" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="3863" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="9565" Column="AD_OrgTrx_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9566" Column="C_Activity_ID" isNewNull="true"/>
+        <Data AD_Column_ID="3880" Column="C_BankAccount_ID">100</Data>
+        <Data AD_Column_ID="5298" Column="C_BP_BankAccount_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5398" Column="C_BPartner_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9564" Column="C_Campaign_ID" isNewNull="true"/>
+        <Data AD_Column_ID="52117" Column="C_CashBook_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8984" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="10265" Column="C_ConversionType_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5299" Column="C_Currency_ID">100</Data>
+        <Data AD_Column_ID="5302" Column="C_DocType_ID">119</Data>
+        <Data AD_Column_ID="5355" Column="C_Invoice_ID" isNewNull="true"/>
+        <Data AD_Column_ID="12925" Column="C_Order_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5043" Column="C_Payment_ID">50005</Data>
+        <Data AD_Column_ID="5300" Column="C_PaymentBatch_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8554" Column="C_Project_ID" isNewNull="true"/>
+        <Data AD_Column_ID="8980" Column="ChargeAmt" isNewNull="true"/>
+        <Data AD_Column_ID="5049" Column="CheckNo" isNewNull="true"/>
+        <Data AD_Column_ID="3865" Column="Created">2014-09-22 20:16:13.875</Data>
+        <Data AD_Column_ID="3866" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="3871" Column="CreditCardExpMM" isNewNull="true"/>
+        <Data AD_Column_ID="3872" Column="CreditCardExpYY" isNewNull="true"/>
+        <Data AD_Column_ID="3870" Column="CreditCardNumber" isNewNull="true"/>
+        <Data AD_Column_ID="3869" Column="CreditCardType" isNewNull="true"/>
+        <Data AD_Column_ID="5047" Column="CreditCardVV" isNewNull="true"/>
+        <Data AD_Column_ID="12128" Column="DateAcct">2003-11-29 00:00:00.0</Data>
+        <Data AD_Column_ID="5399" Column="DateTrx">2003-11-29 00:00:00.0</Data>
+        <Data AD_Column_ID="12127" Column="Description">C_BankDeposit_ID MoneyBank 1234 2003-11-29 00:00:00</Data>
+        <Data AD_Column_ID="5301" Column="DiscountAmt">0</Data>
+        <Data AD_Column_ID="5497" Column="DocAction">--</Data>
+        <Data AD_Column_ID="5496" Column="DocStatus">CL</Data>
+        <Data AD_Column_ID="5401" Column="DocumentNo">2003-11-29 00:00:00</Data>
+        <Data AD_Column_ID="3864" Column="IsActive">true</Data>
+        <Data AD_Column_ID="5400" Column="IsAllocated">true</Data>
+        <Data AD_Column_ID="3875" Column="IsApproved">false</Data>
+        <Data AD_Column_ID="8979" Column="IsDelayedCapture">false</Data>
+        <Data AD_Column_ID="5495" Column="IsOnline">false</Data>
+        <Data AD_Column_ID="7035" Column="IsOverUnderPayment">false</Data>
+        <Data AD_Column_ID="13045" Column="IsPrepayment">false</Data>
+        <Data AD_Column_ID="6216" Column="IsReceipt">true</Data>
+        <Data AD_Column_ID="3879" Column="IsReconciled">true</Data>
+        <Data AD_Column_ID="8775" Column="IsSelfService">false</Data>
+        <Data AD_Column_ID="5048" Column="Micr" isNewNull="true"/>
+        <Data AD_Column_ID="5356" Column="OProcessing" isNewNull="true"/>
+        <Data AD_Column_ID="5031" Column="Orig_TrxID" isNewNull="true"/>
+        <Data AD_Column_ID="7034" Column="OverUnderAmt">0</Data>
+        <Data AD_Column_ID="5032" Column="PONum" isNewNull="true"/>
+        <Data AD_Column_ID="5042" Column="Posted">true</Data>
+        <Data AD_Column_ID="3878" Column="Processed">true</Data>
+        <Data AD_Column_ID="59039" Column="ProcessedOn">1411431374012.1201171875</Data>
+        <Data AD_Column_ID="3877" Column="Processing">false</Data>
+        <Data AD_Column_ID="5038" Column="R_AuthCode" isNewNull="true"/>
+        <Data AD_Column_ID="8981" Column="R_AuthCode_DC" isNewNull="true"/>
+        <Data AD_Column_ID="5039" Column="R_AvsAddr">X</Data>
+        <Data AD_Column_ID="5040" Column="R_AvsZip">X</Data>
+        <Data AD_Column_ID="8982" Column="R_CVV2Match" isNewNull="true"/>
+        <Data AD_Column_ID="5041" Column="R_Info" isNewNull="true"/>
+        <Data AD_Column_ID="5035" Column="R_PnRef">2003-11-29 00:00:00</Data>
+        <Data AD_Column_ID="8983" Column="R_PnRef_DC" isNewNull="true"/>
+        <Data AD_Column_ID="5037" Column="R_RespMsg" isNewNull="true"/>
+        <Data AD_Column_ID="5036" Column="R_Result" isNewNull="true"/>
+        <Data AD_Column_ID="13705" Column="Ref_Payment_ID" isNewNull="true"/>
+        <Data AD_Column_ID="55309" Column="Reversal_ID" isNewNull="true"/>
+        <Data AD_Column_ID="3873" Column="RoutingNo" isNewNull="true"/>
+        <Data AD_Column_ID="8985" Column="Swipe" isNewNull="true"/>
+        <Data AD_Column_ID="5034" Column="TaxAmt">0</Data>
+        <Data AD_Column_ID="5046" Column="TenderType">G</Data>
+        <Data AD_Column_ID="5044" Column="TrxType">X</Data>
+        <Data AD_Column_ID="3867" Column="Updated">2014-09-22 20:16:13.875</Data>
+        <Data AD_Column_ID="3868" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="9563" Column="User1_ID" isNewNull="true"/>
+        <Data AD_Column_ID="9567" Column="User2_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5030" Column="VoiceAuthCode" isNewNull="true"/>
+        <Data AD_Column_ID="6475" Column="WriteOffAmt">0</Data>
+        <Data AD_Column_ID="5303" Column="PayAmt">279.62</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="230" StepType="AD">
+      <PO AD_Table_ID="53844" Action="U" Record_ID="50001" Table="C_BankDeposit">
+        <Data AD_Column_ID="73711" Column="IsApproved" oldValue="false">true</Data>
+        <Data AD_Column_ID="73717" Column="ProcessedOn" isOldNull="true">1411431375469.468994140625</Data>
+        <Data AD_Column_ID="73716" Column="Processed" oldValue="false">true</Data>
+        <Data AD_Column_ID="73706" Column="DocAction" oldValue="CO">CL</Data>
+        <Data AD_Column_ID="73707" Column="DocStatus" oldValue="DR">CO</Data>
+        <Data AD_Column_ID="73814" Column="C_Payment_ID" isOldNull="true">50005</Data>
+        <Data AD_Column_ID="73722" Column="TotalDeposit" oldValue="">279.62</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="260" StepType="AD">
+      <PO AD_Table_ID="392" Action="I" Record_ID="50001" Table="C_BankStatement">
+        <Data AD_Column_ID="4910" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="4911" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="4919" Column="BeginningBalance">-1500</Data>
+        <Data AD_Column_ID="4917" Column="C_BankAccount_ID">100</Data>
+        <Data AD_Column_ID="4909" Column="C_BankStatement_ID">50001</Data>
+        <Data AD_Column_ID="4913" Column="Created">2014-09-22 20:26:32.367</Data>
+        <Data AD_Column_ID="4914" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="5515" Column="CreateFrom">N</Data>
+        <Data AD_Column_ID="4921" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="12461" Column="DocAction">CO</Data>
+        <Data AD_Column_ID="12460" Column="DocStatus">DR</Data>
+        <Data AD_Column_ID="10333" Column="EftStatementDate" isNewNull="true"/>
+        <Data AD_Column_ID="10334" Column="EftStatementReference" isNewNull="true"/>
+        <Data AD_Column_ID="4920" Column="EndingBalance">-1500</Data>
+        <Data AD_Column_ID="4912" Column="IsActive">true</Data>
+        <Data AD_Column_ID="12462" Column="IsApproved">false</Data>
+        <Data AD_Column_ID="5213" Column="IsManual">true</Data>
+        <Data AD_Column_ID="10778" Column="MatchStatement">N</Data>
+        <Data AD_Column_ID="5214" Column="Name">2003-11-30 00:00:00</Data>
+        <Data AD_Column_ID="4925" Column="Posted">false</Data>
+        <Data AD_Column_ID="4924" Column="Processed">false</Data>
+        <Data AD_Column_ID="59035" Column="ProcessedOn" isNewNull="true"/>
+        <Data AD_Column_ID="4923" Column="Processing">false</Data>
+        <Data AD_Column_ID="4922" Column="StatementDifference">0</Data>
+        <Data AD_Column_ID="4915" Column="Updated">2014-09-22 20:26:32.367</Data>
+        <Data AD_Column_ID="4916" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="4918" Column="StatementDate">2003-11-30 00:00:00.0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="280" StepType="AD">
+      <PO AD_Table_ID="393" Action="I" Record_ID="50000" Table="C_BankStatementLine">
+        <Data AD_Column_ID="4927" Column="AD_Client_ID">11</Data>
+        <Data AD_Column_ID="4928" Column="AD_Org_ID">11</Data>
+        <Data AD_Column_ID="4934" Column="C_BankStatement_ID">50001</Data>
+        <Data AD_Column_ID="4926" Column="C_BankStatementLine_ID">50000</Data>
+        <Data AD_Column_ID="10780" Column="C_BPartner_ID" isNewNull="true"/>
+        <Data AD_Column_ID="4939" Column="C_Charge_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5217" Column="C_Currency_ID">100</Data>
+        <Data AD_Column_ID="10779" Column="C_Invoice_ID" isNewNull="true"/>
+        <Data AD_Column_ID="5160" Column="ChargeAmt">0</Data>
+        <Data AD_Column_ID="4930" Column="Created">2014-09-22 20:30:46.582</Data>
+        <Data AD_Column_ID="4931" Column="CreatedBy">100</Data>
+        <Data AD_Column_ID="10027" Column="CreatePayment" isNewNull="true"/>
+        <Data AD_Column_ID="10340" Column="EftAmt" isNewNull="true"/>
+        <Data AD_Column_ID="10383" Column="EftCheckNo" isNewNull="true"/>
+        <Data AD_Column_ID="10341" Column="EftCurrency" isNewNull="true"/>
+        <Data AD_Column_ID="10029" Column="EftMemo" isNewNull="true"/>
+        <Data AD_Column_ID="10028" Column="EftPayee" isNewNull="true"/>
+        <Data AD_Column_ID="10030" Column="EftPayeeAccount" isNewNull="true"/>
+        <Data AD_Column_ID="10339" Column="EftReference" isNewNull="true"/>
+        <Data AD_Column_ID="10338" Column="EftStatementLineDate" isNewNull="true"/>
+        <Data AD_Column_ID="10024" Column="EftTrxID" isNewNull="true"/>
+        <Data AD_Column_ID="10026" Column="EftTrxType" isNewNull="true"/>
+        <Data AD_Column_ID="10336" Column="EftValutaDate" isNewNull="true"/>
+        <Data AD_Column_ID="5161" Column="InterestAmt">0</Data>
+        <Data AD_Column_ID="4929" Column="IsActive">true</Data>
+        <Data AD_Column_ID="10025" Column="IsManual" isNewNull="true"/>
+        <Data AD_Column_ID="5218" Column="IsReversal">false</Data>
+        <Data AD_Column_ID="5219" Column="Line">10</Data>
+        <Data AD_Column_ID="10781" Column="MatchStatement" isNewNull="true"/>
+        <Data AD_Column_ID="8987" Column="Memo" isNewNull="true"/>
+        <Data AD_Column_ID="8986" Column="ReferenceNo" isNewNull="true"/>
+        <Data AD_Column_ID="5220" Column="StmtAmt">279.620000000000</Data>
+        <Data AD_Column_ID="5221" Column="TrxAmt">279.620000000000</Data>
+        <Data AD_Column_ID="4932" Column="Updated">2014-09-22 20:30:46.582</Data>
+        <Data AD_Column_ID="4933" Column="UpdatedBy">100</Data>
+        <Data AD_Column_ID="5222" Column="ValutaDate">2003-11-29 00:00:00.0</Data>
+        <Data AD_Column_ID="4936" Column="Description">Bank Deposit MoneyBank 1234 2003-11-29 00:00:00</Data>
+        <Data AD_Column_ID="5216" Column="DateAcct">2003-11-30 00:00:00.0</Data>
+        <Data AD_Column_ID="10337" Column="StatementLineDate">2003-11-30 00:00:00.0</Data>
+        <Data AD_Column_ID="12463" Column="Processed">true</Data>
+        <Data AD_Column_ID="4937" Column="C_Payment_ID">50005</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="290" StepType="AD">
+      <PO AD_Table_ID="392" Action="U" Record_ID="50001" Table="C_BankStatement">
+        <Data AD_Column_ID="12461" Column="DocAction" oldValue="CO">CL</Data>
+        <Data AD_Column_ID="12462" Column="IsApproved" oldValue="false">true</Data>
+        <Data AD_Column_ID="4924" Column="Processed" oldValue="false">true</Data>
+        <Data AD_Column_ID="12460" Column="DocStatus" oldValue="DR">CO</Data>
+        <Data AD_Column_ID="4922" Column="StatementDifference" oldValue="0">279.62</Data>
+        <Data AD_Column_ID="4920" Column="EndingBalance" oldValue="-1500">-1220.38</Data>
+        <Data AD_Column_ID="59035" Column="ProcessedOn" isNewNull="true" isOldNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="400" StepType="AD">
+      <PO AD_Table_ID="335" Action="U" Record_ID="50005" Table="C_Payment">
+        <Data AD_Column_ID="3879" Column="IsReconciled" oldValue="false">true</Data>
+      </PO>
+    </Step>
+  </Migration>
+</Migrations>

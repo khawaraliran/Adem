@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) 2009 Low Heng Sin                                            *
- * Copyright (C) 2009 Idalica Corporation                                     *
+ * Product: Adempiere ERP & CRM Smart Business Solution                       *
+ * Copyright (C) 2014 Michael McKay                                           *
  * This program is free software; you can redistribute it and/or modify it    *
  * under the terms version 2 of the GNU General Public License as published   *
  * by the Free Software Foundation. This program is distributed in the hope   *
@@ -11,7 +11,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,    *
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *****************************************************************************/
-package org.compiere.grid;
+package org.adempiere.webui.apps;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -24,9 +24,8 @@ import java.util.logging.Level;
 import org.compiere.minigrid.IMiniTable;
 import org.compiere.model.GridTab;
 import org.compiere.model.MBankAccount;
-import org.compiere.model.MBankStatement;
-import org.compiere.model.MBankStatementLine;
-import org.compiere.model.MConversionRate;
+import org.compiere.model.MBankDeposit;
+import org.compiere.model.MBankDepositLine;
 import org.compiere.model.MPayment;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -34,19 +33,10 @@ import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
 
 /**
- *  Create Transactions for Bank Statements
+ *  Create Transactions for Bank Deposits
  *
- *  @author Jorg Janke
- *  @version  $Id: VCreateFromStatement.java,v 1.2 2006/07/30 00:51:28 jjanke Exp $
- *  @author Victor Perez, e-Evolucion 
- *  <li> RF [1811114] http://sourceforge.net/tracker/index.php?func=detail&aid=1811114&group_id=176962&atid=879335
- *  @author Teo Sarca, www.arhipac.ro
- * 			<li>BF [ 2007837 ] VCreateFrom.save() should run in trx
- *  @author Michael McKay (mjmckay)
- * 			<li>BF3439685 Create from for Statement Line picks wrong date
- * 			See https://sourceforge.net/tracker/?func=detail&aid=3439695&group_id=176962&atid=879332  
  */
-public class CreateFromStatement extends CreateFrom 
+public class WCreateFromDeposit extends WCreateFrom 
 {
 	public MBankAccount bankAccount;
 	
@@ -54,7 +44,7 @@ public class CreateFromStatement extends CreateFrom
 	 *  Protected Constructor
 	 *  @param mTab MTab
 	 */
-	public CreateFromStatement(GridTab mTab)
+	public WCreateFromDeposit(GridTab mTab)
 	{
 		super(mTab);
 		log.info(mTab.toString());
@@ -67,7 +57,7 @@ public class CreateFromStatement extends CreateFrom
 	public boolean dynInit() throws Exception
 	{
 		log.config("");
-		setTitle(Msg.translate(Env.getCtx(), "C_BankStatement_ID") + " .. " + Msg.translate(Env.getCtx(), "CreateFrom"));
+		setTitle(Msg.translate(Env.getCtx(), "C_BankDeposit_ID") + " .. " + Msg.translate(Env.getCtx(), "CreateFrom"));
 		
 		return true;
 	}   //  dynInit
@@ -83,11 +73,12 @@ public class CreateFromStatement extends CreateFrom
 	{
 		StringBuffer sql = new StringBuffer("WHERE p.Processed='Y' AND p.IsReconciled='N'"
 		+ " AND p.DocStatus IN ('CO','CL','RE','VO') AND p.PayAmt<>0" 
+		+ "	AND NOT (p.TrxType = 'X' AND p.TenderType = 'G')" // Exclude deposits
 		+ " AND p.C_BankAccount_ID = ?");
 		
-	    sql.append( " AND NOT EXISTS (SELECT * FROM C_BankStatementLine l " 
-		//	Voided Bank Statements have 0 StmtAmt
-			+ "WHERE p.C_Payment_ID=l.C_Payment_ID AND l.StmtAmt <> 0)");
+	    sql.append( " AND NOT EXISTS (SELECT * FROM C_BankDepositLine l " 
+		//	not included in another bank deposit - possibly open
+			+ "WHERE p.C_Payment_ID=l.C_Payment_ID AND l.TrxAmt > 0)");
 		
 		if (DocumentNo.length() > 0)
 			sql.append(" AND UPPER(p.DocumentNo) LIKE ?");
@@ -135,7 +126,7 @@ public class CreateFromStatement extends CreateFrom
 	/**
 	 *  Set Parameters for Query.
 	 *  (as defined in getSQLWhere)
-	 *  @param pstmt statement
+	 *  @param pstmt Deposit
 	 *  @param forCount for counting records
 	 *  @throws SQLException
 	 */
@@ -193,7 +184,7 @@ public class CreateFromStatement extends CreateFrom
 			pstmt.setInt(index++, (Integer) DocType);
 		if(TenderType!=null  && TenderType.toString().length() > 0 )
 			pstmt.setString(index++, (String) TenderType);
-		if(CreditCardType!=null  && CreditCardType.toString().length() > 0 )
+		if(CreditCardType != null && CreditCardType.toString().length() > 0)
 			pstmt.setString(index++, (String) CreditCardType);
 		if(AuthCode.length() > 0 )
 			pstmt.setString(index++, getSQLText(AuthCode));
@@ -284,15 +275,15 @@ public class CreateFromStatement extends CreateFrom
 	}
 
 	/**
-	 *  Save Statement - Insert Data
+	 *  Save Deposit - Insert Data
 	 *  @return true if saved
 	 */
 	public boolean save(IMiniTable miniTable, String trxName)
 	{
 		//  fixed values
-		int C_BankStatement_ID = ((Integer)getGridTab().getValue("C_BankStatement_ID")).intValue();
-		MBankStatement bs = new MBankStatement (Env.getCtx(), C_BankStatement_ID, trxName);
-		log.config(bs.toString());
+		int C_BankDeposit_ID = ((Integer)getGridTab().getValue("C_BankDeposit_ID")).intValue();
+		MBankDeposit bd = new MBankDeposit (Env.getCtx(), C_BankDeposit_ID, trxName);
+		log.config(bd.toString());
 
 		//  Lines
 		for (int i = 0; i < miniTable.getRowCount(); i++)
@@ -302,39 +293,20 @@ public class CreateFromStatement extends CreateFrom
 				Timestamp trxDate = (Timestamp)miniTable.getValueAt(i, 1);  //  1-DateTrx
 				KeyNamePair pp = (KeyNamePair)miniTable.getValueAt(i, 2);   //  2-C_Payment_ID
 				int C_Payment_ID = pp.getKey();
+				MPayment pmt = new MPayment(Env.getCtx(), C_Payment_ID, trxName);
 				pp = (KeyNamePair)miniTable.getValueAt(i, 3);               //  3-Currency
 				int C_Currency_ID = pp.getKey();
-				
-				// Check for realized gains in payments between payment entry and deposit/clearing
-				MPayment pmt = new MPayment(Env.getCtx(),C_Payment_ID, trxName);
-				BigDecimal trxAmt = (BigDecimal)miniTable.getValueAt(i, 5); //  5- Conv Amt
-				//  TODO verify bs.getStatementDate or bs.getAcctDate - which is correct?
-				if (pmt.getDateAcct().compareTo(bs.getStatementDate()) < 0 && pmt.getC_Currency_ID() != bankAccount.getC_Currency_ID())
-				{
-					BigDecimal conv = MConversionRate.convert(Env.getCtx(), pmt.getPayAmt(), 
-							pmt.getC_Currency_ID(), bankAccount.getC_Currency_ID(), 
-							bs.getStatementDate(), pmt.getC_ConversionType_ID(), 
-							pmt.getAD_Client_ID(), pmt.getAD_Org_ID());
-					if (conv != null && !conv.equals(trxAmt))
-						trxAmt = conv;  // We have a gain or loss based on currency exchange
-				}
+				BigDecimal PayAmt = (BigDecimal)miniTable.getValueAt(i, 4); //  4-Payment amount in payment currency
+				BigDecimal ConvAmt = (BigDecimal)miniTable.getValueAt(i, 5); //  5- Conv Amt in bank account currency
 
 				log.fine("Line Date=" + trxDate
-					+ ", Payment=" + C_Payment_ID + ", Currency=" + C_Currency_ID + ", Amt=" + trxAmt);
+					+ ", Payment=" + C_Payment_ID + ", Currency=" + C_Currency_ID + ", Amt=" + PayAmt + ", Converted Amt=" + ConvAmt);
 				//	
-				MBankStatementLine bsl = new MBankStatementLine (bs);
+				MBankDepositLine bdl = new MBankDepositLine (bd);
+				bdl.setPayment(pmt);
+				bdl.setValutaDate(bd.getDepositDate());
 				
-				// BF3439695 - Create from for Statement Line picks wrong date
-				bsl.setDateAcct(bs.getStatementDate());
-				bsl.setStatementLineDate(bs.getStatementDate());
-				bsl.setValutaDate(trxDate);
-				bsl.setPayment(new MPayment(Env.getCtx(), C_Payment_ID, trxName));
-				
-				bsl.setTrxAmt(trxAmt);
-				bsl.setStmtAmt(trxAmt);
-				bsl.setC_Currency_ID(bankAccount.getC_Currency_ID()); 
-				
-				if (!bsl.save())
+				if (!bdl.save())
 					log.log(Level.SEVERE, "Line not created #" + i);
 			}   //   if selected
 		}   //  for all rows

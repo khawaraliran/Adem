@@ -1,4 +1,6 @@
 /******************************************************************************
+ * Product: Adempiere ERP & CRM Smart Business Solution                       *
+ * Copyright (C) 2014 Michael McKay                                           *
  * Copyright (C) 2009 Low Heng Sin                                            *
  * Copyright (C) 2009 Idalica Corporation                                     *
  * This program is free software; you can redistribute it and/or modify it    *
@@ -38,7 +40,7 @@ import org.compiere.grid.ed.VNumber;
 import org.compiere.grid.ed.VString;
 import org.compiere.model.GridTab;
 import org.compiere.model.MBankAccount;
-import org.compiere.model.MBankStatement;
+import org.compiere.model.MBankDeposit;
 import org.compiere.model.MColumn;
 import org.compiere.model.MLookup;
 import org.compiere.model.MLookupFactory;
@@ -52,18 +54,13 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 
-/*
- * @author	Michael McKay
- * 				<li>release/380 - fix row selection event handling to fire single event per row selection
- */
-
-public class VCreateFromStatementUI extends CreateFromStatement implements ActionListener
+public class VCreateFromDepositUI extends CreateFromDeposit implements ActionListener
 {
 	private static final long serialVersionUID = 1L;
 	
 	private VCreateFromDialog dialog;
 
-	public VCreateFromStatementUI(GridTab mTab)
+	public VCreateFromDepositUI(GridTab mTab)
 	{
 		super(mTab);
 		log.info(getGridTab().toString());
@@ -145,7 +142,7 @@ public class VCreateFromStatementUI extends CreateFromStatement implements Actio
 		dialog.getConfirmPanel().addButton(refreshButton);
 		dialog.getRootPane().setDefaultButton(refreshButton);
 				
-		if (getGridTab().getValue("C_BankStatement_ID") == null)
+		if (getGridTab().getValue("C_BankDeposit_ID") == null)
 		{
 			ADialog.error(0, dialog, "SaveErrorRowNotFound");
 			return false;
@@ -180,7 +177,7 @@ public class VCreateFromStatementUI extends CreateFromStatement implements Actio
 				MLookupFactory.get (Env.getCtx(), p_WindowNo, 0, 3499, DisplayType.Search));
 		BPartner_idLabel.setLabelFor(bPartnerLookup);
 		
-		Timestamp date = Env.getContextAsDate(Env.getCtx(), p_WindowNo, MBankStatement.COLUMNNAME_StatementDate);
+		Timestamp date = Env.getContextAsDate(Env.getCtx(), p_WindowNo, MBankDeposit.COLUMNNAME_DepositDate);
 		dateToField.setValue(date);
 	
 		bankAccount = new MBankAccount(Env.getCtx(), C_BankAccount_ID, null);
@@ -232,54 +229,58 @@ public class VCreateFromStatementUI extends CreateFromStatement implements Actio
     	
     	parameterBankPanel.add(bankAccountLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0
     			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(documentTypeLabel, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(tenderTypeLabel, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(BPartner_idLabel, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
     	if (bankAccountField != null)
     		parameterBankPanel.add(bankAccountField, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0
     				,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
+
+    	parameterBankPanel.add(documentTypeLabel, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
     	if(documentTypeField!= null)
     		parameterBankPanel.add(documentTypeField, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0
     				,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
+
+    	parameterBankPanel.add(tenderTypeLabel, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
     	if(tenderTypeField!=null)
     		parameterBankPanel.add(tenderTypeField, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0
     				,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0)); 
-		parameterBankPanel.add(bPartnerLookup, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0
-				,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));   	
 
-    	parameterBankPanel.add(documentNoLabel, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(authorizationLabel, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
     	parameterBankPanel.add(creditCardTypeLabel, new GridBagConstraints(2, 2, 1, 1, 0.0, 0.0
     			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(amtFromLabel, new GridBagConstraints(2, 3, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(dateFromLabel, new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    
-    	parameterBankPanel.add(documentNoField, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
-    	parameterBankPanel.add(authorizationField, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
-    	if(creditCardTypeField!=null)
+    	if(tenderTypeField!=null)
     		parameterBankPanel.add(creditCardTypeField, new GridBagConstraints(3, 2, 1, 1, 0.0, 0.0
     				,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0)); 
+
+    	parameterBankPanel.add(BPartner_idLabel, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
+    		parameterBankPanel.add(bPartnerLookup, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0
+    				,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));   	
+    
+    	parameterBankPanel.add(documentNoLabel, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
+    	parameterBankPanel.add(documentNoField, new GridBagConstraints(3, 0, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
+
+    	parameterBankPanel.add(authorizationLabel, new GridBagConstraints(2, 1, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
+    	parameterBankPanel.add(authorizationField, new GridBagConstraints(3, 1, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
+
+    	parameterBankPanel.add(amtFromLabel, new GridBagConstraints(2, 3, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
     	parameterBankPanel.add(amtFromField, new GridBagConstraints(3, 3, 1, 1, 0.0, 0.0
     			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
-    	parameterBankPanel.add(dateFromField, new GridBagConstraints(3, 4, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
-
     	parameterBankPanel.add(amtToLabel, new GridBagConstraints(4, 3, 1, 1, 0.0, 0.0
     			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-    	parameterBankPanel.add(dateToLabel, new GridBagConstraints(4, 4, 1, 1, 0.0, 0.0
-    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
-
     	parameterBankPanel.add(amtToField, new GridBagConstraints(5, 3, 1, 1, 0.0, 0.0
     			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
+
+    	parameterBankPanel.add(dateFromLabel, new GridBagConstraints(2, 4, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
+    	parameterBankPanel.add(dateFromField, new GridBagConstraints(3, 4, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
+    	parameterBankPanel.add(dateToLabel, new GridBagConstraints(4, 4, 1, 1, 0.0, 0.0
+    			,GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0));
     	parameterBankPanel.add(dateToField, new GridBagConstraints(5, 4, 1, 1, 0.0, 0.0
     			,GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(5, 0, 5, 5), 0, 0));
 
@@ -307,7 +308,7 @@ public class VCreateFromStatementUI extends CreateFromStatement implements Actio
 	protected void loadBankAccount()
 	{
 		loadTableOIS(getBankData(documentNoField.getText(), bPartnerLookup.getValue(), dateFromField.getValue(), dateToField.getValue(),
-				amtFromField.getValue(), amtToField.getValue(), documentTypeField.getValue(), tenderTypeField.getValue(), creditCardTypeField.getValue(), 
+				amtFromField.getValue(), amtToField.getValue(), documentTypeField.getValue(), tenderTypeField.getValue(),creditCardTypeField.getValue(), 
 				authorizationField.getText()));
 	}
 	

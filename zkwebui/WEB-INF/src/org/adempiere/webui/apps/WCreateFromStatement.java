@@ -11,7 +11,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,    *
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.                     *
  *****************************************************************************/
-package org.compiere.grid;
+package org.adempiere.webui.apps;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
@@ -42,11 +42,8 @@ import org.compiere.util.Msg;
  *  <li> RF [1811114] http://sourceforge.net/tracker/index.php?func=detail&aid=1811114&group_id=176962&atid=879335
  *  @author Teo Sarca, www.arhipac.ro
  * 			<li>BF [ 2007837 ] VCreateFrom.save() should run in trx
- *  @author Michael McKay (mjmckay)
- * 			<li>BF3439685 Create from for Statement Line picks wrong date
- * 			See https://sourceforge.net/tracker/?func=detail&aid=3439695&group_id=176962&atid=879332  
  */
-public class CreateFromStatement extends CreateFrom 
+public class WCreateFromStatement extends WCreateFrom 
 {
 	public MBankAccount bankAccount;
 	
@@ -54,7 +51,7 @@ public class CreateFromStatement extends CreateFrom
 	 *  Protected Constructor
 	 *  @param mTab MTab
 	 */
-	public CreateFromStatement(GridTab mTab)
+	public WCreateFromStatement(GridTab mTab)
 	{
 		super(mTab);
 		log.info(mTab.toString());
@@ -308,7 +305,6 @@ public class CreateFromStatement extends CreateFrom
 				// Check for realized gains in payments between payment entry and deposit/clearing
 				MPayment pmt = new MPayment(Env.getCtx(),C_Payment_ID, trxName);
 				BigDecimal trxAmt = (BigDecimal)miniTable.getValueAt(i, 5); //  5- Conv Amt
-				//  TODO verify bs.getStatementDate or bs.getAcctDate - which is correct?
 				if (pmt.getDateAcct().compareTo(bs.getStatementDate()) < 0 && pmt.getC_Currency_ID() != bankAccount.getC_Currency_ID())
 				{
 					BigDecimal conv = MConversionRate.convert(Env.getCtx(), pmt.getPayAmt(), 
@@ -323,8 +319,6 @@ public class CreateFromStatement extends CreateFrom
 					+ ", Payment=" + C_Payment_ID + ", Currency=" + C_Currency_ID + ", Amt=" + trxAmt);
 				//	
 				MBankStatementLine bsl = new MBankStatementLine (bs);
-				
-				// BF3439695 - Create from for Statement Line picks wrong date
 				bsl.setDateAcct(bs.getStatementDate());
 				bsl.setStatementLineDate(bs.getStatementDate());
 				bsl.setValutaDate(trxDate);

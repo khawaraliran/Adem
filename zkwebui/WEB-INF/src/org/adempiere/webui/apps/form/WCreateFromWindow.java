@@ -13,6 +13,7 @@
  *****************************************************************************/
 package org.adempiere.webui.apps.form;
 
+import org.adempiere.webui.apps.WCreateFrom;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.ConfirmPanel;
 import org.adempiere.webui.component.ListModelTable;
@@ -73,7 +74,7 @@ public class WCreateFromWindow extends Window implements EventListener, WTableMo
 			createFrom.setInitOK(false);
 		}		
     }
-	
+
 	protected void zkInit() throws Exception
 	{
 		Borderlayout contentPane = new Borderlayout();
@@ -102,7 +103,7 @@ public class WCreateFromWindow extends Window implements EventListener, WTableMo
 		southPanel.appendChild(new Separator());
 		southPanel.appendChild(statusBar);
 		
-		setWidth("750px");
+		setWidth("1020px");
 		setHeight("550px");
 		setSizable(true);
 		setBorder("normal");

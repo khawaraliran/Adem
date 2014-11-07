@@ -31,6 +31,7 @@ import org.compiere.db.CConnection;
 import org.compiere.interfaces.Server;
 import org.compiere.model.MAcctSchema;
 import org.compiere.model.MAllocationHdr;
+import org.compiere.model.MBankDeposit;
 import org.compiere.model.MBankStatement;
 import org.compiere.model.MCash;
 import org.compiere.model.MClient;
@@ -1057,6 +1058,18 @@ public class DocumentEngine implements DocAction
 			if (docStatus.equals(DocumentEngine.STATUS_Completed))
 			{
 				options[index++] = DocumentEngine.ACTION_Void;
+			}
+		}
+		/********************
+		 *  Bank Deposit
+		 */
+		else if (AD_Table_ID == MBankDeposit.Table_ID)
+		{
+			//	Complete                    ..  CO
+			if (docStatus.equals(DocumentEngine.STATUS_Completed))
+			{
+				options[index++] = DocumentEngine.ACTION_Void;
+				options[index++] = DocumentEngine.ACTION_ReActivate;
 			}
 		}
 		/********************

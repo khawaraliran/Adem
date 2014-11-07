@@ -123,6 +123,7 @@ public abstract class Doc
 	 *  C_Order:            SOO, POO
 	 *  M_Transaction:      MMI, MMM, MMS, MMR
 	 *  C_BankStatement:    CMB
+	 *  C_BankDeposit:		CMD
 	 *  C_Cash:             CMC
 	 *  C_Allocation:       CMA
 	 *  GL_Journal:         GLJ
@@ -146,6 +147,8 @@ public abstract class Doc
 	public static final String 	DOCTYPE_APPayment       = "APP";
 	/**	CashManagement Bank Statement   */
 	public static final String 	DOCTYPE_BankStatement   = "CMB";
+	/**	CashManagement Bank Deposit   */
+	public static final String 	DOCTYPE_BankDeposit     = "CMD";
 	/**	CashManagement Cash Journals    */
 	public static final String 	DOCTYPE_CashJournal     = "CMC";
 	/**	CashManagement Allocations      */

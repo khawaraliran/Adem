@@ -1,0 +1,658 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Migrations>
+  <Migration EntityType="D" Name="Add reference types" ReleaseNo="feature/ADEMPIERE-302" SeqNo="9936">
+    <Comments>Adds Reference types for Cash Journal, Bank Statement, Bank Deposits and Payments.</Comments>
+    <Step SeqNo="10" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53736" Table="AD_Reference">
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53736</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 16:07:49.417</Data>
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the bank statement for a payment</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Payments are reconciled with a bank statement.  To determine when a particular payment was reconciled, this zoom across will find the relavant bank statement.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Bank Statement &lt;= Payment</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 16:07:49.417</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="20" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53736" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5214</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">4909</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53736</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">392</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 16:11:22.717</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause">statementdate</Data>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 16:11:22.717</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_BankStatement.C_BankStatement_ID IN (
+SELECT bsl.C_BankStatement_ID
+FROM  C_BankStatementLine bsl
+WHERE
+            bsl.C_Payment_ID = @C_Payment_ID@
+)</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="30" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53737" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53737</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 16:12:58.486</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Payments for a bank statement</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Payments are reconciled with a bank statement. </Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Payment &lt;= Bank Statememt</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 16:12:58.486</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="40" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53737" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5401</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">5043</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53737</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">335</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 16:14:52.752</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause">DocumentNo</Data>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 16:14:52.752</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_Payment.C_Payment_ID IN (   SELECT bsl.C_Payment_ID   FROM 	C_BankStatementLine bsl WHERE 	bsl.C_BankStatement_ID = @C_BankStatement_ID@) AND 	(C_Payment.TenderType != 'X' AND C_Payment.TenderType != 'G')</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="50" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53738" Table="AD_Reference">
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53738</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 16:18:37.867</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Payments for a bank Deposit</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Payments are reconciled with a bank deposit.  The deposit is reconciled with the bank statement. </Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Payment &lt;= Bank Deposit</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 16:18:37.867</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="60" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53738" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5401</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">5043</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53738</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">335</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 16:20:57.3</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 16:20:57.3</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_Payment.C_Payment_ID IN (   SELECT bdl.C_Payment_ID   FROM 	C_BankDepositLine bdl WHERE 	bdl.C_BankDeposit_ID = @C_BankDeposit_ID@) AND 	(C_Payment.TenderType != 'X' AND C_Payment.TenderType != 'G')</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="70" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53739" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53739</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 16:22:47.644</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the bank deposit for a payment</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Payments can be reconciled with a bank deposit.  The deposit is reconciled with a bank statement.  To determine when a particular payment was reconciled, this zoom across will find the relavant bank deposit.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Bank Deposit &lt;= Payment</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 16:22:47.644</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="80" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53739" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">73714</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">73703</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53739</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">53844</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 16:24:46.984</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 16:24:46.984</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_BankDeposit.C_BankDeposit_ID IN (
+SELECT bdl.C_BankDeposit_ID
+FROM  C_BankDepositLine bdl
+WHERE
+            bdl.C_Payment_ID = @C_Payment_ID@
+)</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause">DepositDate</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="100" StepType="AD">
+      <PO AD_Table_ID="53246" Action="I" Record_ID="50017" Table="AD_RelationType">
+        <Data AD_Column_ID="58571" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="58572" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="58582" Column="AD_Reference_Source_ID">53737</Data>
+        <Data AD_Column_ID="58583" Column="AD_Reference_Target_ID">53736</Data>
+        <Data AD_Column_ID="58574" Column="AD_RelationType_ID">50017</Data>
+        <Data AD_Column_ID="58575" Column="Created">2014-09-23 16:31:57.115</Data>
+        <Data AD_Column_ID="58576" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="58577" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="58578" Column="IsActive">true</Data>
+        <Data AD_Column_ID="58584" Column="IsDirected">false</Data>
+        <Data AD_Column_ID="58579" Column="Name">Payment &lt;-&gt; Bank Statement</Data>
+        <Data AD_Column_ID="58585" Column="Role_Source" isNewNull="true"/>
+        <Data AD_Column_ID="58586" Column="Role_Target" isNewNull="true"/>
+        <Data AD_Column_ID="58587" Column="Type">I</Data>
+        <Data AD_Column_ID="58580" Column="Updated">2014-09-23 16:31:57.115</Data>
+        <Data AD_Column_ID="58581" Column="UpdatedBy">0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="110" StepType="AD">
+      <PO AD_Table_ID="53246" Action="I" Record_ID="50018" Table="AD_RelationType">
+        <Data AD_Column_ID="58576" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="58577" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="58578" Column="IsActive">true</Data>
+        <Data AD_Column_ID="58584" Column="IsDirected">false</Data>
+        <Data AD_Column_ID="58579" Column="Name">Payment &lt;-&gt; Bank Deposit</Data>
+        <Data AD_Column_ID="58585" Column="Role_Source" isNewNull="true"/>
+        <Data AD_Column_ID="58586" Column="Role_Target" isNewNull="true"/>
+        <Data AD_Column_ID="58587" Column="Type">I</Data>
+        <Data AD_Column_ID="58580" Column="Updated">2014-09-23 16:32:20.42</Data>
+        <Data AD_Column_ID="58581" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="58571" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="58572" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="58582" Column="AD_Reference_Source_ID">53738</Data>
+        <Data AD_Column_ID="58583" Column="AD_Reference_Target_ID">53739</Data>
+        <Data AD_Column_ID="58574" Column="AD_RelationType_ID">50018</Data>
+        <Data AD_Column_ID="58575" Column="Created">2014-09-23 16:32:20.42</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="160" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53740" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53740</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 17:35:12.609</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds bank deposits reconciled on a bank statement</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Payments can be reconciled with a bank deposit.  The deposit is reconciled with a bank statement.  This zoom across will determine which deposits were reconciled on the bank statement.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Bank Deposit &lt;= Bank Statement</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 17:35:12.609</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="170" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53740" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">73714</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">73703</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53740</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">53844</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 17:41:38.51</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 17:41:38.51</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_BankDeposit.C_Payment_ID IN (
+SELECT bsl.C_Payment_ID
+FROM  C_BankStatementLine bsl
+WHERE
+            bsl.C_BankStatement_ID = @C_BankStatement_ID@
+)
+ </Data>
+      </PO>
+    </Step>
+    <Step SeqNo="180" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53741" Table="AD_Reference">
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53741</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 17:43:19.278</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Bank Statement for a bank deposit</Data>
+        <Data AD_Column_ID="132" Column="Help">Payments can be reconciled with a bank deposit.  The deposit is reconciled with the bank statement. This zoom across finds the bank statement where a given bank deposit is reconcilled.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Bank Statement &lt;= Bank Deposit</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 17:43:19.278</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="190" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53741" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5214</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">4909</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53741</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">392</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 17:48:18.366</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 17:48:18.366</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_BankStatement.C_BankStatement_ID IN (
+  SELECT bsl.C_BankStatement_ID
+  FROM
+	C_BankStatementLine bsl,
+	C_BankDeposit bd
+WHERE
+	bsl.C_Payment_ID = bd.C_Payment_ID
+	AND bd.C_BankDeposit_ID = @C_BankDeposit_ID@)</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="200" StepType="AD">
+      <PO AD_Table_ID="53246" Action="I" Record_ID="50019" Table="AD_RelationType">
+        <Data AD_Column_ID="58571" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="58572" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="58582" Column="AD_Reference_Source_ID">53741</Data>
+        <Data AD_Column_ID="58583" Column="AD_Reference_Target_ID">53740</Data>
+        <Data AD_Column_ID="58574" Column="AD_RelationType_ID">50019</Data>
+        <Data AD_Column_ID="58575" Column="Created">2014-09-23 17:49:27.245</Data>
+        <Data AD_Column_ID="58576" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="58577" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="58578" Column="IsActive">true</Data>
+        <Data AD_Column_ID="58584" Column="IsDirected">false</Data>
+        <Data AD_Column_ID="58579" Column="Name">Bank Statement &lt;-&gt; Bank Deposit</Data>
+        <Data AD_Column_ID="58585" Column="Role_Source" isNewNull="true"/>
+        <Data AD_Column_ID="58586" Column="Role_Target" isNewNull="true"/>
+        <Data AD_Column_ID="58587" Column="Type">I</Data>
+        <Data AD_Column_ID="58580" Column="Updated">2014-09-23 17:49:27.245</Data>
+        <Data AD_Column_ID="58581" Column="UpdatedBy">0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="210" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53742" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53742</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 18:25:52.161</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds bank deposits which reconciles a cash Journal bank transfer</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Cash Journal bank transfers appear as payments which can be reconciled with a bank deposit.  This zoom across will determine which deposits reconciled the cash journal.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Bank Deposit &lt;= Cash Journal</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 18:25:52.161</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="220" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53742" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">73714</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">73703</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53742</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">53844</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 18:28:30.126</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 18:28:30.126</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_BankDeposit.C_BankDeposit_ID IN (  SELECT bdl.C_BankDeposit_ID FROM       C_CashLine cl,     C_BankDepositLine bdl WHERE     cl.C_Payment_ID = bdl.C_Payment_ID     AND cl.C_Cash_ID = @C_Cash_ID@ )</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="230" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53743" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53743</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 18:30:36.974</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Cash Journals with transfers reconciled in a bank deposit</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Cash Journal bank transfers appear as Payments which can be reconciled with a bank deposit. This zoom across finds the cash journals which are reconciled on the bank deposit.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Cash Journal &lt;= Bank Deposit</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 18:30:36.974</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="240" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53743" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5250</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">5241</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53743</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">407</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 18:34:21.184</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 18:34:21.184</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_Cash.C_Cash_ID IN (   SELECT cl.C_Cash_ID   FROM 	C_CashLine cl, 	C_BankDepositLine bdl WHERE 	cl.C_Payment_ID = bdl.C_Payment_ID 	AND bdl.C_BankDeposit_ID = @C_BankDeposit_ID@)</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="250" StepType="AD">
+      <PO AD_Table_ID="53246" Action="I" Record_ID="50020" Table="AD_RelationType">
+        <Data AD_Column_ID="58571" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="58572" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="58582" Column="AD_Reference_Source_ID">53743</Data>
+        <Data AD_Column_ID="58583" Column="AD_Reference_Target_ID">53742</Data>
+        <Data AD_Column_ID="58574" Column="AD_RelationType_ID">50020</Data>
+        <Data AD_Column_ID="58575" Column="Created">2014-09-23 19:55:25.942</Data>
+        <Data AD_Column_ID="58576" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="58577" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="58578" Column="IsActive">true</Data>
+        <Data AD_Column_ID="58584" Column="IsDirected">false</Data>
+        <Data AD_Column_ID="58579" Column="Name">Cash Journal &lt;-&gt; Bank Deposit</Data>
+        <Data AD_Column_ID="58585" Column="Role_Source" isNewNull="true"/>
+        <Data AD_Column_ID="58586" Column="Role_Target" isNewNull="true"/>
+        <Data AD_Column_ID="58587" Column="Type">I</Data>
+        <Data AD_Column_ID="58580" Column="Updated">2014-09-23 19:55:25.942</Data>
+        <Data AD_Column_ID="58581" Column="UpdatedBy">0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="260" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53744" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53744</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 19:56:31.757</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Cash Journals with transfers reconciled in a bank statement</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Cash Journal bank transfers appear as Payments which can be reconciled with a bank statement. This zoom across finds the cash journals which are reconciled on the bank statement.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Cash Journal &lt;= Bank Statement</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 19:56:31.757</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="270" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53744" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5250</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">5241</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53744</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">407</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 19:58:56.667</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 19:58:56.667</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_Cash.C_Cash_ID IN (   SELECT cl.C_Cash_ID   FROM 	C_CashLine cl, 	C_BankStatementLine bsl WHERE 	cl.C_Payment_ID = bsl.C_Payment_ID 	AND bsl.C_BankStatement_ID = @C_BankStatement_ID@)</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="300" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53745" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53745</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 20:28:02.251</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds bank statements which reconcile a cash Journal bank transfer</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Cash Journal bank transfers appear as payments which can be reconciled with a bank statement.  This zoom across will determine which statements reconciled the cash journal.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Bank Statement &lt;= Cash Journal</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 20:28:02.251</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="310" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53745" Table="AD_Ref_Table">
+        <Data AD_Column_ID="146" Column="WhereClause">C_BankStatement.C_BankStatement_ID IN ( SELECT bsl.C_BankStatement_ID FROM  	C_BankStatementLine bsl, 	C_CashLine cl WHERE  	cl.C_Payment_ID = bsl.C_Payment_ID 	AND cl.C_Cash_ID = @C_Cash_ID@ )</Data>
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5214</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">4909</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53745</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">392</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 20:32:13.497</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 20:32:13.497</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="320" StepType="AD">
+      <PO AD_Table_ID="53246" Action="I" Record_ID="50021" Table="AD_RelationType">
+        <Data AD_Column_ID="58571" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="58572" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="58582" Column="AD_Reference_Source_ID">53744</Data>
+        <Data AD_Column_ID="58583" Column="AD_Reference_Target_ID">53745</Data>
+        <Data AD_Column_ID="58574" Column="AD_RelationType_ID">50021</Data>
+        <Data AD_Column_ID="58575" Column="Created">2014-09-23 20:34:14.78</Data>
+        <Data AD_Column_ID="58576" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="58577" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="58578" Column="IsActive">true</Data>
+        <Data AD_Column_ID="58584" Column="IsDirected">false</Data>
+        <Data AD_Column_ID="58579" Column="Name">Cash Journal &lt;-&gt; Bank Statement</Data>
+        <Data AD_Column_ID="58585" Column="Role_Source" isNewNull="true"/>
+        <Data AD_Column_ID="58586" Column="Role_Target" isNewNull="true"/>
+        <Data AD_Column_ID="58587" Column="Type">I</Data>
+        <Data AD_Column_ID="58580" Column="Updated">2014-09-23 20:34:14.78</Data>
+        <Data AD_Column_ID="58581" Column="UpdatedBy">0</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="330" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53746" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53746</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 20:36:26.829</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Payments recorded in a cash journal</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help" isNewNull="true"/>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Payment &lt;= Cash Journal</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 20:36:26.829</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="340" StepType="AD">
+      <PO AD_Table_ID="102" Action="I" Record_ID="53747" Table="AD_Reference">
+        <Data AD_Column_ID="363" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="364" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="129" Column="AD_Reference_ID">53747</Data>
+        <Data AD_Column_ID="554" Column="Created">2014-09-23 21:05:46.656</Data>
+        <Data AD_Column_ID="555" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="131" Column="Description">Finds the Cash Journal for a payment</Data>
+        <Data AD_Column_ID="6486" Column="EntityType">D</Data>
+        <Data AD_Column_ID="132" Column="Help">Cash payments can be reconciled with a cash journal.  This zoom across will determine the cash journal that records the payment.</Data>
+        <Data AD_Column_ID="553" Column="IsActive">true</Data>
+        <Data AD_Column_ID="54355" Column="IsOrderByValue">false</Data>
+        <Data AD_Column_ID="130" Column="Name">RelType Cash Journal &lt;= Payment</Data>
+        <Data AD_Column_ID="556" Column="Updated">2014-09-23 21:05:46.656</Data>
+        <Data AD_Column_ID="557" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="139" Column="ValidationType">T</Data>
+        <Data AD_Column_ID="1180" Column="VFormat" isNewNull="true"/>
+      </PO>
+    </Step>
+    <Step SeqNo="350" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53747" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5250</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">5241</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53747</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">407</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 21:07:57.546</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 21:07:57.546</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_Cash.C_Cash_ID IN (
+SELECT cl.C_Cash_ID
+FROM  C_CashLine cl
+WHERE
+            cl.C_Payment_ID = @C_Payment_ID@
+)</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="360" StepType="AD">
+      <PO AD_Table_ID="103" Action="I" Record_ID="53746" Table="AD_Ref_Table">
+        <Data AD_Column_ID="367" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="145" Column="AD_Display">5401</Data>
+        <Data AD_Column_ID="144" Column="AD_Key">5043</Data>
+        <Data AD_Column_ID="368" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="142" Column="AD_Reference_ID">53746</Data>
+        <Data AD_Column_ID="143" Column="AD_Table_ID">335</Data>
+        <Data AD_Column_ID="57270" Column="AD_Window_ID" isNewNull="true"/>
+        <Data AD_Column_ID="559" Column="Created">2014-09-23 21:13:18.345</Data>
+        <Data AD_Column_ID="560" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="62121" Column="DisplaySQL" isNewNull="true"/>
+        <Data AD_Column_ID="7711" Column="EntityType">D</Data>
+        <Data AD_Column_ID="558" Column="IsActive">true</Data>
+        <Data AD_Column_ID="62120" Column="IsAlert">false</Data>
+        <Data AD_Column_ID="62122" Column="IsDisplayIdentifier">false</Data>
+        <Data AD_Column_ID="2377" Column="IsValueDisplayed">false</Data>
+        <Data AD_Column_ID="147" Column="OrderByClause" isNewNull="true"/>
+        <Data AD_Column_ID="561" Column="Updated">2014-09-23 21:13:18.345</Data>
+        <Data AD_Column_ID="562" Column="UpdatedBy">0</Data>
+        <Data AD_Column_ID="146" Column="WhereClause">C_Payment.C_Payment_ID IN (   SELECT cl.C_Payment_ID   FROM     C_CashLine cl WHERE     cl.C_Cash_ID = @C_Cash_ID@) AND     (C_Payment.TenderType != 'X' AND C_Payment.TenderType != 'G')</Data>
+      </PO>
+    </Step>
+    <Step SeqNo="370" StepType="AD">
+      <PO AD_Table_ID="53246" Action="I" Record_ID="50022" Table="AD_RelationType">
+        <Data AD_Column_ID="58571" Column="AD_Client_ID">0</Data>
+        <Data AD_Column_ID="58572" Column="AD_Org_ID">0</Data>
+        <Data AD_Column_ID="58582" Column="AD_Reference_Source_ID">53747</Data>
+        <Data AD_Column_ID="58583" Column="AD_Reference_Target_ID">53746</Data>
+        <Data AD_Column_ID="58574" Column="AD_RelationType_ID">50022</Data>
+        <Data AD_Column_ID="58575" Column="Created">2014-09-23 21:15:07.857</Data>
+        <Data AD_Column_ID="58576" Column="CreatedBy">0</Data>
+        <Data AD_Column_ID="58577" Column="Description" isNewNull="true"/>
+        <Data AD_Column_ID="58578" Column="IsActive">true</Data>
+        <Data AD_Column_ID="58584" Column="IsDirected">false</Data>
+        <Data AD_Column_ID="58579" Column="Name">Cash Journal &lt;-&gt; Payment</Data>
+        <Data AD_Column_ID="58585" Column="Role_Source" isNewNull="true"/>
+        <Data AD_Column_ID="58586" Column="Role_Target" isNewNull="true"/>
+        <Data AD_Column_ID="58587" Column="Type">I</Data>
+        <Data AD_Column_ID="58580" Column="Updated">2014-09-23 21:15:07.857</Data>
+        <Data AD_Column_ID="58581" Column="UpdatedBy">0</Data>
+      </PO>
+    </Step>
+  </Migration>
+</Migrations>

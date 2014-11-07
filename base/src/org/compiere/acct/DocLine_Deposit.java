@@ -1,5 +1,6 @@
 /******************************************************************************
  * Product: Adempiere ERP & CRM Smart Business Solution                       *
+ * Copyright (C) 2014 Michael McKay All Rights Reserved.                      *
  * Copyright (C) 1999-2006 ComPiere, Inc. All Rights Reserved.                *
  * This program is free software; you can redistribute it and/or modify it    *
  * under the terms version 2 of the GNU General Public License as published   *
@@ -18,35 +19,35 @@ package org.compiere.acct;
 
 import java.math.BigDecimal;
 
-import org.compiere.model.MBankStatementLine;
+import org.compiere.model.MBankDepositLine;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
 /**
  *  Bank Statement Line
  *
- *  @author Jorg Janke
- *  @version  $Id: DocLine_Bank.java,v 1.2 2006/07/30 00:53:33 jjanke Exp $
+ *  @author Michael McKay
  */
-public class DocLine_Bank extends DocLine
+public class DocLine_Deposit extends DocLine
 {
+	private BigDecimal m_ConvertedAmt;
+
 	/**
 	 *  Constructor
 	 *  @param line statement line
-	 *  @param doc header
+	 *  @param doc_BankDeposit header
 	 */
-	public DocLine_Bank (MBankStatementLine line, Doc_BankStatement doc)
+	public DocLine_Deposit (MBankDepositLine line, Doc_BankDeposit doc_BankDeposit)
 	{
-		super (line, doc);
+		super (line, doc_BankDeposit);
 		m_C_Payment_ID = line.getC_Payment_ID();
 		m_IsReversal = line.isReversal();
 		//
-		m_StmtAmt = line.getStmtAmt();
-		m_InterestAmt = line.getInterestAmt();
+		m_DepositAmt = line.getDepositAmt();
 		m_TrxAmt = line.getTrxAmt();
+		m_ConvertedAmt = line.getConvertedAmt();
 		//
 		setDateDoc(line.getValutaDate());
-		setDateAcct(doc.getDateAcct());  // adaxa-pb use statement date
 		setC_BPartner_ID(line.getC_BPartner_ID());
 	}   //  DocLine_Bank
 
@@ -56,12 +57,11 @@ public class DocLine_Bank extends DocLine
 	private int         m_C_Payment_ID = 0;
 
 	private BigDecimal  m_TrxAmt = Env.ZERO;
-	private BigDecimal  m_StmtAmt = Env.ZERO;
-	private BigDecimal  m_InterestAmt = Env.ZERO;
+	private BigDecimal  m_DepositAmt = Env.ZERO;
 
 	/**
 	 *  Get Payment
-	 *  @return C_Paymnet_ID
+	 *  @return C_Payment_ID
 	 */
 	public int getC_Payment_ID()
 	{
@@ -94,22 +94,14 @@ public class DocLine_Bank extends DocLine
 		return m_IsReversal;
 	}   //  isReversal
 
-	/**
-	 *  Get Interest
-	 *  @return InterestAmount
-	 */
-	public BigDecimal getInterestAmt()
-	{
-		return m_InterestAmt;
-	}   //  getInterestAmt
 
 	/**
 	 *  Get Statement
-	 *  @return Starement Amount
+	 *  @return Statement Amount
 	 */
-	public BigDecimal getStmtAmt()
+	public BigDecimal getDepositAmt()
 	{
-		return m_StmtAmt;
+		return m_DepositAmt;
 	}   //  getStrmtAmt
 
 	/**
@@ -119,6 +111,15 @@ public class DocLine_Bank extends DocLine
 	public BigDecimal getTrxAmt()
 	{
 		return m_TrxAmt;
+	}   //  getTrxAmt
+
+	/**
+	 *  Get Converted Transaction Amount
+	 *  @return converted amount
+	 */
+	public BigDecimal getConvertedAmt()
+	{
+		return m_ConvertedAmt;
 	}   //  getTrxAmt
 
 	/**

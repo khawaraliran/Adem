@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.compiere.model.GridTab;
+import org.compiere.model.I_C_BankDeposit;
 import org.compiere.model.I_C_BankStatement;
 import org.compiere.model.I_C_Invoice;
 import org.compiere.model.I_M_InOut;
@@ -50,6 +51,7 @@ public class VCreateFromFactory
 		s_registeredClasses.put(I_C_Invoice.Table_ID, VCreateFromInvoiceUI.class);
 		
 		s_registeredClasses.put(I_C_BankStatement.Table_ID, VCreateFromStatementUI.class);
+		s_registeredClasses.put(I_C_BankDeposit.Table_ID, VCreateFromDepositUI.class);
 		s_registeredClasses.put(I_M_InOut.Table_ID, VCreateFromShipmentUI.class);
 		s_registeredClasses.put(I_M_RMA.Table_ID, VCreateFromRMAUI.class);
 	}

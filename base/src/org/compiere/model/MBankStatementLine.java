@@ -232,7 +232,7 @@ import org.compiere.util.Msg;
 	{
 		if (!success)
 			return success;
-		return updateHeader();
+		return updateHeader(); 
 	}	//	afterSave
 	
 	/**
@@ -250,11 +250,14 @@ import org.compiere.util.Msg;
 	/**
 	 * 	Update Header
 	 */
-	private boolean updateHeader()
+	public boolean updateHeader()
 	{
+		// The lines could be in different currencies
 		String sql = "UPDATE C_BankStatement bs"
-			+ " SET StatementDifference=(SELECT COALESCE(SUM(StmtAmt),0) FROM C_BankStatementLine bsl "
-				+ "WHERE bsl.C_BankStatement_ID=bs.C_BankStatement_ID AND bsl.IsActive='Y') "
+			+ " SET StatementDifference=(SELECT COALESCE(SUM("
+			+ "    CurrencyConvert(StmtAmt,bsl.C_Currency_ID, ba.C_Currency_ID, bsl.DateAcct, 0, bs.AD_Client_ID, bs.AD_Org_ID)"
+			+ "       ),0) FROM C_BankStatementLine bsl, C_BankAccount ba "
+				+ "WHERE bsl.C_BankStatement_ID=bs.C_BankStatement_ID AND bsl.IsActive='Y' AND bs.C_BankAccount_ID = ba.C_BankAccount_ID) "
 			+ "WHERE C_BankStatement_ID=" + getC_BankStatement_ID();
 		int no = DB.executeUpdate(sql, get_TrxName());
 		if (no != 1) {
@@ -272,4 +275,21 @@ import org.compiere.util.Msg;
 		return true;
 	}	//	updateHeader
 	
+	public BigDecimal getConvertedAmt()
+	{
+		MBankStatement statement = getParent();
+		MBankAccount acct = statement.getBankAccount();
+		int bankCurrencyID = acct.getC_Currency_ID();
+		BigDecimal convAmt = getStmtAmt();
+		if (convAmt == null)
+			convAmt = Env.ZERO;
+		//
+		if (getC_Currency_ID() != bankCurrencyID)
+		{
+			// The original payment amount would have been posted in the in-transit account if used.
+			convAmt = MConversionRate.convert(getCtx(), convAmt, getC_Currency_ID(), 
+					bankCurrencyID, getDateAcct(), 0, getAD_Client_ID(), getAD_Org_ID());
+		}	
+		return convAmt;
+	}
  }	//	MBankStatementLine

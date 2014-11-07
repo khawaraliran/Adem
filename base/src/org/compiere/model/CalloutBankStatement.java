@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -51,8 +52,13 @@ public class CalloutBankStatement extends CalloutEngine
 			return "";
 		int C_BankAccount_ID = ((Integer)value).intValue();
 		MBankAccount ba = MBankAccount.get(ctx, C_BankAccount_ID);
+		MBankStatement bs = MBankStatement.get(ctx,mTab.getRecord_ID());
 		ba.load(ba.get_TrxName());
 		mTab.setValue("BeginningBalance", ba.getCurrentBalance());
+		if (bs.getLines(false).length == 0)
+		{
+			mTab.setValue("StatementDifference",Env.ZERO);
+		}
 		return "";
 	}	//	bankAccount
 	
@@ -104,6 +110,40 @@ public class CalloutBankStatement extends CalloutEngine
 		return "";
 	}   //  amount
 
+	/**
+	 *	BankStmt - Line Currency.
+	 *  Recalculate trx amt based on new currency
+	 *  
+	 *	@param ctx context
+	 *	@param WindowNo window no
+	 *	@param mTab tab
+	 *	@param mField field
+	 *	@param value value
+	 *	@return null or error message
+	 */
+	public String currency (Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value)
+	{
+		return payment(ctx, WindowNo, mTab, mTab.getField("C_Payment_ID"), mTab.getField("C_Payment_ID").getValue());
+	}   //  currency
+
+	/**
+	 *	BankStmt - Line DateAcct.
+	 *  Recalculate trx amt based on the date. Important for calculating currency conversions.
+	 *  
+	 *	@param ctx context
+	 *	@param WindowNo window no
+	 *	@param mTab tab
+	 *	@param mField field
+	 *	@param value value
+	 *	@return null or error message
+	 */
+	public String dateAcct (Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value)
+	{
+		if (mTab.getField("C_Payment_ID") != null)
+			if (mTab.getField("C_Payment_ID").getValue() != null)
+				return payment(ctx, WindowNo, mTab, mTab.getField("C_Payment_ID"), mTab.getField("C_Payment_ID").getValue());
+		return "";
+	}   //  currency
 
 	/**
 	 *	BankStmt - Payment.
@@ -117,14 +157,64 @@ public class CalloutBankStatement extends CalloutEngine
 	 */
 	public String payment (Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value)
 	{
+		if (isCalloutActive())
+			return "";
+
 		Integer C_Payment_ID = (Integer)value;
 		if (C_Payment_ID == null || C_Payment_ID.intValue() == 0)
 			return "";
 		//
+		Integer AD_Client_ID = (Integer) mTab.getField("AD_Client_ID").getValue();
+		if (AD_Client_ID == null || AD_Client_ID.intValue() == 0)
+			return "";
+		//
+		Integer AD_Org_ID = (Integer) mTab.getField("AD_Org_ID").getValue();
+		if (AD_Org_ID == null || AD_Org_ID.intValue() == 0)
+			return "";
+		//
 		BigDecimal stmt = (BigDecimal)mTab.getValue("StmtAmt");
+		BigDecimal trxAmt = (BigDecimal)mTab.getValue("TrxAmt");
 		if (stmt == null)
 			stmt = Env.ZERO;
+		if (trxAmt == null)
+			trxAmt = Env.ZERO;
+		stmt = stmt.subtract(trxAmt);  // Remove the previous trxAmt
+		//
+		MPayment pmt = new MPayment(ctx,C_Payment_ID,null);
 
+		if (pmt == null)
+		{
+			log.severe("No payment found for Payment ID " + C_Payment_ID);
+		}
+
+		// Check the line currency - the payment could be in a different currency
+		Object currencyID = mTab.getField("C_Currency_ID").getValue();
+		if (currencyID != null)
+		{
+			if (((Integer) currencyID).intValue() == pmt.getC_Currency_ID())
+			{
+				// Same currencies - use the payment amt
+				trxAmt = pmt.getPayAmt();
+			}
+			else
+			{
+				// Convert the payment to the line currency on the line acct date.
+				if (mTab.getValue("DateAcct") != null)
+				{
+					Timestamp convDate = (Timestamp) mTab.getValue("DateAcct");  
+					trxAmt = MConversionRate.convert(ctx, pmt.getPayAmt(), pmt.getC_Currency_ID(), ((Integer) currencyID).intValue(), convDate, pmt.getC_ConversionType_ID(), AD_Client_ID.intValue(), AD_Org_ID.intValue());
+				}
+			}
+			mTab.setValue("TrxAmt", trxAmt);
+			stmt = stmt.add(trxAmt);
+			mTab.setValue("StmtAmt", stmt);
+		}
+		else
+		{
+			log.severe("Line currency ID is null. Can't add payment.");			
+		}
+
+		/*
 		String sql = "SELECT PayAmt FROM C_Payment_v WHERE C_Payment_ID=?";		//	1
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -151,6 +241,8 @@ public class CalloutBankStatement extends CalloutEngine
 			DB.close(rs, pstmt);
 			rs = null; pstmt = null;
 		}
+		*/
+		
 		//  Recalculate Amounts
 		amount (ctx, WindowNo, mTab, mField, value);
 		return "";

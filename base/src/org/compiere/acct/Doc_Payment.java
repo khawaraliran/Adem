@@ -107,8 +107,8 @@ public class Doc_Payment extends Doc
 	{
 		//  create Fact Header
 		Fact fact = new Fact(this, as, Fact.POST_Actual);
-		//	Cash Transfer
-		if ("X".equals(m_TenderType))
+		//	Cash Transfer or Manual Deposit
+		if ("X".equals(m_TenderType) || "G".equals(m_TenderType))
 		{
 			ArrayList<Fact> facts = new ArrayList<Fact>();
 			facts.add(fact);
