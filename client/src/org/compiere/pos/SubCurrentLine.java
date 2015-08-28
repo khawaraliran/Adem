@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.logging.Level;
 
+import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.event.ListSelectionEvent;
@@ -46,6 +47,7 @@ import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
+import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
 
 /**
@@ -102,6 +104,11 @@ public class SubCurrentLine extends PosSubPanel implements ActionListener, Focus
 	private String			m_sql;
 	/**	Logger			*/
 	
+	
+	private javax.swing.Timer findProductTimer;
+
+
+	
 	/**	Table Column Layout Info			*/
 	private static ColumnInfo[] s_layout = new ColumnInfo[] 
 	{
@@ -137,10 +144,15 @@ public class SubCurrentLine extends PosSubPanel implements ActionListener, Focus
 		f_name = new PosTextField(Msg.translate(Env.getCtx(), "M_Product_ID"), p_posPanel, p_pos.getOSK_KeyLayout_ID());
 		f_name.setName("Name");
 		f_name.addActionListener(this);
-		f_name.addFocusListener(this);
+		//f_name.addFocusListener(this);
 		f_name.requestFocusInWindow();
 		
 		add (f_name, " growx, h 30:30:, wrap");
+		
+		JComboBox<KeyNamePair> fillingComponent = new JComboBox<KeyNamePair>();
+		add (fillingComponent, " growx, spanx");
+
+		
 
 		m_table = new PosTable();
 		CScrollPane scroll = new CScrollPane(m_table);
@@ -204,7 +216,19 @@ public class SubCurrentLine extends PosSubPanel implements ActionListener, Focus
 		setPrice(Env.ZERO);
 		
 		enableButtons();
-	} //init
+		
+		
+		ProductController finder = new ProductController(this, f_name, 0);
+		f_name.addKeyListener(finder);
+		findProductTimer = new javax.swing.Timer(500,finder);
+		finder.setTimer(findProductTimer);
+		finder.setFillingComponent(fillingComponent);
+		finder.setPriceList_ID(p_posPanel.f_order.getM_PriceList_Version_ID());
+		
+		findProductTimer.start();
+		
+	} 
+	
 
 
 	/**
@@ -339,8 +363,15 @@ public class SubCurrentLine extends PosSubPanel implements ActionListener, Focus
 				}
 			}
 		}
-		p_posPanel.updateInfo();
+		updateInfo();
 	} //	actionPerformed
+	
+	
+	public void updateInfo()
+	{
+		p_posPanel.updateInfo();
+	}
+	
 	
 	/**
 	 * 	Update Table
@@ -535,7 +566,7 @@ public class SubCurrentLine extends PosSubPanel implements ActionListener, Focus
 	/**************************************************************************
 	 * 	Find/Set Product & Price
 	 */
-	private void findProduct()
+	public void findProduct()
 	{
 		String query = f_name.getText();
 		if (query == null || query.length() == 0)

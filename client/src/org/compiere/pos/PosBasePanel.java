@@ -339,7 +339,7 @@ public class PosBasePanel extends CPanel
 	public void newOrder()
 	{
 		log.info( "PosPanel.newOrder");
-		f_order.setC_BPartner_ID(0);
+		f_order.setC_BPartner_ID(1003881);
 		m_order = null;
 		m_order = PosOrderModel.createOrder(p_pos, f_order.getBPartner());
 		f_curLine.newLine();
