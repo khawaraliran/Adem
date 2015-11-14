@@ -46,6 +46,7 @@ import org.compiere.util.Env;
  * 		https://sourceforge.net/tracker/?func=detail&aid=3426137&group_id=176962&atid=879335 
  *  @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com 2015-09-09
  *  	<li>FR [ 9223372036854775807 ] Add Support to Dynamic Tree
+ *  	<li>FR [ 9223372036854775807 ] Add support to launch tree before migrate
  *  @see https://adempiere.atlassian.net/browse/ADEMPIERE-442
  */
 public class MTree extends X_AD_Tree
@@ -369,6 +370,40 @@ public class MTree extends X_AD_Tree
 		}
 		return nodeTableName;
 	}	//	getNodeTableName
+	
+	/**
+	 * Support to old version
+	 * @param treeType
+	 * @return
+	 */
+	public static String getNodeTableName(String treeType) {
+		
+		String	nodeTableName = "AD_TreeNode";
+		if (TREETYPE_Menu.equals(treeType))
+			nodeTableName += "MM";
+		else if  (TREETYPE_BPartner.equals(treeType))
+			nodeTableName += "BP";
+		else if  (TREETYPE_Product.equals(treeType))
+			nodeTableName += "PR";
+		//
+		else if  (TREETYPE_CMContainer.equals(treeType))
+			nodeTableName += "CMC";
+		else if  (TREETYPE_CMContainerStage.equals(treeType))
+			nodeTableName += "CMS";
+		else if  (TREETYPE_CMMedia.equals(treeType))
+			nodeTableName += "CMM";
+		else if  (TREETYPE_CMTemplate.equals(treeType))
+			nodeTableName += "CMT";
+		else if  (TREETYPE_User1.equals(treeType))
+		nodeTableName += "U1";
+		else if  (TREETYPE_User2.equals(treeType))
+			nodeTableName += "U2";
+		else if  (TREETYPE_User3.equals(treeType))
+			nodeTableName += "U3";
+		else if  (TREETYPE_User4.equals(treeType))
+			nodeTableName += "U4";
+		return nodeTableName;
+	}	//	getNodeTableName
 
 	/** All Table Names with tree		*/
 	private static ArrayList<String> s_TableNames = null;
@@ -659,7 +694,14 @@ public class MTree extends X_AD_Tree
 	 *	@return node table name, e.g. AD_TreeNode
 	 */
 	public String getNodeTableName() {
-		return getNodeTableName(getAD_Table_ID());
+		//	Yamel Senih, 2015-11-14
+		//	Add support to old version
+		String tableName = getNodeTableName(getAD_Table_ID());
+		if(tableName == null) {
+			tableName = getNodeTableName(getTreeType());
+		}
+		//	Return
+		return tableName;
 	}	//	getNodeTableName
 	
 	/**
