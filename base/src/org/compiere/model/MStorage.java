@@ -36,6 +36,9 @@ import org.compiere.util.Env;
  *
  *	@author Jorg Janke
  *	@version $Id: MStorage.java,v 1.3 2006/07/30 00:51:05 jjanke Exp $
+ *
+ *  @author mckayERP www.mckayERP.com
+ *  			<li> #282 MStorage.getQtyAvailable does not ignore the warehouse if M_Warehouse_ID = 0
  */
 public class MStorage extends X_M_Storage
 {

@@ -35,6 +35,11 @@ import org.compiere.util.DB;
  *
  * @author Teo Sarca, www.arhipac.ro
  *			<li>FR [ 2214883 ] Remove SQL code and Replace for Query
+ *
+ *  @author mckayERP, www.mckayerp.com
+ *  		<li> #254 MAttributeSet.getMAttributes sets isInstanceAttribute incorrectly 
+ *  		<li> #255 MAttributeSet.isExcludeSerNo returns incorrect value
+ *  		<li> #256 MAttributeSet add convenience function to return all attributes of a set. 
  */
 public class MAttributeSet extends X_M_AttributeSet
 {
@@ -114,7 +119,27 @@ public class MAttributeSet extends X_M_AttributeSet
 	private X_M_SerNoCtlExclude[]	m_excludeSerNos = null;
 
 	/**
-	 * 	Get Attribute Array
+	 * 	Get Attribute Array 
+	 *	@return attribute array
+	 */
+	public MAttribute[] getMAttributes ()
+	{
+		getMAttributes(true);
+		getMAttributes(false);
+		
+		int instanceLength = m_instanceAttributes.length;
+		int productLength = m_productAttributes.length;
+		
+		// Order is important - instance first, then product.
+		MAttribute[] allAttributes = new MAttribute[instanceLength + productLength];
+		System.arraycopy(m_instanceAttributes, 0, allAttributes, 0, instanceLength);
+		System.arraycopy(m_productAttributes, 0, allAttributes, instanceLength, productLength);
+		
+		return allAttributes;
+	}
+	
+	/**
+	 * 	Get Attribute Array in order of attribute use sequence
 	 * 	@param instanceAttributes true if for instance
 	 *	@return instance or product attribute array
 	 */
@@ -165,14 +190,7 @@ public class MAttributeSet extends X_M_AttributeSet
 				m_productAttributes = new MAttribute[list.size()];
 				list.toArray (m_productAttributes);
 			}
-		}
-		//
-		if (instanceAttributes)
-		{
-			if (isInstanceAttribute() != m_instanceAttributes.length > 0)
-				setIsInstanceAttribute(m_instanceAttributes.length > 0);
-		}
-		
+		}		
 		//	Return
 		if (instanceAttributes)
 			return m_instanceAttributes;
@@ -284,7 +302,8 @@ public class MAttributeSet extends X_M_AttributeSet
 	public boolean isExcludeSerNo (int AD_Column_ID, boolean isSOTrx)
 	{
 		if (getM_SerNoCtl_ID() == 0)
-			return true;
+			return false;  // serial numbers could be manually entered.
+		
 		if (m_excludeSerNos == null)
 		{
 			final String whereClause = X_M_SerNoCtlExclude.COLUMNNAME_M_SerNoCtl_ID+"=?";
