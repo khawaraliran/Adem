@@ -90,17 +90,17 @@ SET dbSchema=%ADEMPIERE_DB_USER%
 
 REM variables depending on database vendor
 SET unSupportedVendor=0
-IF NOT "%dbVendor%"=="postgresql" GOTO :NOPGSQL
+IF /I NOT "%dbVendor%"=="postgresql" GOTO :NOPGSQL
 SET dbSeedFile=%ADEMPIERE_HOME%\data\Adempiere_pg.dmp
 SET sysUser=postgres
 GOTO :VENDORSET
 :NOPGSQL
-IF NOT "%dbVendor%"=="oracle" GOTO :NOORACLE
+IF /I NOT "%dbVendor%"=="oracle" GOTO :NOORACLE
 SET dbSeedFile=%ADEMPIERE_HOME%\data\Adempiere.dmp
 SET sysUser=system
 GOTO :VENDORSET
 :NOORACLE
-IF NOT "%dbVendor%"=="oracleXE" GOTO :NOXE
+IF /I NOT "%dbVendor%"=="oracleXE" GOTO :NOXE
 SET dbSeedFile=%ADEMPIERE_HOME%\data\Adempiere.dmp
 SET sysUser=system
 GOTO :VENDORSET
@@ -113,15 +113,15 @@ IF NOT "%importMode%"=="Reference" GOTO :NOREF
 SET dbUser=reference
 SET dbPwd=adempiere
 SET dbSchema=reference
-IF NOT "%dbVendor%"=="postgresql" GOTO :REFNOPG
+IF /I NOT "%dbVendor%"=="postgresql" GOTO :REFNOPG
 SET dbName=reference
 GOTO :NOREF
 :REFNOPG
-IF NOT "%dbVendor%"=="oracle" GOTO :REFNOORACLE
+IF /I NOT "%dbVendor%"=="oracle" GOTO :REFNOORACLE
 SET dbName=%ADEMPIERE_DB_NAME%
 GOTO :NOREF
 :REFNOORACLE
-IF NOT "%dbVendor%"=="oracleXE" GOTO :NOREF 
+IF /I NOT "%dbVendor%"=="oracleXE" GOTO :NOREF 
 SET dbName=%ADEMPIERE_DB_NAME%
 :NOREF
 
