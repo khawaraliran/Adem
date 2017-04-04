@@ -629,9 +629,14 @@ public class ImportHelper {
 				xPath = ""+ uniqueFormatLine.getValue();
 				cols[col] = XMLHelper.getString(xPath, rootElement);
 				log.info("values[" + col + "]=" +  cols[col]);
-				
-			} 
-			else if (MEXPFormatLine.TYPE_ReferencedEXPFormat.equals(uniqueFormatLine.getType())) 
+			} else if (MEXPFormatLine.TYPE_XMLAttribute.equals(uniqueFormatLine.getType()))
+			{
+				// XML Attribute
+				String xPath = null;
+				xPath = "@"+ uniqueFormatLine.getValue();
+				cols[col] = XMLHelper.getString(xPath, rootElement);
+				log.info("values[" + col + "]=" +  cols[col]);
+			} else if (MEXPFormatLine.TYPE_ReferencedEXPFormat.equals(uniqueFormatLine.getType()))
 			{
 				// Referenced Export Format
 				log.info("referencedExpFormat.EXP_EmbeddedFormat_ID = " + uniqueFormatLine.getEXP_EmbeddedFormat_ID());
@@ -652,8 +657,7 @@ public class ImportHelper {
 				log.info("record_ID = " + record_ID);
 				
 				cols[col] = new Integer(record_ID);
-			} 
-			else 
+			} else 
 			{
 				// Export Format Line is not one of two possible values...ERROR
 				throw new Exception(Msg.getMsg(ctx, "EXPFormatLineNonValidType"));
