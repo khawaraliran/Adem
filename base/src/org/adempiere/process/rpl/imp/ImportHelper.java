@@ -321,8 +321,8 @@ public class ImportHelper {
 	 * @return Object with the Value
 	 * @throws Exception
 	 */
-	private Object getValueFromFormat(MEXPFormatLine line,PO po,Element rootElement,
-					StringBuffer result, String ReplicationType) throws Exception
+	private Object getValueFromFormat(MEXPFormatLine line, PO po, Element rootElement,
+			StringBuffer result, String ReplicationType) throws Exception
 	{
 		Object value = null;
 		
@@ -349,7 +349,7 @@ public class ImportHelper {
 			Element referencedNode = XMLHelper.getElement(xPath, rootElement);
 			
 			log.info("referencedNode = " + referencedNode);
-			if(referencedNode!=null)
+			if (referencedNode!=null)
 			{
 				refRecord_ID = getID(ctx, referencedExpFormat, referencedNode, line.getValue(), po.get_TrxName());
 				log.info("refRecord_ID = " + refRecord_ID);
@@ -402,7 +402,6 @@ public class ImportHelper {
 				isChanged = true;
 				}	
 				result.append(" Embedded Save Successful ; ");
-				
 			}
 
 		} 
@@ -481,13 +480,11 @@ public class ImportHelper {
 							) 
 					{
 						//
-						if (! Util.isEmpty(value.toString()))
-						{
+						if (!Util.isEmpty(value.toString())) {
 							int intValue = Integer.parseInt(value.toString());
-							value = new Integer( intValue );
-						}else
-						{
-							value=null;
+							value = new Integer(intValue);
+						} else {
+							value = null;
 						}
 						
 						log.info("About to set int value of column ["+column.getColumnName()+"]=["+value+"]");
@@ -495,19 +492,15 @@ public class ImportHelper {
 						po.set_ValueOfColumn(line.getAD_Column_ID(), value);
 						
 						log.info("Set int value of column ["+column.getColumnName()+"]=["+value+"]");
-						
 					} 
 					else if ( DisplayType.isNumeric(column.getAD_Reference_ID())	
 							&& column.getAD_Reference_ID() != DisplayType.Integer)
 					{
 						//
-						if (!Util.isEmpty(value.toString()))
-						{
+						if (!Util.isEmpty(value.toString())) {
 							value = new BigDecimal(value.toString());
-						}
-						else
-						{
-							value=null;
+						} else {
+							value = null;
 						}
 						//value = new Double( doubleValue );
 						
@@ -519,8 +512,7 @@ public class ImportHelper {
 					} 
 					else if(DisplayType.YesNo == column.getAD_Reference_ID())
 					{
-						if(clazz == Boolean.class)
-						{						 
+						if(clazz == Boolean.class) {						 
 							String v = value.toString().equals("true") ? "Y" : "N";	
 							po.set_ValueOfColumn(line.getAD_Column_ID(), v);
 						}
@@ -529,26 +521,20 @@ public class ImportHelper {
 					{
 						//
 						try {
-								log.info("About to set value of column ["+column.getColumnName()+"]=["+value+"]");
-								
-								if(clazz == Boolean.class)
-								{
-									String v = value.toString().equals("true") ? "Y" : "N";	
-									po.set_ValueOfColumn(line.getAD_Column_ID(), v);
-								}
-								else
-								{
-									po.set_ValueOfColumn(line.getAD_Column_ID(), clazz.cast(value));
-								}
-								
-								log.info("Set value of column ["+column.getColumnName()+"]=["+value+"]");
-							} 
-							catch (ClassCastException ex) 
-							{
-								ex.printStackTrace();
-								throw new Exception(ex);
+							log.info("About to set value of column [" + column.getColumnName() + "]=[" + value + "]");
+
+							if (clazz == Boolean.class) {
+								String v = value.toString().equals("true") ? "Y" : "N";
+								po.set_ValueOfColumn(line.getAD_Column_ID(), v);
+							} else {
+								po.set_ValueOfColumn(line.getAD_Column_ID(), clazz.cast(value));
 							}
-						
+
+							log.info("Set value of column [" + column.getColumnName() + "]=[" + value + "]");
+						} catch (ClassCastException ex) {
+							ex.printStackTrace();
+							throw new Exception(ex);
+						}
 					}
 					result.append(column.getColumnName()).append("=").append(value).append("; ");
 				}//end else			
@@ -566,7 +552,7 @@ public class ImportHelper {
 								.firstOnly();
 		
 		s_log.info("Client_Value =[" + value + "]");
-		if(result != null)
+		if (result != null)
 		{
 			s_log.info("AD_Client_ID = " + result.getAD_Client_ID());
 		}
@@ -666,7 +652,6 @@ public class ImportHelper {
 			if (	DisplayType.DateTime	== column.getAD_Reference_ID() 
 				||	DisplayType.Date 		== column.getAD_Reference_ID()) 
 			{
-				
 				Timestamp value = (Timestamp)handleDateTime(cols[col], column , uniqueFormatLine);
 				params[col] = value;
 			}
@@ -712,18 +697,18 @@ public class ImportHelper {
 			col++;
 		}
 		
-		Query query = new Query(ctx,MTable.get(ctx, expFormat.getAD_Table_ID()),whereClause.toString(),trxName)
+		Query query = new Query(ctx,MTable.get(ctx, expFormat.getAD_Table_ID()), whereClause.toString(), trxName)
 						.setParameters(params);
 		values = query.list();
 		
-		if(values.size()>1)//The Return Object must be always one
+		if (values.size()>1) //The Return Object must be always one
 		{
 			throw new AdempiereException(Msg.getMsg(ctx, "EXPFormatLineNoUniqueColumns") + " : " +expFormat.getName() + "(" +formatLines+")");
 		}
 		
-		if(values.size()<=0)//Means that is a new record
+		if (values.size()<=0) //Means that is a new record
 		{
-			PO po = MTable.get(ctx, expFormat.getAD_Table_ID()).getPO(0,trxName);
+			PO po = MTable.get(ctx, expFormat.getAD_Table_ID()).getPO(0, trxName);
 			
 			if (replication_id > 0 )
 			{
@@ -812,9 +797,7 @@ public class ImportHelper {
 					//NOW Using Standard Japanese Format yyyy-mm-dd hh:mi:ss.mil so don't care about formats....
 				    result = Timestamp.valueOf(valueString);
 				}
-				
 			}
-			
 		}
 		return result;
 	}
