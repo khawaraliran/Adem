@@ -26,15 +26,15 @@ package org.adempiere.webui.panel;
 import java.util.List;
 import java.util.Properties;
 
-import org.adempiere.webui.theme.ThemeUtils;
+import org.adempiere.webui.LayoutUtils;
 import org.adempiere.webui.component.CompositeADTab;
 import org.adempiere.webui.component.IADTab;
 import org.adempiere.webui.component.Tabbox;
 import org.adempiere.webui.component.Tabpanel;
 import org.adempiere.webui.component.Tabs;
+import org.adempiere.webui.panel.ADTabPanel.EmbeddedPanel;
 import org.adempiere.webui.part.ITabOnSelectHandler;
 import org.adempiere.webui.session.SessionManager;
-import org.adempiere.webui.theme.ThemeUtils;
 import org.adempiere.webui.util.UserPreference;
 import org.compiere.model.GridWindow;
 import org.compiere.model.MQuery;
@@ -48,13 +48,14 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.event.KeyEvent;
-import org.zkoss.zul.Borderlayout;
-import org.zkoss.zul.Center;
-import org.zkoss.zul.East;
-import org.zkoss.zul.North;
-import org.zkoss.zul.South;
+import org.zkoss.zkex.zul.Borderlayout;
+import org.zkoss.zkex.zul.Center;
+import org.zkoss.zkex.zul.East;
+import org.zkoss.zkex.zul.North;
+import org.zkoss.zkex.zul.South;
+import org.zkoss.zkex.zul.West;
 import org.zkoss.zul.Tab;
-import org.zkoss.zul.West;
+import org.zkoss.zul.Vbox;
 
 /**
  *
@@ -63,6 +64,15 @@ import org.zkoss.zul.West;
  *
  * @author <a href="mailto:agramdass@gmail.com">Ashley G Ramdass</a>
  * @author <a href="mailto:hengsin@gmail.com">Low Heng Sin</a>
+ *
+ * @author e-Evolution , victor.perez@e-evolution.com
+ *    <li>Implement embedded or horizontal tab panel https://adempiere.atlassian.net/browse/ADEMPIERE-319
+ *    <li>New ADempiere 3.8.0 ZK Theme Light  https://adempiere.atlassian.net/browse/ADEMPIERE-320
+ * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ *		<li>FR [ 265 ] ProcessParameterPanel is not MVC
+ *		@see https://github.com/adempiere/adempiere/issues/265
+ *		<a href="https://github.com/adempiere/adempiere/issues/588">
+ * 		@see FR [ 588 ] Webui status bar is located on up</a>
  * @date Feb 25, 2007
  * @version $Revision: 0.10 $
  */
@@ -71,14 +81,13 @@ public class ADWindowPanel extends AbstractADWindowPanel
     @SuppressWarnings("unused")
 	private static final CLogger logger = CLogger.getCLogger(ADWindowPanel.class);
 
-	private Borderlayout layout;
-
+	
 	private Center contentArea;
 
 	private West west;
 
 	private East east;
-
+	
 	private Keylistener keyListener;
 
     public ADWindowPanel(Properties ctx, int windowNo)
@@ -98,34 +107,41 @@ public class ADWindowPanel extends AbstractADWindowPanel
         layout = new Borderlayout();
         if (parent != null) {
 	        layout.setParent(parent);
-	        //layout.setStyle("position:absolute");
-	        //layout.setHeight("100%");
-	        //layout.setWidth("100%");
+	        layout.setStyle("position:absolute");
+	        layout.setHeight("100%");
+	        layout.setWidth("100%");
         } else {
         	layout.setPage(page);
         }
-        ThemeUtils.addSclass("ad-adwindowpanel", layout);
 
         if (!isEmbedded())
         {
 	        North n = new North();
 	        n.setParent(layout);
 	        n.setCollapsible(false);
-	        ThemeUtils.addSclass("ad-adwindowpanel-toolbar-layout", n);
-	        //n.setHeight("30px");  // Moved to theme
-	        //toolbar.setHeight("30px");
-	        toolbar.setParent(n);
+	        n.setFlex(true);
+	        Vbox box = new Vbox();
+	        box.setWidth("100%");
+	        toolbar.setParent(box);
+	        box.setParent(n);
 	        toolbar.setWindowNo(getWindowNo());
+	        //	FR [ 588 ]
+	        South s = new South();
+	        layout.appendChild(s);
+	        s.setCollapsible(false);
+	        statusBar.setParent(s);
         }
-
-        South s = new South();
-        layout.appendChild(s);
-        s.setCollapsible(false);
-        statusBar.setParent(s);
-        ThemeUtils.addSclass("ad-adwindowpanel-status", statusBar);
+        else
+        {
+        	South s = new South();
+	        layout.appendChild(s);
+	        s.setCollapsible(false);
+	        statusBar.setParent(s);
+        }
+        LayoutUtils.addSclass("adwindow-status", statusBar);
 
         if (!isEmbedded() && adTab.isUseExternalSelection())
-        {	
+        {
         	String tabPlacement = SessionManager.getSessionApplication().getUserPreference().getProperty(UserPreference.P_WINDOW_TAB_PLACEMENT);
         	if (tabPlacement == null || "left".equalsIgnoreCase(tabPlacement))
         	{
@@ -133,11 +149,10 @@ public class ADWindowPanel extends AbstractADWindowPanel
     	        layout.appendChild(west);
     	        west.setSplittable(false);
     	        west.setAutoscroll(true);
-    	        west.setHflex("true");
-    	        west.setVflex("true");
-    	        ThemeUtils.addSclass("ad-adwindowpanel-nav ad-adwindowpanel-nav-left", west);
-    	       adTab.setTabplacement(IADTab.LEFT);
-    	       adTab.getTabSelectionComponent().setParent(west);
+    	        west.setFlex(true);
+    	        LayoutUtils.addSclass("adwindow-nav adwindow-left-nav", west);
+    	        adTab.setTabplacement(IADTab.LEFT);
+    	        adTab.getTabSelectionComponent().setParent(west);
 
     	        if (SessionManager.getSessionApplication().getUserPreference().isPropertyBool(UserPreference.P_WINDOW_TAB_COLLAPSIBLE))
     	        {
@@ -151,9 +166,8 @@ public class ADWindowPanel extends AbstractADWindowPanel
 		        layout.appendChild(east);
 		        east.setSplittable(false);
 		        east.setAutoscroll(true);
-		        east.setHflex("true");
-		        east.setVflex("true");
-		        ThemeUtils.addSclass("ad-adwindowpanel-nav ad-adwindowpanel-nav-right", east);
+		        east.setFlex(true);
+		        LayoutUtils.addSclass("adwindow-nav adwindow-right-nav", east);
 		        adTab.setTabplacement(IADTab.RIGHT);
 		        adTab.getTabSelectionComponent().setParent(east);
 
@@ -163,15 +177,13 @@ public class ADWindowPanel extends AbstractADWindowPanel
     	        	east.setCollapsible(true);
     	        }
         	}
-	        ThemeUtils.addSclass("ad-adwindowpanel-nav-content", (HtmlBasedComponent) adTab.getTabSelectionComponent());
+	        LayoutUtils.addSclass("adwindow-nav-content", (HtmlBasedComponent) adTab.getTabSelectionComponent());
         }
 
         contentArea = new Center();
         contentArea.setParent(layout);
-        //contentArea.setAutoscroll(true);
-        contentArea.setHflex("true");
-        contentArea.setVflex("true");
-        ThemeUtils.addSclass("ad-adwindowpanel-content-area", contentArea);
+        contentArea.setAutoscroll(true);
+        contentArea.setFlex(true);
         adTab.createPart(contentArea);
 
         if (parent instanceof Tabpanel) {
@@ -179,18 +191,16 @@ public class ADWindowPanel extends AbstractADWindowPanel
         	((Tabpanel)parent).setOnCloseHandler(handler);
         }
 
-        
-    
-//        if (!isEmbedded()) {
-//        	if (keyListener != null)
-//        		keyListener.detach();
-//        	keyListener = new Keylistener();
-//        	statusBar.appendChild(keyListener);
-//        	keyListener.setCtrlKeys("#f1#f2#f3#f4#f5#f6#f7#f8#f9#f10#f11#f12^f^i^n^s^d@#left@#right@#up@#down@#pgup@#pgdn@p^p@z@x#enter");
-//        	keyListener.addEventListener(Events.ON_CTRL_KEY, toolbar);
-//        	keyListener.addEventListener(Events.ON_CTRL_KEY, this);
-//        	keyListener.setAutoBlur(false);
-//        }
+        if (!isEmbedded()) {
+        	if (keyListener != null)
+        		keyListener.detach();
+        	keyListener = new Keylistener();
+        	statusBar.appendChild(keyListener);
+        	keyListener.setCtrlKeys("#f1#f2#f3#f4#f5#f6#f7#f8#f9#f10#f11#f12^f^i^n^s^d@#left@#right@#up@#down@#pgup@#pgdn@p^p@z@x#enter");
+        	keyListener.addEventListener(Events.ON_CTRL_KEY, toolbar);
+        	keyListener.addEventListener(Events.ON_CTRL_KEY, this);
+        	keyListener.setAutoBlur(false);
+        }
 
         layout.setAttribute(ITabOnSelectHandler.ATTRIBUTE_KEY, new ITabOnSelectHandler() {
 			public void onSelect() {
@@ -225,6 +235,24 @@ public class ADWindowPanel extends AbstractADWindowPanel
 	@Override
 	public boolean initPanel(int adWindowId, MQuery query) {
 		boolean retValue = super.initPanel(adWindowId, query);
+		
+		if(toolbar.getCurrentPanel() instanceof ADTabPanel)
+		{
+			ADTabPanel tabPanel = (ADTabPanel)toolbar.getCurrentPanel();
+			if (tabPanel != null)
+			{	
+				if( tabPanel.getIncludedPanel() != null && tabPanel.getIncludedPanel().size()>0)
+				{
+					for(EmbeddedPanel panel : tabPanel.getIncludedPanel())
+					{
+	                    tabPanel.includedAutoResize(panel);
+					}
+				}
+				tabPanel.setFocus(true);
+			}	
+		}
+		
+		
 		if (adTab.getTabCount() == 1) {
 			if (west != null)
 				west.setVisible(false);

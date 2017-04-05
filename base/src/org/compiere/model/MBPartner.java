@@ -41,9 +41,11 @@ import org.compiere.util.Msg;
  *  @author Armen Rizal, GOODWILL CONSULT  
  *      <LI>BF [ 2041226 ] BP Open Balance should count only Completed Invoice
  *			<LI>BF [ 2498949 ] BP Get Not Invoiced Shipment Value return null
- *	@author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com 2015-09-09
- *  	<li>FR [ 9223372036854775807 ] Add Support to Dynamic Tree
- *  @see https://adempiere.atlassian.net/browse/ADEMPIERE-442
+ *	@contributor Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ *    	<a href="https://github.com/adempiere/adempiere/issues/683">
+ *    	@see FR [ 683 ] BP Template of POS is not get when a Customer is created on POS</a>
+ *		<a href="https://github.com/adempiere/adempiere/issues/752">
+ * 		@see FR [ 752 ] Blood group should be a BP attribute</a>
  */
 public class MBPartner extends X_C_BPartner
 {
@@ -53,6 +55,26 @@ public class MBPartner extends X_C_BPartner
 	private static final long serialVersionUID = -3669895599574182217L;
 
 	/**
+	 * Get Template from POS, optional if it not exists on POS Terminal the get from Client
+	 * @param ctx
+	 * @param clientId
+	 * @param posId
+	 * @return
+	 */
+	public static MBPartner getTemplate(Properties ctx, int clientId, int posId) {
+		MPOS pos = MPOS.get(ctx, posId);
+		//	Validate
+		if(pos.getC_POS_ID() != 0) {
+			if(pos.getC_BPartnerCashTrx_ID() != 0) {
+				MBPartner template = get(ctx, pos.getC_BPartnerCashTrx_ID());
+				return cleanBPartner(ctx, template);
+			}
+		}
+		//	Return from Client
+		return getTemplate(ctx, clientId);
+	}
+	
+	/**
 	 * 	Get Empty Template Business Partner
 	 * 	@param ctx context
 	 * 	@param AD_Client_ID client
@@ -61,35 +83,44 @@ public class MBPartner extends X_C_BPartner
 	public static MBPartner getTemplate (Properties ctx, int AD_Client_ID)
 	{
 		MBPartner template = getBPartnerCashTrx (ctx, AD_Client_ID);
-		if (template == null)
-			template = new MBPartner (ctx, 0, null);
-		//	Reset
-		if (template != null)
-		{
-			template.set_ValueNoCheck ("C_BPartner_ID", new Integer(0));
-			template.setValue ("");
-			template.setName ("");
-			template.setName2 (null);
-			template.setDUNS("");
-			template.setFirstSale(null);
-			//
-			template.setSO_CreditLimit (Env.ZERO);
-			template.setSO_CreditUsed (Env.ZERO);
-			template.setTotalOpenBalance (Env.ZERO);
-		//	s_template.setRating(null);
-			//
-			template.setActualLifeTimeValue(Env.ZERO);
-			template.setPotentialLifeTimeValue(Env.ZERO);
-			template.setAcqusitionCost(Env.ZERO);
-			template.setShareOfCustomer(0);
-			template.setSalesVolume(0);
-			// Reset Created, Updated to current system time ( teo_sarca )
-			Timestamp ts = new Timestamp(System.currentTimeMillis());
-			template.set_ValueNoCheck("Created", ts);
-			template.set_ValueNoCheck("Updated", ts);
-		}
-		return template;
+		return template = cleanBPartner(ctx, template);
 	}	//	getTemplate
+	
+	/**
+	 * Get a Clean BPartner
+	 * @param ctx
+	 * @param source
+	 * @return
+	 */
+	private static MBPartner cleanBPartner(Properties ctx, MBPartner source) {
+		if (source == null)
+			source = new MBPartner (ctx, 0, null);
+		//	Reset
+		source.set_ValueNoCheck ("C_BPartner_ID", new Integer(0));
+		source.setTaxID("");
+		source.setValue("");
+		source.setName("");
+		source.setName2(null);
+		source.setDUNS("");
+		source.setFirstSale(null);
+		//
+		source.setSO_CreditLimit (Env.ZERO);
+		source.setSO_CreditUsed (Env.ZERO);
+		source.setTotalOpenBalance (Env.ZERO);
+		//	s_template.setRating(null);
+		//
+		source.setActualLifeTimeValue(Env.ZERO);
+		source.setPotentialLifeTimeValue(Env.ZERO);
+		source.setAcqusitionCost(Env.ZERO);
+		source.setShareOfCustomer(0);
+		source.setSalesVolume(0);
+		// Reset Created, Updated to current system time ( teo_sarca )
+		Timestamp ts = new Timestamp(System.currentTimeMillis());
+		source.set_ValueNoCheck("Created", ts);
+		source.set_ValueNoCheck("Updated", ts);
+		//	Return
+		return source;
+	}
 
 	/**
 	 * 	Get Cash Trx Business Partner
@@ -284,6 +315,13 @@ public class MBPartner extends X_C_BPartner
 		setTaxID(impBP.getTaxID());
 		setNAICS(impBP.getNAICS());
 		setC_BP_Group_ID(impBP.getC_BP_Group_ID());
+		//	Employee values
+		setBirthday(impBP.getBirthday());
+		setFathersName(impBP.getFathersName());
+		setBloodGroup(impBP.getBloodGroup());
+		setPlaceOfBirth(impBP.getPlaceOfBirth());
+		setGender(impBP.getGender());
+		//	Se
 	}	//	MBPartner
 	
 	
@@ -986,11 +1024,8 @@ public class MBPartner extends X_C_BPartner
 	{
 		if (newRecord && success)
 		{
-			//	Yamel Senih [ 9223372036854775807 ]
-			//	Change to PO
 			//	Trees
-//			insert_Tree(MTree.TREETYPE_BPartner);
-			//	End Yamel Senih
+			insert_Tree(MTree_Base.TREETYPE_BPartner);
 			//	Accounting
 			insert_Accounting("C_BP_Customer_Acct", "C_BP_Group_Acct", 
 				"p.C_BP_Group_ID=" + getC_BP_Group_ID());
@@ -1023,14 +1058,11 @@ public class MBPartner extends X_C_BPartner
 	 *	@param success
 	 *	@return deleted
 	 */
-	//	Yamel Senih [ 9223372036854775807 ]
-	//	Change to PO
-//	protected boolean afterDelete (boolean success)
-//	{
-//		if (success)
-//			delete_Tree(MTree.TREETYPE_BPartner);
-//		return success;
-//	}	//	afterDelete
-	//	End Yamel Senih
+	protected boolean afterDelete (boolean success)
+	{
+		if (success)
+			delete_Tree(MTree_Base.TREETYPE_BPartner);
+		return success;
+	}	//	afterDelete
 
 }	//	MBPartner

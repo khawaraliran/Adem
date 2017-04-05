@@ -42,6 +42,7 @@ import org.compiere.apps.search.Info;
 import org.compiere.grid.ed.VDate;
 import org.compiere.model.MAcctSchema;
 import org.compiere.model.MAcctSchemaElement;
+import org.compiere.model.Query;
 import org.compiere.model.X_C_AcctSchema_Element;
 import org.compiere.report.core.RModel;
 import org.compiere.report.core.RModelExcelExporter;
@@ -446,6 +447,9 @@ public class AcctViewer extends CFrame
 			m_data.buttonRecordID.put(keyColumn,Record_ID);
 			selRecord.setText(m_data.getButtonText(tableName, keyColumn, selectSQL));
 		}
+		
+		// Display quantity as default
+		displayQty.setValue('Y');
 	}   //  dynInit
 
 	/**
@@ -532,7 +536,7 @@ public class AcctViewer extends CFrame
 			MAcctSchemaElement acctSchemaElement = elements[i];
 			String columnName = acctSchemaElement.getColumnName();
 			String displayColumnName = acctSchemaElement.getDisplayColumnName();
-			if (columnName.equals("User1_ID") || columnName.equals("User2_ID"))
+			if (columnName.equals("User1_ID") || columnName.equals("User2_ID") || columnName.equals("User3_ID") || columnName.equals("User4_ID"))
 				displayColumnName = acctSchemaElement.getName();
 			else
 				displayColumnName = acctSchemaElement.getDisplayColumnName();
@@ -731,8 +735,48 @@ public class AcctViewer extends CFrame
 			if (ase != null)
 				whereClause += " AND C_Element_ID=" + ase.getC_Element_ID();
 		}
+		else if (keyColumn.equals("User3_ID"))
+		{
+			lookupColumn = "C_ElementValue_ID";
+			MAcctSchemaElement ase = m_data.ASchema
+					.getAcctSchemaElement(X_C_AcctSchema_Element.ELEMENTTYPE_UserList3);
+			if (ase != null)
+				whereClause += " AND C_Element_ID=" + ase.getC_Element_ID();
+		}
+		else if (keyColumn.equals("User4_ID"))
+		{
+			lookupColumn = "C_ElementValue_ID";
+			MAcctSchemaElement ase = m_data.ASchema
+					.getAcctSchemaElement(X_C_AcctSchema_Element.ELEMENTTYPE_UserList4);
+			if (ase != null)
+				whereClause += " AND C_Element_ID=" + ase.getC_Element_ID();
+		}
 		else if (keyColumn.equals("M_Product_ID"))
 		{
+			whereClause = "";
+		}
+		if (lookupColumn.equals("UserElement1_ID"))			
+		{
+			MAcctSchemaElement et = new Query(Env.getCtx(), MAcctSchemaElement.Table_Name, 
+					"elementtype = 'X1' ", 
+					null)
+			.setClient_ID()
+			.firstOnly();
+			String tableName = et.getAD_Column().getAD_Table().getTableName();
+			String lookupcolumnname = tableName + "_ID";
+			lookupColumn = lookupcolumnname;
+			whereClause = "";
+		}
+		if (lookupColumn.equals("UserElement2_ID"))			
+		{
+			MAcctSchemaElement et = new Query(Env.getCtx(), MAcctSchemaElement.Table_Name, 
+					"elementtype = 'X2' ", 
+					null)
+			.setClient_ID()
+			.firstOnly();
+			String tableName = et.getAD_Column().getAD_Table().getTableName();
+			String lookupcolumnname = tableName + "_ID";
+			lookupColumn = lookupcolumnname;
 			whereClause = "";
 		}
 		else if (selDocument.isSelected())

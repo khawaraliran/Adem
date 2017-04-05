@@ -58,7 +58,7 @@ import org.zkoss.zul.ListitemRendererExt;
  * @author Andrew Kimball
  *
  * @author	Michael McKay
- * 				<li>release/380 - enable red rows based on color row in miniTable. 
+ * 				<li>release/380 - enable red rows based on color row in miniTable.
  */
 
 public class WListItemRenderer implements ListitemRenderer, EventListener, ListitemRendererExt
@@ -84,7 +84,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 	= new HashMap<WTableColumn, ColumnAttributes>();
 
     class ColumnAttributes {
-    	
+
 		protected Object headerValue;
 
 		protected int minWidth;
@@ -226,7 +226,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 		ListCell listcell = new ListCell();
 		boolean isCellEditable = table != null ? table.isCellEditable(rowIndex, columnIndex) : false;
 		boolean isColumnVisible = Boolean.TRUE;
-		
+
 		if ( !m_tableColumns.isEmpty() )
 			isColumnVisible = isColumnVisible(getColumn(columnIndex));
 
@@ -372,7 +372,7 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
 			listcell.setLabel("");
 			listcell.setValue("");
 		}
-		
+
 		listcell.setAttribute("zk_component_ID", "ListItem_Cell_" + rowIndex + "_" + columnIndex);
 
 		return listcell;
@@ -473,16 +473,16 @@ public class WListItemRenderer implements ListitemRenderer, EventListener, Listi
         ListHeader header = null;
 
         String headerText = headerValue.toString();
-        
+
         // If the header doesn't exist, add it to the end of the list
         if (m_headers.size() <= headerIndex || m_headers.get(headerIndex) == null)
         {
         	header = new ListHeader("");
         	m_headers.add(headerIndex, header);
         }
-        
+
         header = m_headers.get(headerIndex);
-        
+
     	if (!isColumnVisible(getColumn(headerIndex)))
     	{
     		header.setLabel("");

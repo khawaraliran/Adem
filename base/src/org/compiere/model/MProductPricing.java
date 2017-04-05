@@ -45,6 +45,15 @@ public class MProductPricing
 	 * @param isSOTrx SO or PO
 	 * @param trxName
 	 */
+	
+	@Deprecated
+	public MProductPricing(int productId, int partnerId,
+			   BigDecimal quantity, boolean isSOTrx)
+	{
+		 this(productId, partnerId, quantity, isSOTrx, null);
+	}
+	
+	
 	public MProductPricing(int productId, int partnerId,
 						   BigDecimal quantity, boolean isSOTrx, String trxName)
 	{
@@ -402,12 +411,9 @@ public class MProductPricing
 			.append( "WHERE pv.IsActive='Y'")
 			.append( " AND pp.IsActive='Y'")
 			.append( " AND p.M_Product_ID=?")		//	#1
-			.append( " AND pv.M_PriceList_Version_ID=?");	//	#2
-		if (partnerId > 0)
-			sql.append(" AND pp.C_BPartner_ID=?");
-					//	#3
-		sql.append(" AND ?>=pp.BreakValue")				//  #4
-		.append(" ORDER BY pp.BreakValue DESC, pp.C_BPartner_ID ASC");
+			.append( " AND pv.M_PriceList_Version_ID=? AND (pp.C_BPartner_ID=? OR pp.C_BPartner_ID IS NULL) ") //	#2
+			.append(" AND ?>=pp.BreakValue")				//  #4
+			.append(" ORDER BY pp.BreakValue DESC, pp.C_BPartner_ID ASC");
 		calculated = false;
 		PreparedStatement statement = null;
 		ResultSet resultSet = null;
@@ -419,10 +425,8 @@ public class MProductPricing
 			statement.setInt(count, productId);
 			count ++;
 			statement.setInt(count, priceListVersionId);
-			if(partnerId > 0) {
-				count ++;
-				statement.setInt(count, partnerId);
-			}
+			count ++;
+			statement.setInt(count, partnerId);
 			count ++;
 			statement.setBigDecimal(count , quantity);
 			resultSet = statement.executeQuery();
@@ -492,11 +496,8 @@ public class MProductPricing
 		.append(" WHERE pv.IsActive='Y'")
 		.append(" AND pp.IsActive='Y'")
 		.append(" AND p.M_Product_ID=?")				//	#1
-		.append(" AND pv.M_PriceList_ID=?");			//	#2
-		if (partnerId > 0)
-			sql.append(" AND pp.C_BPartner_ID=?");				//	#3
-
-		sql.append(" AND ?>=pp.BreakValue")				//  #4
+		.append(" AND pv.M_PriceList_ID=? AND (pp.C_BPartner_ID=? OR pp.C_BPartner_ID IS NULL) ")			//	#2
+		.append(" AND ?>=pp.BreakValue")				//  #4
 		.append(" ORDER BY pv.ValidFrom DESC, pp.BreakValue DESC, pp.C_BPartner_ID ASC");
 		calculated = false;
 		if (priceDate == null)
@@ -511,10 +512,8 @@ public class MProductPricing
 			statement.setInt(count, productId);
 			count ++;
 			statement.setInt(count, priceListId);
-			if (partnerId > 0) {
-				count++;
-				statement.setInt( count , partnerId);
-			}
+			count++;
+			statement.setInt( count , partnerId);
 			count++;
 			statement.setBigDecimal(count, quantity);
 			resultSet = statement.executeQuery();
@@ -586,11 +585,8 @@ public class MProductPricing
 				.append( " AND pp.IsActive='Y'")
 				.append( " AND p.M_Product_ID=?")				//	#1
 				.append( " AND EXISTS (SELECT 1 FROM M_PriceList_Version plv WHERE plv.IsActive='Y' ")
-				.append( " AND plv.M_PriceList_ID=? AND pp.M_PriceList_Version_ID=plv.M_PriceList_Version_Base_ID)");
-		if (partnerId > 0)
-				sql.append( " AND pp.C_BPartner_ID=?");				//	#3
-
-				sql.append( " AND ?>=pp.BreakValue")				//  #4
+				.append( " AND plv.M_PriceList_ID=? AND pp.M_PriceList_Version_ID=plv.M_PriceList_Version_Base_ID) AND (pp.C_BPartner_ID=? OR pp.C_BPartner_ID IS NULL)")
+				.append( " AND ?>=pp.BreakValue")				//  #4
 				.append( " ORDER BY pv.ValidFrom DESC, BreakValue DESC");
 
 		calculated = false;
@@ -606,10 +602,8 @@ public class MProductPricing
 			statement.setInt(count, productId);
 			count++;
 			statement.setInt(count, priceListId);
-			if (partnerId > 0 ) {
-				count++;
-				statement.setInt(count, partnerId);
-			}
+			count++;
+			statement.setInt(count, partnerId);
 			count++;
 			statement.setBigDecimal(count, quantity);
 			resultSet = statement.executeQuery();

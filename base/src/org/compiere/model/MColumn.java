@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -50,6 +51,8 @@ import org.compiere.util.Util;
  *  	@see https://adempiere.atlassian.net/browse/ADEMPIERE-447
  *  	<li> BR [ 185 ] Fixed error with validation in beforeSave method for MColumn 
  *  	@see https://github.com/adempiere/adempiere/issues/185
+ *  	<a href="https://github.com/adempiere/adempiere/issues/655">
+ * 		@see FR [ 655 ] Bad validation for sequence of identifier columns</a>
  */
 public class MColumn extends X_AD_Column
 {
@@ -300,8 +303,25 @@ public class MColumn extends X_AD_Column
 	protected boolean beforeSave (boolean newRecord)
 	{
 		//set column default based in element when is a new column FR [ 3426134 ]
-		if(newRecord)
+		if(newRecord) {
 			setAD_Column(getCtx(), this, get_TrxName());
+			//Create Document No or Value sequence
+			if (!isDirectLoad() && "DocumentNo".equals(getColumnName()) || !isDirectLoad() && "Value".equals(getColumnName()))
+			{
+				String tableName = MTable.getTableName(getCtx(), getAD_Table_ID());
+				final String whereClause = MSequence.COLUMNNAME_AD_Client_ID + "=? AND " + MSequence.COLUMNNAME_Name + "=? ";
+				//	Sequence for DocumentNo/Value
+				Arrays.stream(MClient.getAll(getCtx())).forEach( client -> {
+					MSequence sequence = new Query(getCtx(), MSequence.Table_Name, whereClause, get_TrxName())
+							.setParameters(client.getAD_Client_ID() , MSequence.PREFIX_DOCSEQ + tableName )
+							.first();
+					if (sequence.getAD_Sequence_ID() <= 0) {
+						sequence = new MSequence(getCtx(), client.getAD_Client_ID(), tableName);
+						sequence.saveEx();
+					}
+				});
+			}
+		}
 
 		int displayType = getAD_Reference_ID();
 		if (DisplayType.isLOB(displayType))	//	LOBs are 0
@@ -336,23 +356,6 @@ public class MColumn extends X_AD_Column
 		SET IsUpdateable='N', IsAlwaysUpdateable='N'
 		WHERE AD_Table_ID IN (SELECT AD_Table_ID FROM AD_Table WHERE IsView='Y')
 		**/
-		
-		/* Diego Ruiz - globalqss - BF [1651899] - AD_Column: Avoid dup. SeqNo for IsIdentifier='Y' */
-		if (isIdentifier())
-		{
-			int cnt = DB.getSQLValue(get_TrxName(),"SELECT COUNT(*) FROM AD_Column "+
-					"WHERE AD_Table_ID=?"+
-					" AND AD_Column_ID!=?"+
-					" AND IsIdentifier='Y'"+
-					" AND SeqNo=?",
-					new Object[] {getAD_Table_ID(), getAD_Column_ID(), getSeqNo()});
-			if (cnt>0)
-			{
-				log.saveError("SaveErrorNotUnique", Msg.getElement(getCtx(), COLUMNNAME_SeqNo));
-				return false;
-			}
-		}
-		
 		//	Virtual Column
 		if (isVirtualColumn())
 		{
@@ -423,7 +426,7 @@ public class MColumn extends X_AD_Column
 			} else if(p_AD_Reference_ID == DisplayType.Table
 					|| p_AD_Reference_ID == DisplayType.Search) {
 				if(p_AD_Reference_Value_ID == 0
-						&& !M_Element.isLookupColumnName(p_ColumnName))
+						&& !M_Element.isLookupColumnName(p_ColumnName, p_AD_Reference_ID))
 					throw new AdempiereException("@AD_Reference_Value_ID@ @IsMandatory@");
 			} else if(p_AD_Reference_ID == DisplayType.List) {
 				if(p_AD_Reference_Value_ID == 0) {

@@ -24,9 +24,7 @@ import org.compiere.model.GridField;
 import org.compiere.model.GridFieldVO;
 import org.compiere.model.M_Element;
 import org.compiere.model.Query;
-import org.compiere.util.CLogger;
 import org.compiere.util.DB;
-import org.compiere.util.Env;
 
 /**
  * Class Model for Browse Field
@@ -34,7 +32,11 @@ import org.compiere.util.Env;
  * @author victor.perez@e-evoluton.com, www.e-evolution.com
  *  <li>FR [ 3426137 ] Smart Browser
  * 	https://sourceforge.net/tracker/?func=detail&aid=3426137&group_id=176962&atid=879335
- *  
+ * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ * 		<li>BR [ 340 ] Smart Browse context is changed from table
+ * 		@see https://github.com/adempiere/adempiere/issues/340
+ *  	<li><a href="https://github.com/adempiere/adempiere/issues/560">
+ * 		FR [ 560 ] SB on ZK have always editable the columns</a>
  */
 public class MBrowseField extends X_AD_Browse_Field {
 
@@ -43,9 +45,7 @@ public class MBrowseField extends X_AD_Browse_Field {
 	 */
 	private static final long serialVersionUID = 3076943543303710639L;
 
-	private GridField gridField;
-
-
+	private static final String CONTEXT_TABLE_PREFIX = "Table_";
 	/**
 	 *
 	 * @param field
@@ -54,21 +54,26 @@ public class MBrowseField extends X_AD_Browse_Field {
 	static public GridField createGridFieldVO(MBrowseField field , int windowNo)
 	{
 		GridFieldVO valueObject = GridFieldVO.createStdField(field.getCtx(), windowNo, 0, 0, 0, false, false, false);
-
-		String uniqueName =  field.getAD_View_Column().getColumnSQL();
+		//	
+		String uniqueName =  field.getAD_View_Column().getColumnName();
 		valueObject.isProcess = true;
 		valueObject.IsDisplayed = field.isDisplayed();
 		valueObject.IsReadOnly = field.isReadOnly();
 		valueObject.IsUpdateable = true;
 		valueObject.WindowNo = windowNo;
-		if (field.getAD_View_Column().getAD_Column_ID() > 0) {
+		//	BR [ 318 ]
+		if(field.getAD_View_Column().getAD_Column_ID() > 0) {
+			valueObject.ColumnName = field.getAD_View_Column().getAD_Column().getColumnName();
 			valueObject.AD_Column_ID = field.getAD_View_Column().getAD_Column_ID();
 			valueObject.AD_Table_ID = field.getAD_View_Column().getAD_Column()
 					.getAD_Table_ID();
-			valueObject.ColumnName = field.getAD_View_Column().getAD_Column()
-					.getColumnName();
+		} else {
+			valueObject.ColumnName = field.getAD_View_Column().getColumnSQL();
 		}
-
+		//	Add Alias
+		//	BR [ 340 ]
+		valueObject.ColumnNameAlias = CONTEXT_TABLE_PREFIX + uniqueName;
+		//	
 		valueObject.displayType = field.getAD_Reference_ID();
 		valueObject.AD_Reference_Value_ID = field.getAD_Reference_Value_ID();
 		valueObject.IsMandatory = field.isMandatory();
@@ -84,12 +89,22 @@ public class MBrowseField extends X_AD_Browse_Field {
 		valueObject.ValueMin = field.getValueMin();
 		valueObject.ValueMax = field.getValueMax();
 		valueObject.ValidationCode = field.getAD_Val_Rule().getCode();
-		valueObject.isRange = field.isRange();
-		valueObject.Description = field.getDescription();
+		valueObject.IsRange = field.isRange();
+		try {
+			valueObject.Description = field.getDescription();
+		}
+		catch (IllegalArgumentException e) {
+			valueObject.Description = (String) field.get_Value("Description");  
+		}
 		if (field.getAD_View_Column().getAD_Column_ID() <= 0 && field.isReadOnly())
 			valueObject.ColumnSQL = uniqueName;
 		valueObject.Help = uniqueName;
-		valueObject.Header = field.getName();
+		try {
+			valueObject.Header = field.getName();
+		}
+		catch (IllegalArgumentException e) {
+			valueObject.Header = (String) field.get_Value("Name");;
+		}		
 		valueObject.Callout = field.getCallout();
 		valueObject.initFinish();
 
@@ -121,7 +136,12 @@ public class MBrowseField extends X_AD_Browse_Field {
 						column.getAD_View_Column_ID()).first();
 	}
 	
-
+	/**
+	 * Get ID by Column Name
+	 * @param browse
+	 * @param columnName
+	 * @return
+	 */
 	public static int getIdByColumnName(MBrowse browse, String columnName) {
 		String whereClause = MBrowseField.COLUMNNAME_AD_Browse_ID + "=? AND EXISTS (SELECT 1 FROM AD_View_Column vc WHERE vc.AD_View_Column_ID=AD_Browse_Field.AD_View_Column_ID AND vc.ColumnName=?)";
 		return new Query(browse.getCtx(), MBrowseField.Table_Name, whereClause,
@@ -130,8 +150,6 @@ public class MBrowseField extends X_AD_Browse_Field {
 				.firstIdOnly();
 	}
 
-	/** Logger */
-	private static CLogger s_log = CLogger.getCLogger(MBrowseField.class);
 	/** Element */
 	private M_Element m_element = null;
 	/** MViewColumn */
@@ -220,7 +238,6 @@ public class MBrowseField extends X_AD_Browse_Field {
 		if (!success) {
 			return false;
 		}
-
 		return success;
 	}
 	
@@ -270,34 +287,19 @@ public class MBrowseField extends X_AD_Browse_Field {
 		return sb.toString();
 	} // toString
 	
-	public String getName()
-	{
-		final boolean baseLanguage = Env.isBaseLanguage(Env.getCtx(),
-				"AD_Browse");
-		final String sql = "SELECT Name FROM AD_Browse_Field_Trl WHERE AD_Browse_Field_ID=? AND AD_LANGUAGE=?";
-		return  baseLanguage ? super.getName() : DB.getSQLValueString(get_TrxName(),
-				sql, getAD_Browse_Field_ID(),
-				Env.getAD_Language(Env.getCtx()));
+	@Override
+	public String getName() {
+		return get_Translation(COLUMNNAME_Name);
 	}
 	
-	public String getDescription()
-	{
-		final boolean baseLanguage = Env.isBaseLanguage(Env.getCtx(),
-				"AD_Browse");
-		final String sql = "SELECT Description FROM AD_Browse_Field_Trl WHERE AD_Browse_Field_ID=? AND AD_LANGUAGE=?";
-		return  baseLanguage ? super.getDescription() : DB.getSQLValueString(get_TrxName(),
-				sql, getAD_Browse_Field_ID(),
-				Env.getAD_Language(Env.getCtx()));
+	@Override
+	public String getDescription() {
+		return get_Translation(COLUMNNAME_Description);
 	}
 	
-	public String getHelp()
-	{
-		final boolean baseLanguage = Env.isBaseLanguage(Env.getCtx(),
-				"AD_Browse");
-		final String sql = "SELECT Help FROM AD_Browse_Field_Trl WHERE AD_Browse_Field_ID=? AND AD_LANGUAGE=?";
-		return  baseLanguage ? super.getHelp() : DB.getSQLValueString(get_TrxName(),
-				sql, getAD_Browse_Field_ID(),
-				Env.getAD_Language(Env.getCtx()));
+	@Override
+	public String getHelp() {
+		return get_Translation(COLUMNNAME_Help);
 	}
 
 }

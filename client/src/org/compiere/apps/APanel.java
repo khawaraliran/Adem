@@ -33,29 +33,22 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -73,6 +66,7 @@ import org.compiere.grid.VOnlyCurrentDays;
 import org.compiere.grid.VPayment;
 import org.compiere.grid.VSortTab;
 import org.compiere.grid.VTabbedPane;
+import org.compiere.grid.VTable;
 import org.compiere.grid.ed.VButton;
 import org.compiere.grid.ed.VDocAction;
 import org.compiere.model.DataStatusEvent;
@@ -83,8 +77,6 @@ import org.compiere.model.GridTable;
 import org.compiere.model.GridWindow;
 import org.compiere.model.GridWindowVO;
 import org.compiere.model.GridWorkbench;
-import org.compiere.model.Lookup;
-import org.compiere.model.MLookupFactory;
 import org.compiere.model.MProcess;
 import org.compiere.model.MQuery;
 import org.compiere.model.MRole;
@@ -95,7 +87,6 @@ import org.compiere.print.AReport;
 import org.compiere.process.DocAction;
 import org.compiere.process.ProcessInfo;
 import org.compiere.process.ProcessInfoUtil;
-import org.compiere.swing.CFrame;
 import org.compiere.swing.CPanel;
 import org.compiere.util.ASyncProcess;
 import org.compiere.util.CLogMgt;
@@ -149,6 +140,10 @@ import org.eevolution.form.VBrowser;
  *		@see https://github.com/adempiere/adempiere/issues/114
  *		<li>FR [ 248 ] Smart Browse not open on modal inside a window
  * 		@see https://github.com/adempiere/adempiere/issues/248
+ * 		<a href="https://github.com/adempiere/adempiere/issues/592">
+ * 		@see FR [ 592 ] Delete Selection dialog is not MVC</a>
+ * 		<a href="https://github.com/adempiere/adempiere/issues/611">
+ * 		@see BR [ 611 ] Error dialog is showed and lost focus from window</a>
  *  @sponsor www.metas.de
  */
 public final class APanel extends CPanel
@@ -633,6 +628,8 @@ public final class APanel extends CPanel
 	private boolean 		m_isPersonalLock = MRole.getDefault().isPersonalLock();
 	/**	Last Modifier of Action Event					*/
 	private int 			m_lastModifiers;
+	/**	Error on the load								*/
+	private String 			loadError = null;
 
 	private HashMap<Integer, GridController> includedMap;
 
@@ -673,7 +670,8 @@ public final class APanel extends CPanel
 		//	}
 		//	tabPanel.setWorkbench(true);
 		//	tabPanel.addChangeListener(this);
-			ADialog.warn(0, this, "","Not implemented yet");
+			log.warning("Workbench Not implemented yet [" + this + "]");
+			loadError = "Workbench Not implemented yet";
 			return false;
 		}
 
@@ -724,7 +722,8 @@ public final class APanel extends CPanel
 				GridWindowVO wVO = AEnv.getMWindowVO(m_curWindowNo, m_mWorkbench.getWindowID(wb), 0);
 				if (wVO == null)
 				{
-					ADialog.error(0, null, "AccessTableNoView", "(No Window Model Info)");
+					log.warning("AccessTableNoView for [" + this + "]");
+					loadError = "AccessTableNoView";
 					return false;
 				}
 				GridWindow mWindow = new GridWindow (wVO, true);			                //  Timing: ca. 0.3-1 sec
@@ -768,7 +767,8 @@ public final class APanel extends CPanel
 					    	}
 							isCancel = false; //Goodwill
 							query = initialQuery (query, gTab);
-							if (isCancel) return false; //Cancel opening window
+							if (isCancel) 
+								return false; //Cancel opening window
 							if (query != null && query.getRecordCount() <= 1)
 								goSingleRow = true;
 						}
@@ -914,6 +914,14 @@ public final class APanel extends CPanel
 		m_curWinTab.requestFocusInWindow();
 		return true;
 	}	//	initPanel
+	
+	/**
+	 * Get load error if the window is not displayed
+	 * @return
+	 */
+	public String getLoadError() {
+		return loadError;
+	}
 
 	private boolean zoomToDetailTab(MQuery query) {
 		if (query != null && query.getZoomTableName() != null && query.getZoomColumnName() != null)
@@ -1911,113 +1919,68 @@ public final class APanel extends CPanel
 	/**
 	 *  Confirm & delete record
 	 */
-	private void cmd_delete()
-	{
+	private void cmd_delete() {
 		if (m_curTab.isReadOnly())
 			return;
-		int keyID = m_curTab.getRecord_ID();
-		if (ADialog.ask(m_curWindowNo, this, "DeleteRecord?"))
-			if (m_curTab.dataDelete())
-				m_curGC.rowChanged(false, keyID);
-		m_curGC.dynamicDisplay(0);
-	}   //  cmd_delete
+		VTable table = m_curGC.getTable();
 
+		int[] selection = table.getSelectedRows();
+		Arrays.sort(selection);
+
+		if (selection.length <= 1) {
+			int keyID = m_curTab.getRecord_ID();
+			if (ADialog.ask(m_curWindowNo, this, "DeleteRecord?")) {
+				if (m_curTab.dataDelete()) {
+					m_curGC.rowChanged(false, keyID);
+					m_curGC.dynamicDisplay(0);
+				}
+			}
+		} else {
+			//	FR [ 564 ]
+			ArrayList<Integer> selectionIndex = new ArrayList<>();
+			for(int i = 0; i < selection.length; i++) {
+				int index = table.convertRowIndexToModel(selection[i]);
+				selectionIndex.add(index);
+			}
+			//	Delete only selection
+			cmd_deleteSelection(selectionIndex);
+		}
+	}   //  cmd_delete
+	
 	/**
 	 * Show a list to select one or more items to delete.
 	 */
-	private void cmd_deleteSelection(){
+	private void cmd_deleteSelection() {
+		cmd_deleteSelection(null);
+	}
+	
+	/**
+	 * Show a list to select one or more items to delete.
+	 * @param selectionIndex
+	 */
+	private void cmd_deleteSelection(List<Integer> selectionIndex) {
 		if (m_curTab.isReadOnly())
 			return;
-		//show table with deletion rows -> by identifiers columns
-		JPanel messagePanel = new JPanel();
-		JList list = new JList();
-		JScrollPane scrollPane = new JScrollPane(list);
-		Vector<String> data = new Vector<String>();
-		// FR [ 2877111 ]
-		final String keyColumnName = m_curTab.getKeyColumnName();
-		String sql = null;
-		if (! "".equals(keyColumnName)) {
-			sql = MLookupFactory.getLookup_TableDirEmbed(Env.getLanguage(m_ctx), keyColumnName, "[?","?]")
-			   .replace("[?.?]", "?");
-		}
-		int noOfRows = m_curTab.getRowCount();
-		for(int i = 0; i < noOfRows; i++)
-		{
-			StringBuffer displayValue = new StringBuffer();
-			if ("".equals(keyColumnName))
-			{
-				ArrayList<String> parentColumnNames = m_curTab.getParentColumnNames();
-				for (Iterator<String> iter = parentColumnNames.iterator(); iter.hasNext();)
-				{
-					String columnName = iter.next();
-					GridField field = m_curTab.getField(columnName);
-					if(field.isLookup()){
-						Lookup lookup = field.getLookup();
-						if (lookup != null){
-							displayValue = displayValue.append(lookup.getDisplay(m_curTab.getValue(i,columnName))).append(" | ");
-						} else {
-							displayValue = displayValue.append(m_curTab.getValue(i,columnName)).append(" | ");
-						}
-					} else {
-						displayValue = displayValue.append(m_curTab.getValue(i,columnName)).append(" | ");
-					}
-				}
-			} else {
-				final int id = m_curTab.getKeyID(i);
-				String value = DB.getSQLValueStringEx(null, sql, id);
-				if (value != null)
-					value = value.replace(" - ", " | ");
-				displayValue.append(value);
-				// Append ID
-				if (displayValue.length() == 0 || CLogMgt.isLevelFine())
-				{
-					if (displayValue.length() > 0)
-						displayValue.append(" | ");
-					displayValue.append("<").append(id).append(">");
-				}
-			}
-			//
-			data.add(displayValue.toString());
-		}
-		// FR [ 2877111 ]
-		list.setListData(data);
-
-		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		messagePanel.add(scrollPane);
-
-		final JOptionPane pane = new JOptionPane(
-				messagePanel, // message
-				JOptionPane.QUESTION_MESSAGE, // messageType
-				JOptionPane.OK_CANCEL_OPTION); // optionType
-		final JDialog deleteDialog = pane.createDialog(this.getParent(), Msg.getMsg(m_ctx, "DeleteSelection"));
-		deleteDialog.setVisible(true);
-		Integer okCancel = (Integer) pane.getValue();
-		if(okCancel != null && okCancel == JOptionPane.OK_OPTION)
-		{
+		//	
+		DeleteSelection dSelection = new DeleteSelection(m_window, m_curTab, selectionIndex);
+		dSelection.showDialog();
+		//	Verify Selection
+		if(dSelection.isOkPressed()) {
 			log.fine("ok");
-			Object[] selectedValues = list.getSelectedValues();
-			for (int i = 0; i < selectedValues.length; i++)
-			{
-				log.fine(selectedValues[i].toString());
-			}
-			int[] indices = list.getSelectedIndices();
-			Arrays.sort(indices);
+			int[] indices = dSelection.getSelection();
 			int offset = 0;
-			for (int i = 0; i < indices.length; i++)
-			{
+			for (int i = 0; i < indices.length; i++) {
 				//m_curTab.setCurrentRow(indices[i]-offset);
 				m_curTab.navigate(indices[i]-offset);
 				int keyID = m_curTab.getRecord_ID();
-				if (m_curTab.dataDelete())
-				{
+				if (m_curTab.dataDelete()) {
 					m_curGC.rowChanged(false, keyID);
 					offset++;
 				}
 			}
+			//	Refresh
 			m_curGC.dynamicDisplay(0);
-		}
-		else
-		{
+		} else {
 			log.fine("cancel");
 		}
 	}//cmd_deleteSelection
@@ -2686,7 +2649,7 @@ public final class APanel extends CPanel
 			FormFrame ff = new FormFrame(getWindowNo());
 			ff.setProcessInfo(pi);
 			MBrowse browse = new MBrowse(Env.getCtx(), browse_ID , null);
-			new VBrowser(ff, true , getWindowNo(), "" , browse , "" , true, "");
+			new VBrowser(ff, true , getWindowNo(), "" , browse , "" , true, "", Env.isSOTrx(Env.getCtx(), m_curWindowNo));
 			ff.pack();
 			AEnv.showCenterScreen(ff);
 			//	Yamel Senih
@@ -2699,8 +2662,8 @@ public final class APanel extends CPanel
 					this, m_curWindowNo, vButton.getProcess_ID(), table_ID,
 					record_ID, startWOasking);
 			//	FR [ 265 ]
-			if (dialog.isValidDialog())
-			{
+			//	BR [ 323 ]
+			if(!startWOasking) {
 				dialog.validate();
 				dialog.pack();
 				AEnv.showCenterWindow(Env.getWindow(m_curWindowNo), dialog);

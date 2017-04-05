@@ -463,7 +463,7 @@ public class ImportGLJournal extends SvrProcess
 		//	Set TrxOrg
 		sql = new StringBuffer ("UPDATE I_GLJournal i "
 			+ "SET AD_OrgTrx_ID=(SELECT o.AD_Org_ID FROM AD_Org o"
-			+ " WHERE o.Value=i.OrgValue AND o.IsSummary='N' AND i.AD_Client_ID=o.AD_Client_ID) "
+			+ " WHERE o.Value=i.OrgTrxValue AND o.IsSummary='N' AND i.AD_Client_ID=o.AD_Client_ID) "
 			+ "WHERE AD_OrgTrx_ID IS NULL AND OrgTrxValue IS NOT NULL"
 			+ " AND (C_ValidCombination_ID IS NULL OR C_ValidCombination_ID=0) AND I_IsImported<>'Y'").append (clientCheck);
 		no = DB.executeUpdate(sql.toString(), get_TrxName());
@@ -724,7 +724,7 @@ public class ImportGLJournal extends SvrProcess
 						imp.getM_Product_ID(), imp.getC_BPartner_ID(), imp.getAD_OrgTrx_ID(),
 						imp.getC_LocFrom_ID(), imp.getC_LocTo_ID(), imp.getC_SalesRegion_ID(),
 						imp.getC_Project_ID(), imp.getC_Campaign_ID(), imp.getC_Activity_ID(),
-						imp.getUser1_ID(), imp.getUser2_ID(), 0, 0, null);
+						imp.getUser1_ID(), imp.getUser2_ID() , imp.getUser3_ID(), imp.getUser4_ID() , 0, 0, null);
 					if (acct != null && acct.get_ID() == 0)
 						acct.saveEx();
 					if (acct == null || acct.get_ID() == 0)

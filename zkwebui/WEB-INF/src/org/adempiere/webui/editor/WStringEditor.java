@@ -25,7 +25,7 @@ import org.adempiere.webui.component.StringBox;
 import org.adempiere.webui.component.Window;
 import org.adempiere.webui.event.ContextMenuEvent;
 import org.adempiere.webui.event.ContextMenuListener;
-import org.adempiere.webui.event.ValueChangeEvent;
+import org.adempiere.exceptions.ValueChangeEvent;
 import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.WRecordInfo;
 import org.adempiere.webui.window.WTextEditorDialog;
@@ -75,6 +75,7 @@ public class WStringEditor extends WEditor implements ContextMenuListener
     public WStringEditor(GridField gridField, boolean tableEditor)
     {
         super(gridField.isAutocomplete() ? new Combobox() : new StringBox(), gridField);
+        this.getComponent().setAttribute("zk_component_prefix", "Field_" + gridField.getColumnName() + "_" + gridField.getAD_Tab_ID() + "_" + gridField.getWindowNo() + "_");
         this.tableEditor = tableEditor;
         init(gridField.getObscureType());
     }

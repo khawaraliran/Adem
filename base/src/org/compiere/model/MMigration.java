@@ -18,6 +18,7 @@ package org.compiere.model;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -35,25 +36,43 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * @author Paul
+ * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ *		<li> BR [ 425 ] Table ad_reportview_trl with wrong primary key
+ *		@see https://github.com/adempiere/adempiere/issues/425
+ */
 public class MMigration extends X_AD_Migration {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5145941967716336078L;
+	
+	/**	Column List to synchronizing		*/
+	private ArrayList<Integer> columnList = new ArrayList<Integer>();
 
 	/**	Logger	*/
 	private CLogger	log	= CLogger.getCLogger (MMigration.class);
 
-	public boolean isFailOnError() {
-		return isFailOnError;
+	/**
+	 * is force
+	 * @return
+	 */
+	public boolean isForce() {
+		return isForce;
 	}
 
-	public void setFailOnError(boolean isFailOnError) {
-		this.isFailOnError = isFailOnError;
+	/**
+	 * Set if is force
+	 * @param isForce
+	 */
+	public void setIsForce(boolean isForce) {
+		this.isForce = isForce;
 	}
-
-	private boolean isFailOnError = true;
+	
+	/**	Is Force		*/
+	private boolean isForce = true;
 
 	public MMigration(Properties ctx, int AD_Migration_ID, String trxName) {
 		super(ctx, AD_Migration_ID, trxName);		
@@ -116,33 +135,33 @@ public class MMigration extends X_AD_Migration {
 			Env.setContext(Env.getCtx() , "MigrationScriptBatchInProgress", "Y");
 			
 			// Get the set of active steps and apply each in order
-			for ( int stepId : getStepIds(!apply) )
+			for (int stepId : getStepIds(!apply))
 			{
 				MMigrationStep step = new MMigrationStep(getCtx(), stepId, get_TrxName());
-				
+				step.setParent(this);
 				// The migration will only be applied if all steps are unapplied.  Any partially
 				// applied migration will need to be rolled back first.
-				/*
-				if (apply && MMigrationStep.STATUSCODE_Applied.equals(step.getStatusCode())) 
-				{
-					log.log(Level.CONFIG, step.toString() + " ---> Migration Step already applied - skipping.");
-					continue;
-				}
-				else
-				*/ 
 				if (!apply && MMigrationStep.STATUSCODE_Unapplied.equals(step.getStatusCode())) 
 				{
 						log.log(Level.CONFIG, step.toString() + " ---> Migration Step unapplied - skipping.");
 						continue;
 				}
-
-				step.apply();
+				//	Apply
+				try {
+					step.apply();
+				} catch(Exception e) {
+					if(!isForce) {
+						throw e;
+					}
+				}
 			}
+			//	Synchronize Columns
+			syncColumn();
 		}
 		catch (Exception e)
 		{
 			log.warning(e.getMessage());
-			if (isFailOnError)    // abort on first error
+			if (!isForce)    // abort on first error
 			{			
 				if (apply) // Try to rollback the transaction
 				{
@@ -189,12 +208,6 @@ public class MMigration extends X_AD_Migration {
 		return retVal;
 	}
 	
-	@Deprecated // Since 3.8.0#002.  Use apply() instead.
-	private String rollback() {
-
-		return apply();
-	}
-
 	/**
 	 * Update the status of a Migration to reflect the status of its steps.
 	 * The status will be Applied, Partially Applied or Unapplied.
@@ -421,5 +434,31 @@ public class MMigration extends X_AD_Migration {
 			}
 			this.saveEx();
 		}
+	}
+	
+	/**
+	 * Add column to array for next sync
+	 * @param p_AD_Column_ID
+	 */
+	public void addColumnToList(int p_AD_Column_ID) {
+		columnList.add(p_AD_Column_ID);
+	}
+	
+	/**
+	 * Synchronize the AD_Column changes with the database.
+	 */
+	public void syncColumn() {
+		//	Validate size
+		if(columnList.size() == 0)
+			return;
+		//	Iterate
+		for(int columnId : columnList) {
+			MColumn column = new MColumn(getCtx(), columnId, get_TrxName());
+			log.log(Level.CONFIG, "Synchronizing column: " + column.toString() 
+					+ " in table: " + MTable.get(Env.getCtx(), column.getAD_Table_ID()));
+			column.syncDatabase();
+		}
+		//	flush column list
+		columnList = new ArrayList<Integer>();
 	}
 }

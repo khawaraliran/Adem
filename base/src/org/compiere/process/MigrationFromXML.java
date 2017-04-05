@@ -19,14 +19,12 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.commons.io.FileUtils;
-import org.compiere.model.I_AD_Migration;
 import org.compiere.model.MMigration;
-import org.compiere.model.MPInstance;
-import org.compiere.model.MPInstancePara;
 import org.compiere.util.Env;
 import org.compiere.util.Ini;
 import org.compiere.util.Msg;
 import org.compiere.util.Trx;
+import org.eevolution.service.dsl.ProcessBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -34,15 +32,10 @@ import org.xml.sax.SAXException;
 
 // This process is called from the Application Dictionary Menu to load Migrations from XML files.
 // It is also called from the MigrationLoader which is called by RUN_MigrateXML.
-public class MigrationFromXML extends SvrProcess {
+public class MigrationFromXML extends MigrationFromXMLAbstract {
 
 	private DocumentBuilder builder;
 	private Boolean success = false;
-
-	private String fileName = null;
-	private boolean apply = false;
-	private boolean failOnError = false;
-	private boolean clean = false;
 	
 	@Override
 	protected String doIt() throws Exception {
@@ -54,26 +47,10 @@ public class MigrationFromXML extends SvrProcess {
 		}
 		
 		loadXML();
-		clean();		
+//		clean();		
 
 		return "Import complete";
 
-	}
-
-	@Override
-	protected void prepare() {
-		ProcessInfoParameter[] paras = getParameter();
-		for ( ProcessInfoParameter para : paras )
-		{
-			if ( para.getParameterName().equals("FileName"))
-				fileName = (String) para.getParameter();
-			else if ( para.getParameterName().equals("Apply"))
-				apply  = para.getParameterAsBoolean();
-			if ( para.getParameterName().equals("FailOnError"))
-				failOnError  = para.getParameterAsBoolean();
-			if ( para.getParameterName().equals("Clean"))
-				clean  = para.getParameterAsBoolean();
-		}		
 	}
 
 	public Comparator<File> fileComparator = new Comparator<File>() {
@@ -100,7 +77,7 @@ public class MigrationFromXML extends SvrProcess {
 		dbf.setIgnoringElementContentWhitespace(true);
 
 		// file can be a file or directory
-		File file = new File(fileName);		
+		File file = new File(getFileName());		
 
 		try {
 			builder = dbf.newDocumentBuilder();
@@ -138,7 +115,7 @@ public class MigrationFromXML extends SvrProcess {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch ( AdempiereException e ) {
-			if (failOnError)
+			if (!isForce())
 				throw new AdempiereException("Loading Migration from XML failed.", e);
 		}
 		
@@ -171,7 +148,7 @@ public class MigrationFromXML extends SvrProcess {
 							return;
 						}
 
-						if (apply) {
+						if (isApply()) {
                             if (MMigration.STATUSCODE_Applied.equals(migration.getStatusCode())) {
                                 log.log(Level.CONFIG, migration.toString() + " ---> Migration already applied - skipping.");
                                 return;
@@ -186,7 +163,7 @@ public class MigrationFromXML extends SvrProcess {
 							applyMigration(migration.getCtx(), migration.getAD_Migration_ID(), trxName);
 						}
 				} catch (AdempiereException|SQLException e) {
-					if (failOnError)
+					if (!isForce())
 					{
 						throw new AdempiereException("Loading migration from " + file.toString() + " failed.", e);
 					}
@@ -195,43 +172,36 @@ public class MigrationFromXML extends SvrProcess {
 		}
 	}
 
-	private void applyMigration(Properties ctx  , int migrationId, String trx) throws AdempiereException {
-		Trx.run(trx, trxName -> {
-			int processId = 53173; // Apply migration
-			MPInstance instance = new MPInstance(ctx, processId, migrationId);
-			instance.saveEx();
-			MPInstancePara parameter = new MPInstancePara(instance,10);
-			parameter.setParameter("FailOnError",true);
-			parameter.saveEx();
+	private void applyMigration(Properties ctx  , int migrationId, String trxName) throws AdempiereException {
+		ProcessInfo processInfo = ProcessBuilder.create(ctx)
+				.process(53173)
+				.withTitle("Apply migration")
+				.withRecordId(MMigration.Table_ID , migrationId)
+				.withParameter("FailOnError",true)
+				.execute(trxName);
 
-			ProcessInfo pi = new ProcessInfo("Apply migration", processId);
-			pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
-			pi.setRecord_ID(migrationId);
-			ServerProcessCtl migrationProcess = new ServerProcessCtl(null, pi, Trx.get(trxName, false));
-			migrationProcess.run();
-			log.log(Level.CONFIG, "Process=" + pi.getTitle() + " Error="+pi.isError() + " Summary=" + pi.getSummary());
-			if (pi.isError()) 
-				throw new AdempiereException(pi.getSummary());
-		});
+		log.log(Level.CONFIG, "Process=" + processInfo.getTitle() + " Error="+processInfo.isError() + " Summary=" + processInfo.getSummary());
+		if (processInfo.isError())
+			throw new AdempiereException(processInfo.getSummary());
 	}
 
-	private void clean() {
-		
-		if (!clean)
-			return;
-		
-		// For backward compatibility, check if the processed column has been added 
-		// to the AD_Migration table
-		// The processed column was added to AD_MigrationStep just prior to release 3.8.0.
-		MMigration migration = new MMigration(getCtx(),0,get_TrxName());
-		if (migration.get_ColumnIndex(I_AD_Migration.COLUMNNAME_Processed) < 0)
-			return;
-
-		migration = null;
-		Boolean notProcessed = false;
-		for (MMigration mig : MMigration.getMigrations(getCtx(), notProcessed, get_TrxName())) {
-			if (mig != null)
-				mig.clean();
-		}
-	}	
+//	private void clean() {
+//		
+//		if (!is)
+//			return;
+//		
+//		// For backward compatibility, check if the processed column has been added 
+//		// to the AD_Migration table
+//		// The processed column was added to AD_MigrationStep just prior to release 3.8.0.
+//		MMigration migration = new MMigration(getCtx(),0,get_TrxName());
+//		if (migration.get_ColumnIndex(I_AD_Migration.COLUMNNAME_Processed) < 0)
+//			return;
+//
+//		migration = null;
+//		Boolean notProcessed = false;
+//		for (MMigration mig : MMigration.getMigrations(getCtx(), notProcessed, get_TrxName())) {
+//			if (mig != null)
+//				mig.clean();
+//		}
+//	}	
 }

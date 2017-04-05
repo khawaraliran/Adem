@@ -41,8 +41,8 @@ import org.adempiere.webui.editor.WLocatorEditor;
 import org.adempiere.webui.editor.WNumberEditor;
 import org.adempiere.webui.editor.WPAttributeEditor;
 import org.adempiere.webui.editor.WSearchEditor;
-import org.adempiere.webui.event.ValueChangeEvent;
-import org.adempiere.webui.event.ValueChangeListener;
+import org.adempiere.exceptions.ValueChangeEvent;
+import org.adempiere.exceptions.ValueChangeListener;
 import org.adempiere.webui.event.WTableModelEvent;
 import org.adempiere.webui.event.WTableModelListener;
 import org.adempiere.webui.panel.ADForm;
@@ -246,6 +246,7 @@ ValueChangeListener,Serializable,WTableModelListener
 		GridField field = new GridField(vo);
 		// M_AttributeSetInstance_ID
 		attribute = new WPAttributeEditor(field.getGridTab(),field);
+		attribute.setReadWrite(true);
 		attribute.setValue(0);
 		// 4Layers - Further init
 		scrapQtyField.setValue(Env.ZERO);

@@ -29,8 +29,7 @@ import org.adempiere.webui.component.Tabpanels;
 import org.adempiere.webui.component.Tabs;
 import org.adempiere.webui.component.ToolBarButton;
 import org.adempiere.webui.component.Window;
-import org.adempiere.webui.theme.DefaultTheme;
-import org.adempiere.webui.theme.ThemeUtils;
+import org.adempiere.webui.theme.ThemeManager;
 import org.compiere.Adempiere;
 import org.compiere.model.MUser;
 import org.compiere.util.CLogErrorBuffer;
@@ -38,7 +37,6 @@ import org.compiere.util.CLogMgt;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.zkoss.util.media.AMedia;
-import org.zkoss.web.fn.ServletFns;
 import org.zkoss.zhtml.Pre;
 import org.zkoss.zhtml.Text;
 import org.zkoss.zk.ui.event.Event;
@@ -55,9 +53,12 @@ import org.zkoss.zul.Vbox;
 /**
  *
  * @author Low Heng Sin
+ * @athor Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ *		<li> FR [ 379 ] Change URL in About
+ *		@see https://github.com/adempiere/adempiere/issues/379
  *
  */
-public class AboutWindow extends Window implements EventListener<Event> {
+public class AboutWindow extends Window implements EventListener {
 
 	/**
 	 *
@@ -80,33 +81,26 @@ public class AboutWindow extends Window implements EventListener<Event> {
 		this.setWidth("500px");
 		this.setHeight("450px");
 		this.setPosition("center");
-		DefaultTheme dt = new DefaultTheme();
-		this.setTitle(dt.get_themeDisplay());
+		this.setTitle(ThemeManager.getBrowserTitle());
 		this.setClosable(true);
-		this.setMaximizable(true);
 		this.setSizable(true);
-		this.setSclass("ad-about-window");
-		this.setContentSclass("ad-about-window-content");
 
 		this.addEventListener(Events.ON_SIZE, this);
 
 		Vbox layout = new Vbox();
+		layout.setWidth("100%");
 		layout.setParent(this);
-		layout.setVflex("1");
-		layout.setHflex("1");
 
 		tabbox = new Tabbox();
 		tabbox.setParent(layout);
-		tabbox.setVflex("1");
-		tabbox.setHflex("1");
-
+		tabbox.setWidth("480px");
+		tabbox.setHeight("380px");
+//		tabbox.setSclass("lite");
 		Tabs tabs = new Tabs();
 		tabs.setParent(tabbox);
-		
 		tabPanels = new Tabpanels();
 		tabPanels.setParent(tabbox);
-		tabPanels.setHflex("1");
-		tabPanels.setVflex("1");
+		tabPanels.setWidth("480px");
 
 		//about
 		Tab tab = new Tab();
@@ -142,7 +136,7 @@ public class AboutWindow extends Window implements EventListener<Event> {
 		hbox.setPack("end");
 		hbox.setWidth("100%");
 		Button btnOk = new Button();
-		btnOk.setImage(ServletFns.resolveThemeURL("~./images/Ok24.png"));
+		btnOk.setImage("/images/Ok24.png");
 		btnOk.addEventListener(Events.ON_CLICK, this);
 		btnOk.setParent(hbox);
 
@@ -186,7 +180,7 @@ public class AboutWindow extends Window implements EventListener<Event> {
 		vbox.appendChild(logTable);
 		logTable.setWidth("480px");
 		logTable.setHeight("310px");
-		//logTable.setVflex(false);
+		logTable.setVflex(false);
 
 		updateLogTable();
 
@@ -227,11 +221,10 @@ public class AboutWindow extends Window implements EventListener<Event> {
 		Hbox hbox = new Hbox();
 		hbox.setParent(vbox);
 		ToolBarButton link = new ToolBarButton();
-		link.setImage(ServletFns.resolveThemeURL("~./images/Posterita.jpg"));
+		link.setImage("images/Posterita.jpg");
 		link.setParent(hbox);
 		link.setHref("http://www.posterita.org");
 		link.setTarget("_blank");
-		link.setHeight("54px");
 		Label label= new Label("Contributed the initial Zk Web Client code.");
 		label.setParent(hbox);
 
@@ -286,6 +279,12 @@ public class AboutWindow extends Window implements EventListener<Event> {
 		link.setHref("http://www.idalica.com/");
 		link.setTarget("_blank");
 		link.setParent(content);
+		
+		link = new ToolBarButton();
+		link.setLabel("ERPCyA");
+		link.setHref("http://www.erpcya.com/");
+		link.setTarget("_blank");
+		link.setParent(content);
 
 		separator = new Separator();
 		separator.setParent(vbox);
@@ -305,57 +304,63 @@ public class AboutWindow extends Window implements EventListener<Event> {
 
 		link = new ToolBarButton();
 		link.setLabel("Victor Pérez");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:vpj-cd");
+		link.setHref("http://wiki.adempiere.net/User:vpj-cd");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 		link = new ToolBarButton();
 		link.setLabel("Paul Bowden");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:Phib");
+		link.setHref("http://wiki.adempiere.net/User:Phib");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 
 		link = new ToolBarButton();
 		link.setLabel("Michael McKay");
-		link.setHref("http://www.adempiere.com/index.php/User:MJMcKay");
+		link.setHref("http://wiki.adempiere.net/User:MJMcKay");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 
 		link = new ToolBarButton();
 		link.setLabel("Mario Calderon");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:mar_cal_westf");
+		link.setHref("http://wiki.adempiere.net/User:mar_cal_westf");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 		link = new ToolBarButton();
 		link.setLabel("Ashley G Ramdass");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:Agramdass");
+		link.setHref("http://wiki.adempiere.net/User:Agramdass");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 		link = new ToolBarButton();
 		link.setLabel("Low Heng Sin");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:Hengsin");
+		link.setHref("http://wiki.adempiere.net/User:Hengsin");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 		link = new ToolBarButton();
 		link.setLabel("Carlos Ruiz");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:CarlosRuiz");
+		link.setHref("http://wiki.adempiere.net/User:CarlosRuiz");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 		link = new ToolBarButton();
 		link.setLabel("Teo Sarca");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:Teo_sarca");
+		link.setHref("http://wiki.adempiere.net/User:Teo_sarca");
 		link.setTarget("_blank");
 		link.setParent(content);
 
 		link = new ToolBarButton();
 		link.setLabel("Trifon Trifonov");
-		link.setHref("http://www.adempiere.com/wiki/index.php/User:Trifonnt");
+		link.setHref("http://wiki.adempiere.net/User:Trifonnt");
+		link.setTarget("_blank");
+		link.setParent(content);
+		
+		link = new ToolBarButton();
+		link.setLabel("Yamel Senih");
+		link.setHref("http://wiki.adempiere.net/User:Yamel_Senih");
 		link.setTarget("_blank");
 		link.setParent(content);
 
@@ -372,55 +377,46 @@ public class AboutWindow extends Window implements EventListener<Event> {
 		vbox.setPack("center");
 		vbox.setParent(tabPanel);
 
-		Image image = new Image(ThemeUtils.getSmallLogo());
+		Image image = new Image(ThemeManager.getSmallLogo());
 		image.setParent(vbox);
-		image.setSclass("ad-about-window-logo");
 
 		Text text = new Text(Adempiere.getSubtitle());
 		text.setParent(vbox);
-		//Separator separator = new Separator();
-		//separator.setParent(vbox);
+		Separator separator = new Separator();
+		separator.setParent(vbox);
 
 		text = new Text(Adempiere.getVersion());
 		text.setParent(vbox);
 
-		//separator = new Separator();
-		//separator.setParent(vbox);
+		separator = new Separator();
+		separator.setParent(vbox);
 		ToolBarButton link = new ToolBarButton();
 		link.setLabel("Github Project Site");
 		link.setHref("http://github.com/adempiere");
 		link.setTarget("_blank");
 		link.setParent(vbox);
 
-		//separator = new Separator();
-		//separator.setParent(vbox);
+		separator = new Separator();
+		separator.setParent(vbox);
 		link = new ToolBarButton();
 		link.setLabel("ADempiere.io");
 		link.setHref("http://www.adempiere.io");
 		link.setTarget("_blank");
 		link.setParent(vbox);
 
-		//separator = new Separator();
-		//separator.setParent(vbox);
-		link = new ToolBarButton();
-		link.setLabel("ADempiere.com");
-		link.setHref("http://www.adempiere.com");
-		link.setTarget("_blank");
-		link.setParent(vbox);
-
-		//separator = new Separator();
-		//separator.setParent(vbox);
+		separator = new Separator();
+		separator.setParent(vbox);
 		link = new ToolBarButton();
 		link.setLabel("ADempiere.net");
 		link.setHref("http://www.adempiere.net");
 		link.setTarget("_blank");
 		link.setParent(vbox);
 
-		//separator = new Separator();
-		//separator.setParent(vbox);
+		separator = new Separator();
+		separator.setParent(vbox);
 		link = new ToolBarButton();
 		link.setLabel("ADempiere Wiki");
-		link.setHref("http://www.adempiere.com/wiki/index.php");
+		link.setHref("http://wiki.adempiere.net");
 		link.setTarget("_blank");
 		link.setParent(vbox);
 

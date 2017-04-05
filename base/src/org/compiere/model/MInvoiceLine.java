@@ -221,6 +221,8 @@ public class MInvoiceLine extends X_C_InvoiceLine
 		setAD_OrgTrx_ID(oLine.getAD_OrgTrx_ID());
 		setUser1_ID(oLine.getUser1_ID());
 		setUser2_ID(oLine.getUser2_ID());
+		setUser3_ID(oLine.getUser3_ID());
+		setUser4_ID(oLine.getUser4_ID());
 		//
 		setRRAmt(oLine.getRRAmt());
 		setRRStartDate(oLine.getRRStartDate());
@@ -297,6 +299,8 @@ public class MInvoiceLine extends X_C_InvoiceLine
 		setAD_OrgTrx_ID(sLine.getAD_OrgTrx_ID());
 		setUser1_ID(sLine.getUser1_ID());
 		setUser2_ID(sLine.getUser2_ID());
+		setUser3_ID(sLine.getUser3_ID());
+		setUser4_ID(sLine.getUser4_ID());
 	}	//	setShipLine
 
 	/**
@@ -661,30 +665,6 @@ public class MInvoiceLine extends X_C_InvoiceLine
 	}	//	getC_Campaign_ID
 
 	/**
-	 * 	Get User2_ID
-	 *	@return User2
-	 */
-	public int getUser1_ID ()
-	{
-		int ii = super.getUser1_ID ();
-		if (ii == 0)
-			ii = getParent().getUser1_ID();
-		return ii;
-	}	//	getUser1_ID
-
-	/**
-	 * 	Get User2_ID
-	 *	@return User2
-	 */
-	public int getUser2_ID ()
-	{
-		int ii = super.getUser2_ID ();
-		if (ii == 0)
-			ii = getParent().getUser2_ID();
-		return ii;
-	}	//	getUser2_ID
-
-	/**
 	 * 	Get AD_OrgTrx_ID
 	 *	@return trx org
 	 */
@@ -870,7 +850,7 @@ public class MInvoiceLine extends X_C_InvoiceLine
 		setLineNetAmt();
 		// TaxAmt recalculations should be done if the TaxAmt is zero
 		// or this is an Invoice(Customer) - teo_sarca, globalqss [ 1686773 ]
-		if (m_IsSOTrx || getTaxAmt().compareTo(Env.ZERO) == 0)
+		if (getTaxAmt().compareTo(Env.ZERO) == 0)
 			setTaxAmt();
 		//
 		return true;
@@ -996,6 +976,10 @@ public class MInvoiceLine extends X_C_InvoiceLine
 			return "";
 		String sql = "DELETE C_LandedCostAllocation WHERE C_InvoiceLine_ID=" + getC_InvoiceLine_ID();
 		int no = DB.executeUpdate(sql, get_TrxName());
+
+		sql = "DELETE M_CostDetail WHERE C_landedcostallocation_ID in " +
+				"(select c_landedCostAllocation_ID from c_landedcostAllocation where c_invoiceline_ID=" + getC_InvoiceLine_ID() + ")";
+		no = DB.executeUpdate(sql, get_TrxName());
 		if (no != 0)
 			log.info("Deleted #" + no);
 
@@ -1065,6 +1049,7 @@ public class MInvoiceLine extends X_C_InvoiceLine
 					return "Invalid Receipt Line - " + iol;
 				MLandedCostAllocation lca = new MLandedCostAllocation (this, lc.getM_CostElement_ID());
 				lca.setM_Product_ID(iol.getM_Product_ID());
+				lca.setM_InOutLine_ID(lc.getM_InOutLine_ID());
 				lca.setM_AttributeSetInstance_ID(iol.getM_AttributeSetInstance_ID());
 				BigDecimal base = iol.getBase(lc.getLandedCostDistribution()); 
 				lca.setBase(base);

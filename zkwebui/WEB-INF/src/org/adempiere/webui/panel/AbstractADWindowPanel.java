@@ -17,16 +17,12 @@
 
 package org.adempiere.webui.panel;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import org.adempiere.model.MBrowse;
@@ -43,7 +39,6 @@ import org.adempiere.webui.component.AbstractADTab;
 import org.adempiere.webui.component.CWindowToolbar;
 import org.adempiere.webui.component.IADTab;
 import org.adempiere.webui.component.IADTabList;
-import org.adempiere.webui.component.Listbox;
 import org.adempiere.webui.component.Window;
 import org.adempiere.webui.editor.WButtonEditor;
 import org.adempiere.webui.event.ActionEvent;
@@ -55,8 +50,8 @@ import org.adempiere.webui.session.SessionManager;
 import org.adempiere.webui.window.FDialog;
 import org.adempiere.webui.window.FindWindow;
 import org.adempiere.webui.window.WChat;
+import org.adempiere.webui.window.WDeleteSelection;
 import org.adempiere.webui.window.WRecordAccessDialog;
-import org.compiere.apps.ADialog;
 import org.compiere.grid.ICreateFrom;
 import org.compiere.model.DataStatusEvent;
 import org.compiere.model.DataStatusListener;
@@ -65,8 +60,6 @@ import org.compiere.model.GridTab;
 import org.compiere.model.GridTable;
 import org.compiere.model.GridWindow;
 import org.compiere.model.GridWindowVO;
-import org.compiere.model.Lookup;
-import org.compiere.model.MLookupFactory;
 import org.compiere.model.MProcess;
 import org.compiere.model.MQuery;
 import org.compiere.model.MRole;
@@ -74,15 +67,12 @@ import org.compiere.process.DocAction;
 import org.compiere.process.ProcessInfo;
 import org.compiere.process.ProcessInfoUtil;
 import org.compiere.util.ASyncProcess;
-import org.compiere.util.CLogMgt;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
-import org.compiere.util.Util;
 import org.compiere.util.WebDoc;
 import org.eevolution.form.WBrowser;
-import org.zkoss.web.fn.ServletFns;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Executions;
 import org.zkoss.zk.ui.HtmlBasedComponent;
@@ -91,10 +81,8 @@ import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.util.Clients;
-import org.zkoss.zul.Button;
-import org.zkoss.zul.Div;
-import org.zkoss.zul.Hbox;
-import org.zkoss.zul.Listitem;
+import org.zkoss.zkex.zul.Borderlayout;
+import org.zkoss.zkex.zul.North;
 import org.zkoss.zul.Menuitem;
 import org.zkoss.zul.Menupopup;
 
@@ -130,10 +118,12 @@ import org.zkoss.zul.Menupopup;
  *		@see https://github.com/adempiere/adempiere/issues/114
  *		<li> BR [ 147 ] Form called from window must has access to process
  *		@see https://github.com/adempiere/adempiere/issues/147
+ *		<a href="https://github.com/adempiere/adempiere/issues/592">
+ * 		@see FR [ 592 ] Delete Selection dialog is not MVC</a>
  *
  */
 public abstract class AbstractADWindowPanel extends AbstractUIPart implements ToolbarListener,
-        EventListener<Event>, DataStatusListener, ActionListener, ASyncProcess
+        EventListener, DataStatusListener, ActionListener, ASyncProcess
 {
     private static final CLogger logger;
 
@@ -183,6 +173,11 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	private IADTabPanel embeddedTabPanel;
 
 	private boolean m_findCreateNew;
+	
+	public Borderlayout layout;
+	
+	public North north = new North();
+
 
 	/**
 	 * Constructor for non-embedded mode
@@ -516,7 +511,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
     						}
     						else
     						{
-    							ADTabPanel parent = includedMap.get(gTab.getAD_Tab_ID());
+    							IADTabPanel parent = includedMap.get(gTab.getAD_Tab_ID());
     							int pindex = gridWindow.getTabIndex(parent.getGridTab());
     							if (pindex >= 0)
     								setActiveTab(pindex);
@@ -531,11 +526,6 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		return false;
 	}
 
-	/**
-	 * Initialize the embedded tab
-	 * @param query
-	 * @param tabIndex
-	 */
 	private void initEmbeddedTab(MQuery query, int tabIndex) {
 		GridTab gTab = gridWindow.getTab(tabIndex);
 		gTab.addDataStatusListener(this);
@@ -586,7 +576,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			sortTab.setGlobalToolbar(toolbar);
 			if (includedMap.containsKey(gTab.getAD_Tab_ID()))
 		    {
-				ADTabPanel includePanel = includedMap.get(gTab.getAD_Tab_ID());
+				IADTabPanel includePanel = includedMap.get(gTab.getAD_Tab_ID());
                 if (includePanel.isEmbedded())
                     includedMap.get(gTab.getAD_Tab_ID()).embed(ctx, curWindowNo, gridWindow, gTab.getAD_Tab_ID(), tabIndex, sortTab);
                 else
@@ -609,7 +599,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		{
 			//build embedded tab map
 			ADTabPanel fTabPanel = new ADTabPanel();
-            toolbar.setCurrentPanel((IADTabPanel) fTabPanel);
+            toolbar.setCurrentPanel(fTabPanel);
 			fTabPanel.setGlobalToolbar(toolbar);
 			GridField[] fields = gTab.getTableModel().getFields();
 		    for(int i = 0; i < fields.length; i++)
@@ -820,7 +810,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 
 			m_lock = new Menuitem(Msg.translate(Env.getCtx(), "Lock"));
 			m_popup.appendChild(m_lock);
-			m_lock.addEventListener(Events.ON_CLICK, new EventListener<Event>()
+			m_lock.addEventListener(Events.ON_CLICK, new EventListener()
 			{
 				public void onEvent(Event event) throws Exception
 				{
@@ -833,7 +823,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 
 			m_access = new Menuitem(Msg.translate(Env.getCtx(), "RecordAccessDialog"));
 			m_popup.appendChild(m_access);
-			m_access.addEventListener(Events.ON_CLICK, new EventListener<Event>()
+			m_access.addEventListener(Events.ON_CLICK, new EventListener()
 			{
 				public void onEvent(Event event) throws Exception
 				{
@@ -1463,7 +1453,6 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 
 	// Elaine 2008/11/19
     /**
-     * Copy the current record
      * @see ToolbarListener#onCopy()
      */
     public void onCopy()
@@ -1497,11 +1486,9 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
     //
 
     /**
-     * Find
      * @see ToolbarListener#onFind()
      */
-    @SuppressWarnings("unused")
-	public void onFind()
+    public void onFind()
     {
     	GridTab currentTab = toolbar.getCurrentPanel().getGridTab();
 
@@ -1641,148 +1628,29 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	/**
 	 * @see ToolbarListener#onDelete()
 	 */
-    public void onDeleteSelection()
-	{
+    public void onDeleteSelection() {
     	GridTab currentTab = toolbar.getCurrentPanel().getGridTab();
 		if (currentTab.isReadOnly())
-        {
             return;
-        }
-
-		//show table with deletion rows -> value, name...
-		final Window messagePanel = new Window();
-		messagePanel.setBorder("normal");
-		messagePanel.setWidth("600px");
-		messagePanel.setTitle(Msg.getMsg(Env.getCtx(), "Find").replaceAll("&", "") + ": " + title);
-        messagePanel.setAttribute(Window.MODE_KEY, Window.MODE_MODAL);
-        messagePanel.setClosable(true);
-        messagePanel.setSizable(true);
-
-		final Listbox listbox = new Listbox();
-		listbox.setHeight("400px");
-
-		Vector<String> data = new Vector<String>();
-		// FR [ 2877111 ]
-		final String keyColumnName = currentTab.getKeyColumnName();
-		String sql = null;
-		if (! "".equals(keyColumnName)) {
-			sql = MLookupFactory.getLookup_TableDirEmbed(Env.getLanguage(ctx), keyColumnName, "[?","?]")
-			   .replace("[?.?]", "?");
-		}
-		int noOfRows = currentTab.getRowCount();
-		for(int i=0; i<noOfRows; i++)
-		{
-			StringBuffer displayValue = new StringBuffer();
-			if ("".equals(keyColumnName))
-			{
-				ArrayList<String> parentColumnNames = currentTab.getParentColumnNames();
-				for (Iterator<String> iter = parentColumnNames.iterator(); iter.hasNext();)
-				{
-					String columnName = iter.next();
-					GridField field = currentTab.getField(columnName);
-					if(field.isLookup()){
-						Lookup lookup = field.getLookup();
-						if (lookup != null){
-							displayValue = displayValue.append(lookup.getDisplay(currentTab.getValue(i,columnName))).append(" | ");
-						} else {
-							displayValue = displayValue.append(currentTab.getValue(i,columnName)).append(" | ");
-						}
-					} else {
-						displayValue = displayValue.append(currentTab.getValue(i,columnName)).append(" | ");
-					}
-				}
-			} else {
-				final int id = currentTab.getKeyID(i);
-				String value = DB.getSQLValueStringEx(null, sql, id);
-				if (value != null)
-					value = value.replace(" - ", " | ");
-				displayValue.append(value);
-				// Append ID
-				if (displayValue.length() == 0 || CLogMgt.isLevelFine())
-				{
-					if (displayValue.length() > 0)
-						displayValue.append(" | ");
-					displayValue.append("<").append(id).append(">");
+        //	
+		WDeleteSelection dSelection = new WDeleteSelection(currentTab);
+		dSelection.showDialog();
+		if(dSelection.isOkPressed()) {
+			logger.fine("ok");
+			int[] indices = dSelection.getSelection();
+			Arrays.sort(indices);
+			int offset = 0;
+			for (int i = 0; i < indices.length; i++) {
+				currentTab.navigate(indices[i]-offset);
+				if (currentTab.dataDelete()) {
+					offset++;
 				}
 			}
-			//
-			data.add(displayValue.toString());
+			curTabPanel.dynamicDisplay(0);
+		} else {
+			logger.fine("cancel");
 		}
-		// FR [ 2877111 ]
-
-		for(int i = 0; i < data.size(); i++)
-		{
-			String record = data.get(i);
-			listbox.appendItem(record, record);
-		}
-
-		listbox.setMultiple(true);
-		messagePanel.appendChild(listbox);
-
-		Div div = new Div();
-		//TODO - move this to theme
-		div.setAlign("center");
-		messagePanel.appendChild(div);
-
-		Hbox hbox = new Hbox();
-		div.appendChild(hbox);
-
-		Button btnOk = new Button();
-		btnOk.setLabel(Util.cleanAmp(Msg.getMsg(Env.getCtx(), "OK")));
-		final GridTab newCurrentTab = currentTab;
-		btnOk.setImage(ServletFns.resolveThemeURL("~./images/Ok16.png"));
-		btnOk.addEventListener(Events.ON_CLICK, new EventListener<Event>()
-		{
-			public void onEvent(Event event) throws Exception
-			{
-				if (FDialog.ask(curWindowNo, messagePanel, "DeleteSelection"))
-		        {
-					logger.fine("ok");
-					Set<Listitem> selectedValues = listbox.getSelectedItems();
-					if(selectedValues != null)
-					{
-						for(Iterator<Listitem> iter = selectedValues.iterator(); iter.hasNext();)
-						{
-							Listitem li = iter.next();
-							if(li != null)
-								logger.fine((String) li.getValue());
-						}
-					}
-
-					int[] indices = listbox.getSelectedIndices();
-					Arrays.sort(indices);
-					int offset = 0;
-					for (int i = 0; i < indices.length; i++)
-					{
-                        newCurrentTab.navigate(indices[i]-offset);
-						if (newCurrentTab.dataDelete())
-						{
-							offset++;
-						}
-					}
-					curTabPanel.dynamicDisplay(0);
-
-		            messagePanel.dispose();
-		        } else {
-					logger.fine("cancel");
-				}
-			}
-		});
-		hbox.appendChild(btnOk);
-
-		Button btnCancel = new Button();
-		btnCancel.setLabel(Util.cleanAmp(Msg.getMsg(Env.getCtx(), "Cancel")));
-		btnCancel.setImage(ServletFns.resolveThemeURL("~./images/Cancel16.png"));
-		btnCancel.addEventListener(Events.ON_CLICK, new EventListener<Event>()
-		{
-			public void onEvent(Event event) throws Exception
-			{
-				messagePanel.dispose();
-			}
-		});
-		hbox.appendChild(btnCancel);
-
-		AEnv.showWindow(messagePanel);
+		//	Set Focus
 		focusToActivePanel();
 	}
 	//
@@ -1814,8 +1682,12 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 				AD_Process_ID,table_ID, record_ID, true);
 		if (dialog.isValid()) {
 			dialog.setPosition("center");
-			dialog.setPage(this.getComponent().getPage());
-			dialog.doModal();
+			try {
+				dialog.setPage(this.getComponent().getPage());
+				dialog.doModal();
+			}
+			catch (InterruptedException e) {
+			}
 		}
 	}
 
@@ -2232,8 +2104,6 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			form.setClosable(true);
 			form.setMaximizable(true);
 			form.setSizable(true);
-			form.setHeight("90%");
-			form.setWidth("80%");
 			form.setContentStyle("overflow: auto");
 			AEnv.showWindow(form);
 			//	End Yamel Senih
@@ -2247,7 +2117,7 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			pi.setAD_User_ID (Env.getAD_User_ID(ctx));
 			pi.setAD_Client_ID (Env.getAD_Client_ID(ctx));
 			MBrowse browse = new MBrowse(Env.getCtx(), adBrowseID , null);
-			WBrowser browser = new WBrowser(true, curWindowNo, "" , browse, "", true, "");
+			WBrowser browser = new WBrowser(true, curWindowNo, "" , browse, "", true, "", "Y".equals(Env.isSOTrx(Env.getCtx(), curWindowNo)));
 			browser.setProcessInfo(pi);
 			CustomForm ff =  browser.getForm();
 			ff.setAttribute(Window.MODE_KEY, Window.MODE_EMBEDDED);
@@ -2339,14 +2209,14 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		m_uiLocked = true;
 
 		if (Executions.getCurrent() != null)
-			Clients.showBusy(null);
+			Clients.showBusy(null, true);
 		else
 		{
 			try {
 				//get full control of desktop
-				Executions.activate(getComponent().getDesktop(), 500);
+				Executions.activate(getComponent().getDesktop(), 2000);
 				try {
-					Clients.showBusy(null);
+					Clients.showBusy(null, true);
                 } catch(Error ex){
                 	throw ex;
                 } finally{
@@ -2378,8 +2248,9 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 			if (notPrint)		//	refresh if not print
 			{
 				updateUI(pi);
+			} else {
+				Clients.showBusy(null, false);
 			}
-			Clients.clearBusy();
 		}
 		else
 		{
@@ -2390,8 +2261,9 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 					if (notPrint)		//	refresh if not print
 					{
 						updateUI(pi);
+					} else {
+						Clients.showBusy(null, false);
 					}
-                	Clients.clearBusy();
                 } catch(Error ex){
                 	throw ex;
                 } finally{
@@ -2420,6 +2292,8 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 		//	Get Log Info
 		ProcessInfoUtil.setLogFromDB(pi);
 		String logInfo = pi.getLogInfo();
+		//	
+		Clients.showBusy(null, false);
 		if (logInfo.length() > 0)
 			FDialog.info(curWindowNo, this.getComponent(), Env.getHeader(ctx, curWindowNo),
 				pi.getTitle() + "<br>" + logInfo);
@@ -2453,5 +2327,4 @@ public abstract class AbstractADWindowPanel extends AbstractUIPart implements To
 	public Component getParent() {
 		return this.parent;
 	}
-
 }

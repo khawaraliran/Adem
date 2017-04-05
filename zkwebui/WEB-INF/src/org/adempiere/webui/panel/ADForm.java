@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import org.adempiere.webui.component.Window;
 import org.adempiere.webui.exception.ApplicationException;
 import org.adempiere.webui.session.SessionManager;
-import org.adempiere.webui.theme.ThemeUtils;
 import org.adempiere.webui.util.ADClassNameMap;
 import org.compiere.model.MForm;
 import org.compiere.process.ProcessInfo;
@@ -37,6 +36,9 @@ import org.zkoss.zk.ui.event.EventListener;
  * The form is abstract, so specific types of custom form must be implemented
  *
  * @author Andrew Kimball
+ * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ *		<a href="https://github.com/adempiere/adempiere/issues/605">
+ * 		@see FR [ 605 ] Bad size of form window in ZK GUI</a>
  */
 public abstract class ADForm extends Window implements EventListener
 {
@@ -74,8 +76,11 @@ public abstract class ADForm extends Window implements EventListener
     protected ADForm()
     {
          m_WindowNo = SessionManager.getAppDesktop().registerWindow(this);
-         ThemeUtils.addSclass("ad-adform", this);
-         this.setContentSclass("ad-adform-content");
+
+         this.setWidth("100%");
+         this.setHeight("100%");
+         this.setStyle("position:absolute");
+         this.setContentSclass("adform-content");
     }
 
     public int getWindowNo()

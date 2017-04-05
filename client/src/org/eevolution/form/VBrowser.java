@@ -25,9 +25,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,38 +34,30 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.model.MBrowse;
-import org.adempiere.model.MBrowseField;
+import org.adempiere.model.MViewDefinition;
 import org.compiere.Adempiere;
 import org.compiere.apps.ADialog;
 import org.compiere.apps.AEnv;
-import org.compiere.apps.ALayout;
 import org.compiere.apps.AppsAction;
 import org.compiere.apps.ConfirmPanel;
 import org.compiere.apps.ProcessCtl;
-import org.compiere.apps.ProcessParameter;
-import org.compiere.apps.ProcessParameterPanel;
+import org.compiere.apps.ProcessController;
+import org.compiere.apps.ProcessPanel;
 import org.compiere.apps.StatusBar;
 import org.compiere.apps.Waiting;
 import org.compiere.apps.form.FormFrame;
 import org.compiere.grid.ed.VEditor;
 import org.compiere.model.GridField;
-import org.compiere.model.MPInstance;
 import org.compiere.model.MQuery;
 import org.compiere.process.ProcessInfo;
-import org.compiere.process.ProcessInfoUtil;
 import org.compiere.swing.CButton;
 import org.compiere.swing.CFrame;
 import org.compiere.swing.CPanel;
-import org.compiere.swing.CScrollPane;
 import org.compiere.swing.CollapsiblePanel;
 import org.compiere.util.ASyncProcess;
 import org.compiere.util.DB;
@@ -77,8 +66,9 @@ import org.compiere.util.Ini;
 import org.compiere.util.Login;
 import org.compiere.util.Msg;
 import org.compiere.util.Splash;
-import org.eevolution.grid.BrowserTable;
 import org.eevolution.grid.Browser;
+import org.eevolution.grid.BrowserSearch;
+import org.eevolution.grid.VBrowserTable;
 
 /**
  * UI Browser
@@ -102,57 +92,57 @@ import org.eevolution.grid.Browser;
  * 		@see https://github.com/adempiere/adempiere/issues/251
  * 		<li>FR [ 252 ] Smart Browse is Collapsible when query don't have result
  * 		@see https://github.com/adempiere/adempiere/issues/252
+ * 		<li>FR [ 352 ] T_Selection is better send to process like a HashMap instead read from disk
+ *		@see https://github.com/adempiere/adempiere/issues/352
+ *		<li>BR [ 394 ] Smart browse does not reset context when windows is closed
+ *		@see https://github.com/adempiere/adempiere/issues/394
+ *		<li>BR [ 460 ] Update context when you select a row in a SmartBrowser
+ *		@see https://github.com/adempiere/adempiere/issues/460
  */
-public class VBrowser extends Browser implements ActionListener,
-		VetoableChangeListener, ChangeListener, ListSelectionListener,
-		TableModelListener, ASyncProcess {
+public class VBrowser extends Browser implements ActionListener, ListSelectionListener, ASyncProcess {
 	/**
 	 * get Browse
-	 * @param browse_ID
+	 * @param windowNo
+	 * @param browserId
+	 * @param whereClause
+	 * @param isSOTrx
 	 */
-	public static CFrame openBrowse(int browse_ID) {
-		MBrowse browse = new MBrowse(Env.getCtx(), browse_ID , null);
-		boolean modal = true;
-		int WindowNo = 0;
+	public static CFrame openBrowse(int windowNo , int browserId, String whereClause, Boolean isSOTrx) {
+		MBrowse browse = new MBrowse(Env.getCtx(), browserId , null);
+		boolean modal = false;
+		if (windowNo > 0 )
+			modal = true;
 		String value = "";
 		String keyColumn = "";
 		boolean multiSelection = true;
-		String whereClause = null;
-		FormFrame ff = new FormFrame(WindowNo);
-		return new VBrowser(ff, modal , WindowNo, value, browse, keyColumn,multiSelection, whereClause)
+		FormFrame ff = new FormFrame(windowNo);
+		return new VBrowser(ff, modal , windowNo, value, browse, keyColumn,multiSelection, whereClause, isSOTrx)
 		.getFrame();
-		
 	}
 
 	/**
 	 * Detail Protected Constructor.
 	 * 
-	 * @param frame
-	 *            parent
-	 * @param modal
-	 *            modal
-	 * @param WindowNo
-	 *            window no
-	 * @param value
-	 *            QueryValue
-	 * @param browse
-	 *            table name
-	 * @param keyColumn
-	 *            key column (ignored)
-	 * @param multiSelection
-	 *            multiple selections
-	 * @param whereClause
-	 *            where clause
+	 * @param frame parent
+	 * @param modal modal
+	 * @param WindowNo window no
+	 * @param value QueryValue
+	 * @param browse table name
+	 * @param keyColumn key column (ignored)
+	 * @param multiSelection multiple selections
+	 * @param whereClause where clause
+	 * @param isSOTrx
 	 */
 	public VBrowser(FormFrame frame, boolean modal, int WindowNo, String value,
 			MBrowse browse, String keyColumn, boolean multiSelection,
-			String whereClause) {
+			String whereClause, Boolean isSOTrx) {
 		super(modal, WindowNo, value, browse, keyColumn, multiSelection,
 				whereClause);
 		m_frame = frame;
 		m_frame.setTitle(browse.getTitle());
 		m_frame.getContentPane().add(statusBar, BorderLayout.SOUTH);
 		windowNo = Env.createWindowNo(m_frame.getContainer());
+		Env.setContext(Env.getCtx(), windowNo, "IsSOTrx", isSOTrx ? "Y" : "N");
 		setProcessInfo(frame.getProcessInfo());
 		copyWinContext();
 		setContextWhere(whereClause);
@@ -161,7 +151,7 @@ public class VBrowser extends Browser implements ActionListener,
 	} // InfoGeneral
 
 	/** Process Parameters Panel */
-	private ProcessParameterPanel parameterPanel;
+	private ProcessPanel processParameterPanel;
 	/** StatusBar **/
 	protected StatusBar statusBar = new StatusBar();
 	/** Worker */
@@ -187,7 +177,7 @@ public class VBrowser extends Browser implements ActionListener,
 	private javax.swing.JToolBar toolsBar;
 	private CPanel topPanel;
 	/**	Table						*/
-	private BrowserTable detail;
+	private VBrowserTable detail;
 	private CollapsiblePanel collapsibleSearch;
 	private VBrowserSearch  searchPanel;
 	/**	Form Frame				*/
@@ -208,7 +198,7 @@ public class VBrowser extends Browser implements ActionListener,
 		setStatusDB(Integer.toString(no));
 		//	
 		if (isExecuteQueryByDefault()
-				&& evaluateMandatoryFilter() == null)
+				&& searchPanel.validateParameters() == null)
 			executeQuery();
 	}
 	
@@ -217,39 +207,23 @@ public class VBrowser extends Browser implements ActionListener,
 	 * Static Setup - add fields to parameterPanel (GridLayout)
 	 */
 	private void statInit() {
-		searchPanel.setLayout(new ALayout());
-		int cols = 0;
-		int col = 2;
-		int row = 0;
-		for (MBrowseField field : m_Browse.getCriteriaFields()) {
-			String title = field.getName();
-			String name = field.getAD_View_Column().getColumnName();
-			searchPanel.addField(field, row, cols, name, title);
-			cols = cols + col;
-
-			if (field.isRange())
-				cols = cols + col;
-
-			if (cols >= 4) {
-				cols = 0;
-				row++;
-			}
-		}
-		
-		searchPanel.dynamicDisplay();
-		
-		if (m_Browse.getAD_Process_ID() > 0) {
+		//	
+		if (getAD_Process_ID() > 0) {
 			//	FR [ 245 ]
 			initProcessInfo();
-			parameterPanel = new ProcessParameterPanel(getWindowNo() , getBrowseProcessInfo());
-			parameterPanel.setColumns(ProcessParameter.COLUMNS_2);
-			parameterPanel.init();
-			//	Add Scroll FR [ 265 ]
-			CScrollPane scrollPane = new CScrollPane(parameterPanel.getPanel());
-			scrollPane.setAutoscrolls(true);
-			scrollPane.createVerticalScrollBar();
-			scrollPane.createHorizontalScrollBar();
-			processPanel.add(scrollPane, BorderLayout.CENTER);
+			processParameterPanel = new ProcessPanel(getWindowNo(), getBrowseProcessInfo());
+			processParameterPanel.setColumns(ProcessController.COLUMNS_2);
+			processParameterPanel.setShowButtons(false);
+			processParameterPanel.setShowDescription(false);
+			processParameterPanel.createFieldsAndEditors();
+			//	If don't have parameters then don'show collapsible panel
+			if(processParameterPanel.hasParameters()) {
+				//	Add collapsible panel for process pane;
+				CollapsiblePanel collapsibleProcess = new CollapsiblePanel(Msg.getMsg(Env.getCtx(),("Parameter")));
+				collapsibleProcess.add(processParameterPanel.getPanel());
+				collapsibleProcess.validate();
+				processPanel.add(collapsibleProcess);
+			}
 		}
 	}
 
@@ -281,7 +255,7 @@ public class VBrowser extends Browser implements ActionListener,
 	 */
 	protected void executeQuery() {
 		//	FR [ 245 ]
-		String errorMsg = evaluateMandatoryFilter();
+		String errorMsg = searchPanel.validateParameters();
 		if (errorMsg == null) {
 			if (getAD_Window_ID() > 1)
 				bZoom.setEnabled(true);
@@ -295,8 +269,8 @@ public class VBrowser extends Browser implements ActionListener,
 			p_loadedOK = initBrowser();
 
 			Env.setContext(Env.getCtx(), 0, "currWindowNo", getWindowNo());
-			if (parameterPanel != null)
-				parameterPanel.refreshContext();
+			if (processParameterPanel != null)
+				processParameterPanel.refreshContext();
 
 			if (m_worker != null && m_worker.isAlive())
 				return;
@@ -314,7 +288,7 @@ public class VBrowser extends Browser implements ActionListener,
 			m_worker = new Worker();
 			m_worker.start();
 		} else {
-			ADialog.error(windowNo, getForm().getContentPane(), 
+			ADialog.error(windowNo, m_frame.getContentPane(), 
 					"FillMandatory", Msg.parseTranslation(Env.getCtx(), errorMsg));
 		}
 	} // executeQuery
@@ -329,7 +303,7 @@ public class VBrowser extends Browser implements ActionListener,
 		//	
 		if (browserFields.size() == 0) {
 			ADialog.error(getWindowNo(), m_frame.getContainer(), "Error", "No Browse Fields");
-			log.log(Level.SEVERE, "No Browser for view=" + m_View.getName());
+			log.log(Level.SEVERE, "No Browser for view=" + getViewName());
 			return false;
 		}
 		return true;
@@ -366,48 +340,6 @@ public class VBrowser extends Browser implements ActionListener,
 		
 	}//cmd_deleteSelection
 
-	public void dispose(boolean ok) {
-		log.config("OK=" + ok);
-		m_ok = ok;
-
-		// End Worker
-		if (m_worker != null) {
-			// worker continues, but it does not block UI
-			if (m_worker.isAlive())
-				m_worker.interrupt();
-			log.config("Worker alive=" + m_worker.isAlive());
-		}
-		m_worker = null;
-		//	
-		saveResultSelection(detail);
-		saveSelection(detail);
-
-		//m_frame.removeAll();
-		m_frame.dispose();
-		if (m_Browse.getAD_Process_ID() <= 0)
-			return;
-
-		MPInstance instance = new MPInstance(Env.getCtx(),
-				m_Browse.getAD_Process_ID(), getBrowseProcessInfo().getRecord_ID());
-		instance.saveEx();
-
-		DB.createT_Selection(instance.getAD_PInstance_ID(), getSelectedKeys(),
-				null);
-		
-		ProcessInfo pi = getBrowseProcessInfo();
-		pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
-		pi.setWindowNo(getWindowNo());
-		parameterPanel.saveParameters();
-		ProcessInfoUtil.setParameterFromDB(pi);
-		setBrowseProcessInfo(pi);
-		//Save Values Browse Field Update
-		createT_Selection_Browse(instance.getAD_PInstance_ID());
-		// Execute Process
-		ProcessCtl worker = new ProcessCtl(this, pi.getWindowNo() , pi , null);
-		worker.start(); // complete tasks in unlockUI /
-        Env.clearWinContext(getWindowNo());
-	} // dispose
-
 	/**
 	 * Instance tool bar
 	 */
@@ -439,11 +371,15 @@ public class VBrowser extends Browser implements ActionListener,
 		tabsPanel = new javax.swing.JTabbedPane();
 		searchTab = new CPanel();
 		topPanel = new CPanel();
-		searchPanel = new VBrowserSearch(getWindowNo());
+		//	FR [ 344 ]
+		searchPanel = new VBrowserSearch(getWindowNo(), getAD_Browse_ID(), BrowserSearch.COLUMNS_2);
+		searchPanel.init();
+		//	
 		buttonSearchPanel = new CPanel();
 		centerPanel = new javax.swing.JScrollPane();
-		detail = new BrowserTable(this);
+		detail = new VBrowserTable(this);
 		detail.setRowSelectionAllowed(true);
+		detail.getSelectionModel().addListSelectionListener(this);
 		footPanel = new CPanel();
 		footButtonPanel = new CPanel(new FlowLayout(FlowLayout.CENTER));
 		processPanel = new CPanel();
@@ -492,11 +428,9 @@ public class VBrowser extends Browser implements ActionListener,
 		searchTab.setLayout(new java.awt.BorderLayout());
 
 		topPanel.setLayout(new java.awt.BorderLayout());
-
-		searchPanel.setLayout(new java.awt.GridBagLayout());
 		
 		collapsibleSearch = new CollapsiblePanel(Msg.getMsg(Env.getCtx(),("SearchCriteria")));
-		collapsibleSearch.add(searchPanel);
+		collapsibleSearch.add(searchPanel.getPanel());		
 		topPanel.add(collapsibleSearch, java.awt.BorderLayout.NORTH);
 
 		bSearch.setText(Msg.getMsg(Env.getCtx(), "StartSearch"));
@@ -511,12 +445,8 @@ public class VBrowser extends Browser implements ActionListener,
 		searchTab.add(centerPanel, java.awt.BorderLayout.CENTER);
 
 		footPanel.setLayout(new java.awt.BorderLayout());
-
-//		bCancel.setText(Msg.getMsg(Env.getCtx(), "Cancel").replaceAll("[&]",""));
 		
 		footButtonPanel.add(bCancel);
-
-//		bOk.setText(Msg.getMsg(Env.getCtx(), "Ok").replaceAll("[&]",""));
 		
 		footButtonPanel.add(bOk);
 
@@ -530,10 +460,6 @@ public class VBrowser extends Browser implements ActionListener,
 		tabsPanel.addTab(Msg.getMsg(Env.getCtx(), "Search"), searchTab);
 
 		graphPanel.setLayout(new java.awt.BorderLayout());
-		
-		//	Instance Table
-//		detail = new BrowseTable(this);
-//		centerPanel.setViewportView(detail);
 		
 		m_frame.getContentPane().add(tabsPanel, java.awt.BorderLayout.CENTER);
 	}
@@ -557,40 +483,40 @@ public class VBrowser extends Browser implements ActionListener,
 		//	Is Process ok
 		boolean isOk = false;
 		//	Valid Process, Selected Keys and process parameters
-		if (m_Browse.getAD_Process_ID() > 0 && getSelectedKeys() != null)
+		if (getAD_Process_ID() > 0 && getSelectedKeys() != null)
 		{
-			//	
-			MPInstance instance = new MPInstance(Env.getCtx(),
-					m_Browse.getAD_Process_ID(), getBrowseProcessInfo().getRecord_ID());
-			instance.saveEx();
-			ProcessInfo pi = getBrowseProcessInfo();
-			pi.setWindowNo(getWindowNo());
-			pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
-			pi.setIsSelection(p_multiSelection);
+			processParameterPanel.getProcessInfo().setAD_PInstance_ID(-1);
 			// BR [ 249 ]
-			if(parameterPanel.saveParameters() == null) {
-				DB.createT_Selection(instance.getAD_PInstance_ID(), getSelectedKeys(),
-						null);
-				//	Call Process
-				ProcessInfoUtil.setParameterFromDB(pi);
-				setBrowseProcessInfo(pi);
-				//Save Values Browse Field Update
-				createT_Selection_Browse(instance.getAD_PInstance_ID());
-				// Execute Process
-				ProcessCtl worker = new ProcessCtl(this, pi.getWindowNo() , pi , null);
-				//	
-				String msg = Msg.getMsg(Env.getCtx(), "Processing");
-				//	For Dialog
-				if(m_frame.isDialog()) {
-					m_waiting = new Waiting (m_frame.getCDialog(), msg, false, getBrowseProcessInfo().getEstSeconds());
-				} else {
-					m_waiting = new Waiting (m_frame.getCFrame(), msg, false, getBrowseProcessInfo().getEstSeconds());
+			if(processParameterPanel.validateParameters() == null) {
+				//	Save Parameters
+				if(processParameterPanel.saveParameters() == null) {
+					//	Get Process Info
+					ProcessInfo pi = processParameterPanel.getProcessInfo();
+					//	Set Selected Values
+					if (getFieldKey() != null && getFieldKey().get_ID() > 0) {
+						MViewDefinition viewDefinition = (MViewDefinition) getFieldKey().getAD_View_Column().getAD_View_Definition();
+						pi.setAliasForTableSelection(viewDefinition.getTableAlias());
+						pi.setTableSelectionId(viewDefinition.getAD_Table_ID());
+					}
+					pi.setSelectionValues(getSelectedValues());
+					//	
+					setBrowseProcessInfo(pi);
+					// Execute Process
+					ProcessCtl worker = new ProcessCtl(this, getWindowNo() , pi , null);
+					//	
+					String msg = Msg.getMsg(Env.getCtx(), "Processing");
+					//	For Dialog
+					if(m_frame.isDialog()) {
+						m_waiting = new Waiting (m_frame.getCDialog(), msg, false, getBrowseProcessInfo().getEstSeconds());
+					} else {
+						m_waiting = new Waiting (m_frame.getCFrame(), msg, false, getBrowseProcessInfo().getEstSeconds());
+					}
+					worker.run(); // complete tasks in unlockUI /
+					m_waiting.doNotWait();
+					setStatusLine(pi.getSummary(), pi.isError());
+					//	For Valid Ok
+					isOk = !pi.isError();
 				}
-				worker.run(); // complete tasks in unlockUI /
-				m_waiting.doNotWait();
-				setStatusLine(pi.getSummary(), pi.isError());
-				//	For Valid Ok
-				isOk = !pi.isError();
 			}
 		}
 		m_frame.setCursor(Cursor.getDefaultCursor());
@@ -618,8 +544,9 @@ public class VBrowser extends Browser implements ActionListener,
 	 *  Dispose
 	 */
 	public void dispose() {
+		//	BR [ 394 ]
+		Env.clearWinContext(getWindowNo());
 		searchPanel.dispose();
-//		m_frame.removeAll();
 		m_frame.dispose();
 	}   //  dis
 
@@ -633,8 +560,8 @@ public class VBrowser extends Browser implements ActionListener,
 		bDelete.setEnabled(true);
 		Env.setContext(Env.getCtx(), 0, "currWindowNo", getWindowNo());
 
-		if (m_Browse.getAD_Process_ID() > 0)
-			parameterPanel.refreshContext();
+		if (getAD_Process_ID() > 0)
+			processParameterPanel.refreshContext();
 
 		executeQuery();
 	}
@@ -691,7 +618,6 @@ public class VBrowser extends Browser implements ActionListener,
 						+ "ms");
 				//	Load Table
 				row = detail.loadTable(m_rs);
-				
 			} catch (SQLException e) {
 				log.log(Level.SEVERE, dataSql, e);
 			}
@@ -700,8 +626,6 @@ public class VBrowser extends Browser implements ActionListener,
 			//no = detail.getRowCount();
 			log.fine("#" + no + " - " + (System.currentTimeMillis() - start)
 					+ "ms");
-			if (detail.isShowTotals())
-				detail.addTotals();
 			detail.autoSize();
 			//
 			m_frame.setCursor(Cursor.getDefaultCursor());
@@ -759,7 +683,7 @@ public class VBrowser extends Browser implements ActionListener,
 		boolean multiSelection = true;
 		String whereClause = "";
 		VBrowser browser = new VBrowser(frame, modal, WindowNo, value, browse,
-				keyColumn, multiSelection, whereClause);
+				keyColumn, multiSelection, whereClause, true);
 		// browser.setPreferredSize(getPreferredSize ());
 		browser.getFrame().setVisible(true);
 		browser.getFrame().pack();
@@ -805,51 +729,61 @@ public class VBrowser extends Browser implements ActionListener,
 			cmd_zoom();
 		}		
 	}
-
-	public void vetoableChange(PropertyChangeEvent evt)
-			throws PropertyVetoException {
-		
-	}
-
-	public void stateChanged(ChangeEvent e) {
-		
-	}
-
+	
+	@Override
 	public void valueChanged(ListSelectionEvent e) {
+		//  no rows
+		if (detail.getRowCount() == 0)
+			return;
 		
+		int rowTable = detail.getSelectedRow();
+		int rowCurrent = detail.getData().getCurrentRow();
+		log.config("(" + detail.toString() + ") Row in Table=" + rowTable + ", in Model=" + rowCurrent);
+		//  nothing selected
+		if (rowTable == -1) {
+			if (rowCurrent >= 0) {
+				detail.setRowSelectionInterval(rowCurrent, rowCurrent); //  causes this method to be called again
+				return;
+			}
+		} else {
+			if (rowTable != rowCurrent) {
+				//make sure table selection is consistent with model
+				detail.getData().setCurrentRow(rowTable);
+			}
+		}
 	}
-
-	public void tableChanged(TableModelEvent e) {
-		
-	}
-
+	
+	@Override
 	public void executeASync(ProcessInfo pi) {
 		
 	}
-
+	
+	@Override
 	public boolean isUILocked() {
 		return false;
 	}
 
+	@Override
 	public void lockUI(ProcessInfo pi) {
 		
 	}
 
+	@Override
 	public void unlockUI(ProcessInfo pi) {
 		
 	}
 	
 	@Override
-	public LinkedHashMap<Object, GridField> getPanelParameters() {
-		LinkedHashMap<Object, GridField> m_List = new LinkedHashMap<Object, GridField>();
-		for (Entry<Object, Object> entry : searchPanel.getParameters().entrySet()) {
+	public LinkedHashMap<String, GridField> getPanelParameters() {
+		LinkedHashMap<String, GridField> m_List = new LinkedHashMap<String, GridField>();
+		for (Entry<String, Object> entry : searchPanel.getParameters().entrySet()) {
 			VEditor editor = (VEditor) entry.getValue();
 			//	BR [ 251 ]
-			if(!((Component)editor).isVisible())
+			if(!((Component)editor).isVisible()
+					|| editor.getField().isInfoOnly())
 				continue;
 			//	
 			GridField field = editor.getField();
-			field.setValue(editor.getValue(), true);
 			m_List.put(entry.getKey(), field);
 		}
 		//	Default Return

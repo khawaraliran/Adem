@@ -46,6 +46,7 @@ import org.adempiere.webui.theme.ThemeUtils;
 import org.adempiere.webui.window.FDialog;
 import org.compiere.model.MAcctSchema;
 import org.compiere.model.MAcctSchemaElement;
+import org.compiere.model.Query;
 import org.compiere.model.X_C_AcctSchema_Element;
 import org.compiere.report.core.RColumn;
 import org.compiere.report.core.RModel;
@@ -854,6 +855,9 @@ public class WAcctViewer extends Window implements EventListener<Event>
 
 		if (tabResult.isSelected())
 			stateChanged();
+		
+		// Display quantity as default
+		displayQty.setSelected(true);
 	} // dynInit
 
 	/**
@@ -978,7 +982,7 @@ public class WAcctViewer extends Window implements EventListener<Event>
 			MAcctSchemaElement acctSchemaElement = elements[i];
 			String columnName = acctSchemaElement.getColumnName();
 			String displayColumnName;
-			if (columnName.equals("User1_ID") || columnName.equals("User2_ID"))
+			if (columnName.equals("User1_ID") || columnName.equals("User2_ID") || columnName.equals("User3_ID") || columnName.equals("User4_ID")  )
 				displayColumnName = acctSchemaElement.getName();
 			else
 				displayColumnName = acctSchemaElement.getDisplayColumnName();
@@ -1223,7 +1227,16 @@ public class WAcctViewer extends Window implements EventListener<Event>
 					if (ase != null)
 						displayColumnName = Msg.translate(Env.getCtx(), ase.getName());					
 				}
-
+				else if (columnName.equals("User3_ID")) {
+					MAcctSchemaElement ase = as.getAcctSchemaElement(MAcctSchemaElement.ELEMENTTYPE_UserList3);
+					if (ase != null)
+						displayColumnName = Msg.translate(Env.getCtx(), ase.getName());
+				}
+				else if (columnName.equals("User4_ID")) {
+					MAcctSchemaElement ase = as.getAcctSchemaElement(MAcctSchemaElement.ELEMENTTYPE_UserList4);
+					if (ase != null)
+						displayColumnName = Msg.translate(Env.getCtx(), ase.getName());
+				}
 				Listheader listheader = new Listheader(displayColumnName);
 				listheader.setTooltiptext(rmodel.getColumnName(i));
 				listhead.appendChild(listheader);
@@ -1349,6 +1362,48 @@ public class WAcctViewer extends Window implements EventListener<Event>
 
 			if (ase != null)
 				whereClause += " AND C_Element_ID=" + ase.getC_Element_ID();
+		}
+		else if ("User3_ID".equals(keyColumn))
+		{
+			lookupColumn = "C_ElementValue_ID";
+			MAcctSchemaElement ase = m_data.ASchema
+					.getAcctSchemaElement(X_C_AcctSchema_Element.ELEMENTTYPE_UserList3);
+
+			if (ase != null)
+				whereClause += " AND C_Element_ID=" + ase.getC_Element_ID();
+		}
+		else if ("User4_ID".equals(keyColumn))
+		{
+			lookupColumn = "C_ElementValue_ID";
+			MAcctSchemaElement ase = m_data.ASchema
+					.getAcctSchemaElement(X_C_AcctSchema_Element.ELEMENTTYPE_UserList4);
+
+			if (ase != null)
+				whereClause += " AND C_Element_ID=" + ase.getC_Element_ID();
+		}
+		else if ("UserElement1_ID".equals(keyColumn))
+		{
+			MAcctSchemaElement et = new Query(Env.getCtx(), MAcctSchemaElement.Table_Name, 
+					"elementtype = 'X1' ", 
+					null)
+					.setClient_ID()
+					.firstOnly();
+			String tableName = et.getAD_Column().getAD_Table().getTableName();
+			String lookupcolumnname = tableName + "_ID";
+			lookupColumn = lookupcolumnname;
+			whereClause = "";
+		}
+		else if ("UserElement2_ID".equals(keyColumn))
+		{
+			MAcctSchemaElement et = new Query(Env.getCtx(), MAcctSchemaElement.Table_Name, 
+					"elementtype = 'X2' ", 
+					null)
+					.setClient_ID()
+					.firstOnly();
+			String tableName = et.getAD_Column().getAD_Table().getTableName();
+			String lookupcolumnname = tableName + "_ID";
+			lookupColumn = lookupcolumnname;
+			whereClause = "";
 		}
 		else if (keyColumn.equals("M_Product_ID"))
 		{

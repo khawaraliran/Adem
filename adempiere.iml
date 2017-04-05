@@ -29,7 +29,7 @@
     <libelement value="jar://$MODULE_DIR$/tools/lib/xml-apis.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/jpedal.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/swingx-1.6.jar!/" />
-    <libelement value="jar://$MODULE_DIR$/tools/lib/bsh-2.0b5.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/tools/lib/bsh-2.0b6.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/bsh-engine.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/groovy-engine.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/jython.jar!/" />
@@ -112,7 +112,7 @@
     <libelement value="jar://$MODULE_DIR$/tools/lib/payflow.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/cron4j-2.2.1.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/mysql-connector-java-5.1.13-bin.jar!/" />
-    <libelement value="jar://$MODULE_DIR$/tools/lib/groovy-all-2.0.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/tools/lib/groovy-all-2.4.7!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/jcommon-1.0.18.jar!/" />
     <libelement value="jar://$MODULE_DIR$/tools/lib/jfreechart-1.0.15.jar!/" />
     <libelement value="jar://$MODULE_DIR$/JasperReportsTools/lib/jasperreports-5.1.0.jar!/" />
@@ -200,6 +200,8 @@
       <sourceFolder url="file://$MODULE_DIR$/com.kkalice.adempiere.migrate/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/org.adempiere.test/src/test/scala" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/org.adempiere.test/src/main/scala" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/org.eevolution.warehouse/src/main/java/ui/zk" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/org.adempiere.production/src/main/java/base" isTestSource="false" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
@@ -456,9 +458,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">
-      <library name="bsh-2.0b5.jar">
+      <library name="bsh-2.0b6.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/tools/lib/bsh-2.0b5.jar!/" />
+          <root url="jar://$MODULE_DIR$/tools/lib/bsh-2.0b6.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -1223,15 +1225,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library" exported="">
-      <library name="groovy-all-2.0.1.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/tools/lib/groovy-all-2.0.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
       <library name="jcommon-1.0.18.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/tools/lib/jcommon-1.0.18.jar!/" />
@@ -1330,14 +1323,24 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="scala-sdk-2.11.7" level="application" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-reflect:2.11.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.7:jar" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.11.8" level="application" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
     <orderEntry type="library" name="SBT: javax.servlet:javax.servlet-api:3.0.1:jar" level="project" />
-    <orderEntry type="library" name="SBT: org.scalatest:scalatest_2.11:2.2.4:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scalatest:scalatest_2.11:2.2.6:jar" level="project" />
     <orderEntry type="library" name="SBT: com.typesafe:config:1.2.0:jar" level="project" />
-    <orderEntry type="library" name="packages" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.2:jar" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/tools/lib/mariadb-java-client.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="scripting-scala-0.1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.12.0" level="project" />
+    <orderEntry type="library" name="groovy-all-2.4.7" level="project" />
   </component>
 >>>>>>> hotfix/3.8.0#002
 </module>

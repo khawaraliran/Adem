@@ -69,7 +69,13 @@ public class MPPOrderBOMLine extends X_PP_Order_BOMLine
 	}	//	PP_Order_BOMLine_ID
 
 
-	public MPPOrderBOMLine(Properties ctx, ResultSet rs,String trxName)
+	/**
+	 * Constructor
+	 * @param ctx
+	 * @param rs
+	 * @param trxName
+     */
+	public MPPOrderBOMLine(Properties ctx, ResultSet rs, String trxName)
 	{
 		super (ctx, rs,trxName);
 	}	//	MOrderLine
@@ -194,12 +200,8 @@ public class MPPOrderBOMLine extends X_PP_Order_BOMLine
 	protected boolean beforeDelete()
 	{
 		// Release Reservation
-		if(MPPOrder.DOCSTATUS_InProgress.equals(getParent().getDocStatus()) || 
-		   MPPOrder.DOCSTATUS_Completed.equals(getParent().getDocStatus()))
-		{	
-			setQtyRequired(Env.ZERO);
-			reserveStock();
-		}			
+		setQtyRequired(Env.ZERO);
+		reserveStock();
 		return true;
 	}
 
@@ -332,10 +334,15 @@ public class MPPOrderBOMLine extends X_PP_Order_BOMLine
 			setQtyRequired(qtyrequired);
 			setQtyEntered(qty);
 		}
-		else if (isComponentType(COMPONENTTYPE_Packing,COMPONENTTYPE_Tools))
+		else if (isComponentType(COMPONENTTYPE_Tools))
 		{
 			setQtyRequired(multiplier);
 			setQtyEntered(multiplier);
+		}
+		else if (isComponentType(COMPONENTTYPE_Packing))
+		{
+			setQtyRequired(multiplier.multiply(getParent().getQtyBatchs()));
+			setQtyEntered(multiplier.multiply(getParent().getQtyBatchs()));
 		}
 		else
 		{

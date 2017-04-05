@@ -74,8 +74,6 @@ import org.compiere.model.GridWindow;
 import org.compiere.model.Lookup;
 import org.compiere.model.MLookup;
 import org.compiere.model.MMemo;
-import org.compiere.model.MQuery;
-import org.compiere.model.MTable;
 import org.compiere.model.MTree;
 import org.compiere.model.MTreeNode;
 import org.compiere.swing.CPanel;
@@ -995,7 +993,7 @@ public class GridController extends CPanel
 			log.config("(" + m_mTab.toString() + ") "
 				+ columnName + " - Dependents=" + dependants.size());
 			//	No Dependents and no Callout - Set just Background
-			if (dependants.size() == 0 && changedField.getCallout().length() > 0)
+			if (dependants.size() == 0 && changedField.getCallout().length() == 0)
 			{
 				Component[] comp = vPanel.getComponentsRecursive();
 				for (int i = 0; i < comp.length; i++)
@@ -1068,7 +1066,8 @@ public class GridController extends CPanel
 							//	log.log(Level.FINEST, "RW=" + rw + " " + mField);
 								boolean manMissing = false;
 							//  least expensive operations first        //  missing mandatory
-								if (rw && mField.getValue() == null && mField.isMandatory(true))    //  check context
+								if (rw && (mField.getValue() == null || mField.getValue().toString().isEmpty()) 
+										&& mField.isMandatory(true))    //  check context. Some fields can return "" instead of null
 									manMissing = true;
 								ve.setBackground(manMissing || mField.isError());
 							}
@@ -1253,11 +1252,13 @@ public class GridController extends CPanel
 		int row = m_mTab.getCurrentRow();
 		int col = mTable.findColumn(e.getPropertyName());
 		//
-		if (e.getNewValue() == null && e.getOldValue() != null
-			&& e.getOldValue().toString().length() > 0)		//	some editors return "" instead of null
+		if ((e.getNewValue() == null || e.getNewValue().toString().isEmpty()) 
+			&& e.getOldValue() != null && e.getOldValue().toString().length() > 0)		//	some editors return "" instead of null
 		{
-			//  #283 Set value to null 
-			mTable.setValueAt (null, row, col);	//	-> dataStatusChanged -> dynamicDisplay
+			//  #283 Set value to null
+			GridField gridField = m_mTab.getField(col);
+			if (!gridField.getVO().IsMandatory)
+				mTable.setValueAt (null, row, col);	//	-> dataStatusChanged -> dynamicDisplay
 			mTable.setChanged (true);
 		}	
 		else

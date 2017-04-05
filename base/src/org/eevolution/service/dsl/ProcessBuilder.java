@@ -31,8 +31,10 @@ import org.compiere.util.Trx;
 import org.compiere.util.TrxRunnable;
 
 import java.lang.reflect.Constructor;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -45,6 +47,8 @@ import java.util.Properties;
  * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
  *		<li> FR [ 244 ] Is Selection flag
  *		@see https://github.com/adempiere/adempiere/issues/244
+ *		<li> FR [ 352 ] T_Selection is better send to process like a HashMap instead read from disk
+ *		@see https://github.com/adempiere/adempiere/issues/352
  */
 public class ProcessBuilder {
 
@@ -61,7 +65,10 @@ public class ProcessBuilder {
     private MProcess process;
     private ASyncProcess parent;
     private List<Integer> selectedRecordsIds;
-    private Boolean managedTransaction = true;
+    private Boolean isManagedTransaction = true;
+    private Boolean isExecuteUsingSystemRole =  false;
+    /**	Multi-Selection Parameters	*/
+    private LinkedHashMap<Integer, LinkedHashMap<String, Object>> selection = null;
 
     /**
      * Private constructor is called when an instance is created
@@ -158,16 +165,32 @@ public class ProcessBuilder {
 
         //	FR [ 244 ]
         boolean isSelection = selectedRecordsIds.size() > 0;
-        if (isSelection)
-            DB.createT_Selection(instance.getAD_PInstance_ID(), selectedRecordsIds, null);
-
-
-        processInfo = new ProcessInfo(title, processId, tableId , recordId, managedTransaction);
+        processInfo = new ProcessInfo(title, processId, tableId , recordId, isManagedTransaction);
         processInfo.setAD_PInstance_ID(instance.getAD_PInstance_ID());
         processInfo.setClassName(MProcess.get(context , processId).getClassname());
         processInfo.setTransactionName(trxName);
         processInfo.setIsSelection(isSelection);
+        if (isExecuteUsingSystemRole) {
+            processInfo.setAD_Client_ID(0);
+            processInfo.setAD_User_ID(100);
+        }
         ProcessInfoUtil.setParameterFromDB(processInfo);
+
+        //	FR [ 352 ]
+        if (isSelection) {
+            processInfo.setSelectionKeys(selectedRecordsIds);
+            if (selection != null && selection.size() > 0) {
+                processInfo.setSelectionValues(selection);
+                //TODO : Need Remove duplicate functionality ProcessCtl , WProcessCtl , ServerProcessCtl
+                //TODO : The WProcessCtl and ServerProcessCtl not save selection and smart browser selection
+                if (windowNo == 0)
+                        DB.createT_Selection_Browse(processInfo.getAD_PInstance_ID(), processInfo.getSelectionValues(), processInfo.getTransactionName());
+            }
+            //TODO : Need Remove duplicate functionality ProcessCtl , WProcessCtl , ServerProcessCtl
+            //TODO : The WProcessCtl and ServerProcessCtl not save selection and smart browser selection
+            if (windowNo == 0) // force the save selction the issue that not implement save selection
+                DB.createT_Selection(processInfo.getAD_PInstance_ID(), processInfo.getSelectionKeys(), processInfo.getTransactionName());
+        }
     }
 
     /**
@@ -217,8 +240,7 @@ public class ProcessBuilder {
 
     public ProcessInfo executeUsingSystemRole()
     {
-        processInfo.setAD_Client_ID(0);
-        processInfo.setAD_User_ID(100);
+        isExecuteUsingSystemRole = true;
         return execute();
     }
 
@@ -226,14 +248,21 @@ public class ProcessBuilder {
      * Execute ths process with new transaction
      * @return
      */
-    public ProcessInfo execute() {
+    public ProcessInfo execute() throws AdempiereException {
         try {
             Trx.run(trxName -> {
                 generateProcessInfo(trxName);
                 processBuilder.run(trxName);
+                if (processInfo.isError())
+                    throw new AdempiereException("@ProcessRunError@ @Error@ " + processInfo.getSummary());
             });
         } catch (AdempiereException e) {
-            throw new AdempiereException(e.getMessage());
+            if (processInfo.isError())
+                throw new AdempiereException(e.getMessage());
+            else {
+                processInfo.setError(true);
+                throw new AdempiereException("@ProcessRunError@ @Error@ " + e.getMessage());
+            }
         }
         return processInfo;
     }
@@ -243,18 +272,25 @@ public class ProcessBuilder {
      * @param trxName
      * @return
      */
-    public ProcessInfo execute(String trxName) {
+    public ProcessInfo execute(String trxName) throws AdempiereException {
         try {
 
             Trx.run(trxName, new TrxRunnable() {
                 public void run(String trxName) {
                     generateProcessInfo(trxName);
                     processBuilder.run(trxName);
+                    if (processInfo.isError())
+                        throw new AdempiereException("@ProcessRunError@ @Error@ "  + processInfo.getSummary());
                 }
             });
 
         } catch (AdempiereException e) {
-            e.printStackTrace();
+            if (processInfo.isError())
+                throw new AdempiereException(e.getMessage());
+            else {
+                processInfo.setError(true);
+                throw new AdempiereException("@ProcessRunError@ @Error@ " + e.getMessage());
+            }
         }
         return processInfo;
     }
@@ -297,15 +333,28 @@ public class ProcessBuilder {
         return this;
     }
 
+    /**
+     * Define select record ids and values
+     * @param selectedRecordsIds
+     * @param selection
+     * @return
+     */
+    public ProcessBuilder withSelectedRecordsIds(List<Integer> selectedRecordsIds, LinkedHashMap<Integer, LinkedHashMap<String, Object>> selection)
+    {
+        this.selectedRecordsIds = selectedRecordsIds;
+        this.selection = selection;
+        return this;
+    }
+
 
    public ProcessBuilder withoutTransactionClose()
    {
-       this.managedTransaction = false;
+       this.isManagedTransaction = false;
        return this;
    }
 
     /**
-     * Define paramenter with automatic sequence
+     * Define parameter with automatic sequence
      * @param name
      * @param value
      * @return
@@ -317,7 +366,7 @@ public class ProcessBuilder {
     }
 
     /**
-     * Define paramenter and sequence
+     * Define parameter and sequence
      * @param name
      * @param value
      * @param sequence
@@ -341,6 +390,8 @@ public class ProcessBuilder {
             parameter.setParameter(name, (Timestamp) value);
         if (value instanceof Boolean)
             parameter.setParameter(name, (java.lang.Boolean) value);
+        if (value instanceof BigDecimal)
+            parameter.setParameter(name, (BigDecimal) value);
         parameter.saveEx();
         return this;
     }

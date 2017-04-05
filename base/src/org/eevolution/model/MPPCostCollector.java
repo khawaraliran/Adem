@@ -78,24 +78,35 @@ public class MPPCostCollector extends X_PP_Cost_Collector implements DocAction ,
 
 	/**
 	 * get Cost Collector That not was generate by inventory transaction
-	 * @param product
-	 * @param AD_Client_ID
-	 * @param dateAcct
+	 * @param productId
+	 * @param dateAccount
+	 * @param dateAccountTo
+	 * @param trxName
 	 * @return Collection the Cost Collector
 	 */
-	public static List<MPPCostCollector> getCostCollectorNotTransaction(Properties ctx, int M_Product_ID,int AD_Client_ID, Timestamp dateAcct, String trxName)
+	public static List<MPPCostCollector> getCostCollectorNotTransaction(
+			Properties ctx,
+			int productId,
+			Timestamp dateAccount,
+			Timestamp dateAccountTo,
+			String trxName)
 	{
 		List<Object> params = new ArrayList();
 		final StringBuffer whereClause = new StringBuffer();
 		whereClause.append(MPPCostCollector.COLUMNNAME_CostCollectorType +" NOT IN ('100','110') AND ");
-		if(M_Product_ID > 0)
+		if(productId > 0)
 		{	
 		  whereClause.append(MPPCostCollector.COLUMNNAME_M_Product_ID + "=? AND ");
-		  params.add(M_Product_ID);
+		  params.add(productId);
 		}	 
-			 
-		  whereClause.append(MPPCostCollector.COLUMNNAME_DateAcct + ">=?");
-		  params.add(dateAcct);
+		if (dateAccount == null || dateAccountTo == null)
+			throw new AdempiereException("@DateAcct@ @NotFound@");
+
+		whereClause.append(MPPCostCollector.COLUMNNAME_DateAcct + ">=? AND ");
+		params.add(dateAccount);
+
+		whereClause.append(MPPCostCollector.COLUMNNAME_DateAcct + "<=?");
+		params.add(dateAccountTo);
 		 
 		return new Query(ctx, I_PP_Cost_Collector.Table_Name, whereClause.toString() , trxName)
 					.setClient_ID()
@@ -164,6 +175,8 @@ public class MPPCostCollector extends X_PP_Cost_Collector implements DocAction ,
 		cc.setProcessing(false);
 		cc.setUser1_ID(order.getUser1_ID());
 		cc.setUser2_ID(order.getUser2_ID());
+		cc.setUser3_ID(order.getUser3_ID());
+		cc.setUser4_ID(order.getUser4_ID());
 		cc.setM_Product_ID(productId);
 		if(orderNodeId > 0)
 		{	
@@ -229,7 +242,7 @@ public class MPPCostCollector extends X_PP_Cost_Collector implements DocAction ,
 	 *	@param ctx context
 	 *	@param rs result set
 	 */
-	public MPPCostCollector(Properties ctx, ResultSet rs,String trxName)
+	public MPPCostCollector(Properties ctx, ResultSet rs, String trxName)
 	{
 		super(ctx, rs, trxName);
 	}	//	MPPCostCollector
@@ -658,12 +671,6 @@ public class MPPCostCollector extends X_PP_Cost_Collector implements DocAction ,
 	}
 
 //	@Override
-	public int getC_Currency_ID()
-	{
-		return 0;
-	}
-
-//	@Override
 	public BigDecimal getApprovalAmt()
 	{
 		return Env.ZERO;
@@ -1061,6 +1068,24 @@ public class MPPCostCollector extends X_PP_Cost_Collector implements DocAction ,
 	public IDocumentLine getReversalDocumentLine() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public BigDecimal getPriceActualCurrency() {
+		return BigDecimal.ZERO;
+	}
+
+	@Override
+	public int getC_Currency_ID ()
+	{
+		MClient client  = MClient.get(getCtx());
+		return client.getC_Currency_ID();
+	}
+
+	@Override
+	public int getC_ConversionType_ID()
+	{
+		return  MConversionType.getDefault(getAD_Client_ID());
 	}
 
 }	//	MPPCostCollector

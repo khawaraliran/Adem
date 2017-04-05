@@ -20,16 +20,18 @@ package org.adempiere.webui.editor;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
+
+import org.adempiere.exceptions.ValueChangeEvent;
+import org.adempiere.exceptions.ValueChangeListener;
 import org.adempiere.webui.component.*;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Label;
-import org.adempiere.webui.event.ValueChangeEvent;
-import org.adempiere.webui.event.ValueChangeListener;
-import org.adempiere.webui.theme.ThemeUtils;
 import org.adempiere.webui.panel.IADTabPanel;
 import org.compiere.model.GridField;
 import org.compiere.model.GridTab;
+import org.compiere.swing.CEditor;
 import org.compiere.util.DisplayType;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.HtmlBasedComponent;
@@ -49,7 +51,7 @@ import org.zkoss.zul.Image;
  * @date    Mar 11, 2007
  * @version $Revision: 0.10 $
  */
-public abstract class WEditor implements EventListener, PropertyChangeListener
+public abstract class WEditor implements CEditor, EventListener, PropertyChangeListener
 {
     private static final String[] LISTENER_EVENTS = {};
 
@@ -197,8 +199,6 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
 
     private void init()
     {
-    	ThemeUtils.addSclass("ad-weditor", this.getComponent());
-
         label = new Label("");
         label.setValue(strLabel);
         label.setTooltiptext(description);
@@ -263,6 +263,15 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
     {
         return gridField;
     }
+
+    /**
+    * Added for compatibility with SWING
+    * @return grid field for this editor ( can be null )
+    */
+   public GridField getField()
+   {
+       return gridField;
+   }
 
     /**
      *
@@ -472,10 +481,10 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
         label.setVisible(visible);
         
         
-//        if (component instanceof org.adempiere.webui.component.StringBox)
-//        {
-//        	((StringBox)component).getTextBox().setVisible(visible);
-//        }
+        if (component instanceof org.adempiere.webui.component.StringBox)
+        {
+        	((StringBox)component).getTextBox().setVisible(visible);
+        }
         		
         
         component.setVisible(visible);
@@ -573,18 +582,23 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
         	//can't stretch bandbox & datebox
         	if (!(getComponent() instanceof Bandbox) &&
         		!(getComponent() instanceof Datebox)) {
+        		String width = "100%";
         		if (getComponent() instanceof Button) {
         			Button btn = (Button) getComponent();
+        			String zclass = btn.getZclass();
         			if (gridField.getDisplayType() == DisplayType.Image) {
-        				ThemeUtils.addSclass("ad-button-image", btn);
-        			} else {
-        				ThemeUtils.addSclass("ad-button-form",btn);
+        				if (!zclass.contains("image-button-field ")) {
+            				btn.setZclass("image-button-field " + zclass);
+        				}
+        			} else if (!zclass.contains("form-button ")) {
+        				btn.setZclass("form-button " + zclass);
         			}
         		} else if (getComponent() instanceof Image) {
         			Image image = (Image) getComponent();
-        			ThemeUtils.addSclass("image", image);
+        			image.setWidth("48px");
+        			image.setHeight("48px");
         		} else {
-        			ThemeUtils.addSclass("component", getComponent());
+        			((HtmlBasedComponent)getComponent()).setWidth(width);
         		}
         	}
         }
@@ -612,7 +626,6 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
 	private static final String STYLE_EMPTY_MANDATORY_LABEL = "color: red;";
 
 	private void markMandatory(boolean mandatory) {
-		// TODO - move to the style
 		getLabel().setStyle( (getLabel().isZoomable() ? STYLE_ZOOMABLE_LABEL : "") + (mandatory ? STYLE_EMPTY_MANDATORY_LABEL : STYLE_NORMAL_LABEL));
 	}
 
@@ -649,5 +662,8 @@ public abstract class WEditor implements EventListener, PropertyChangeListener
                 return false;
     }
 
+	public void addVetoableChangeListener(VetoableChangeListener listener) {
+		// Not used in ZK		
+	}
 
 }

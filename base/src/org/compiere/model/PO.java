@@ -27,11 +27,15 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -42,6 +46,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.exceptions.DBException;
+import org.adempiere.model.GenericPO;
 import org.compiere.Adempiere;
 import org.compiere.acct.Doc;
 import org.compiere.util.CLogMgt;
@@ -91,21 +96,44 @@ import org.w3c.dom.Element;
  *			<li>https://sourceforge.net/tracker/?func=detail&aid=2947622&group_id=176962&atid=879332
  *			<li>Error when try load a PO Entity with virtual columns
  *			<li>http://adempiere.atlassian.net/browse/ADEMPIERE-100
- * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com 2015-09-09
- *  		<li>FR [ 9223372036854775807 ] Add Support to Dynamic Tree
- * @see https://adempiere.atlassian.net/browse/ADEMPIERE-442
+ *			<li>#439 The migration xml generation not persisted the insert the tables with suffix Acct</li>
+ *			<li>https://github.com/adempiere/adempiere/issues/439</>
+ * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
+ *			<li> FR [ 392 ] Translation method does not use PO class
+ *			@see https://github.com/adempiere/adempiere/issues/392
+ *			<a href="https://github.com/adempiere/adempiere/issues/673">
+ * 			@see FR [ 673 ] Model Migration don't load current value for Multi-Key records</a>
  */
 public abstract class PO
 	implements Serializable, Comparator, Evaluatee, Cloneable
 {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -4708137979682082002L;
 
 	private static final String USE_TIMEOUT_FOR_UPDATE = "org.adempiere.po.useTimeoutForUpdate";
 
 	private static final int QUERY_TIME_OUT = 10;
+
+	/**
+	 * get instance based on table id , record id and trxName
+	 * @param tableId
+	 * @param recordIds
+	 * @param trxName
+     * @return
+	 * @throws AdempiereException
+     */
+	static public List<?> getInstances(Integer tableId, List<Integer> recordIds, String trxName) throws AdempiereException
+	{
+		if (tableId <= 0)
+			throw new AdempiereException("@AD_Table_ID@  @NotFound@");
+		if (recordIds == null || recordIds.size() <= 0)
+			throw new AdempiereException("@NoRecordID@");
+
+		MTable table =  MTable.get(Env.getCtx() , tableId);
+		return recordIds.stream().filter(recordId -> recordId > 0).map(recordId -> table.getPO(recordId, trxName)).collect(Collectors.toList());
+	}
 
 	/**
 	 * 	Set Document Value Workflow Manager
@@ -249,7 +277,7 @@ public abstract class PO
 
 	/** Trifon - Indicates that this record is created by replication functionality.*/
 	private boolean m_isReplication = false;
-	
+
 	/** Direct load, e.g. from migration. Do not overwrite assigned ID with generated one, or fire triggers */
 	private boolean isDirectLoad = false;
 
@@ -703,7 +731,7 @@ public abstract class PO
 				value = Integer.parseInt((String)value);
 			}
 		}
-		
+
 		return set_Value (index, value);
 	}   //  setValue
 
@@ -740,7 +768,7 @@ public abstract class PO
 			log.log(Level.WARNING, "Virtual Column" + colInfo);
 			return false;
 		}
-		
+
 		//
 		// globalqss -- Bug 1618469 - is throwing not updateable even on new records
 		// if (!p_info.isColumnUpdateable(index))
@@ -838,16 +866,16 @@ public abstract class PO
 				log.finest(ColumnName + " = " + m_newValues[index] + " (OldValue="+m_oldValues[index]+")");
 		}
 		set_Keys (ColumnName, m_newValues[index]);
-		
+
 		// FR 2962094 Fill ProcessedOn when the Processed column is changing from N to Y
 		setProcessedOn(ColumnName, value, m_oldValues[index]);
-		
+
 		return true;
 	}   //  setValue
 
 	/* FR 2962094 - Finish implementation of weighted average costing
-	   Fill the column ProcessedOn (if it exists) with a bigdecimal representation of current timestamp (with nanoseconds) 
-	*/ 
+	   Fill the column ProcessedOn (if it exists) with a bigdecimal representation of current timestamp (with nanoseconds)
+	*/
 	public void setProcessedOn(String ColumnName, Object value, Object oldValue) {
 		if ("Processed".equals(ColumnName)
 				&& value instanceof Boolean
@@ -945,7 +973,7 @@ public abstract class PO
 
 		// FR 2962094 Fill ProcessedOn when the Processed column is changing from N to Y
 		setProcessedOn(ColumnName, value, m_oldValues[index]);
-		
+
 		return true;
 	}   //  set_ValueNoCheck
 
@@ -2070,7 +2098,7 @@ public abstract class PO
 			// If not a localTrx we need to set a savepoint for rollback
 			if (localTrx == null)
 				savepoint = trx.setSavepoint(null);
-			
+
 			if (!beforeSave(newRecord))
 			{
 				log.warning("beforeSave failed - " + toString());
@@ -2235,25 +2263,20 @@ public abstract class PO
 	 */
 	private boolean saveFinish (boolean newRecord, boolean success)
 	{
-		//	Translations
-		if (success)
-		{
-			if (newRecord)
-				insertTranslations();
-			else
-				updateTranslations();
-		}
 		if (!isDirectLoad)
 		{
+			//	Translations
+			if (success)
+			{
+				if (newRecord)
+					insertTranslations();
+				else
+					updateTranslations();
+			}
 			//
 			try
 			{
 				success = afterSave (newRecord, success);
-				//	Yamel Senih [ 9223372036854775807 ]
-				//	Insert Tree Node
-				if (success && newRecord)
-					insertTreeNode();
-				//	End Yamel Senih
 			}
 			catch (Exception e)
 			{
@@ -2294,7 +2317,7 @@ public abstract class PO
 				s_docWFMgr.process (this, p_info.getAD_Table_ID());
 
 		}
-		
+
 		if (success)
 		{
 			//	Copy to Old values
@@ -2616,7 +2639,7 @@ public abstract class PO
 			int no = saveNew_getID();
 			if (no <= 0)
 				no = DB.getNextID(getAD_Client_ID(), p_info.getTableName(), m_trxName);
-			// the primary key is not overwrite with the local sequence	
+			// the primary key is not overwrite with the local sequence
 			if (isReplication())
 			{
 				if (get_ID() > 0)
@@ -2640,7 +2663,7 @@ public abstract class PO
 		//	Set new DocumentNo
 		String columnName = "DocumentNo";
 		int index = p_info.getColumnIndex(columnName);
-		if (index != -1)
+		if (index != -1 && p_info.getColumn(index).ColumnSQL == null)
 		{
 			String value = (String)get_Value(index);
 			if (value != null && value.startsWith("<") && value.endsWith(">"))
@@ -3032,7 +3055,7 @@ public abstract class PO
 					log.fine("No Session found");
 				else if ( Ini.isPropertyBool(Ini.P_LOGMIGRATIONSCRIPT) )
 					session.logMigration(this, p_info, MMigrationStep.ACTION_Delete);
-				
+
 				if( p_info.isChangeLog())
 				{
 					//	Change Log
@@ -3079,11 +3102,6 @@ public abstract class PO
 		try
 		{
 			success = afterDelete (success);
-			//	Yamel Senih [ 9223372036854775807 ]
-			//	Insert Tree Node
-			if (success)
-				deleteTreeNode();
-			//	End Yamel Senih
 		}
 		catch (Exception e)
 		{
@@ -3211,8 +3229,7 @@ public abstract class PO
 	 * 	Insert (missing) Translation Records
 	 * 	@return false if error (true if no translation or success)
 	 */
-	public boolean insertTranslations()
-	{
+	public boolean insertTranslations() {
 		//	Not a translation table
 		if (m_IDs.length > 1
 			|| m_IDs[0].equals(I_ZERO)
@@ -3220,50 +3237,59 @@ public abstract class PO
 			|| !(m_IDs[0] instanceof Integer))
 			return true;
 		//
-		StringBuffer iColumns = new StringBuffer();
-		StringBuffer sColumns = new StringBuffer();
-		for (int i = 0; i < p_info.getColumnCount(); i++)
-		{
-			if (p_info.isColumnTranslated(i))
-			{
-				iColumns.append(p_info.getColumnName(i))
-					.append(",");
-				sColumns.append("t.")
-					.append(p_info.getColumnName(i))
-					.append(",");
+		ArrayList<String> tColumns = new ArrayList<String>();
+		for (int i = 0; i < p_info.getColumnCount(); i++) {
+			if (p_info.isColumnTranslated(i)) {
+				tColumns.add(p_info.getColumnName(i));
 			}
 		}
-		if (iColumns.length() == 0)
+		//	Valid translation Columns
+		if (tColumns.size() == 0)
 			return true;
-
-		String tableName = p_info.getTableName();
+		//	Get Available languages
+		MLanguage [] langs = MLanguage.getMaintainLanguage(getCtx());
+		//	Valid Languages
+		if(langs.length == 0)
+			return true;
+		//	Get Keys
+		String tableName = p_info.getTableName() + "_Trl";
 		String keyColumn = m_KeyColumns[0];
-		StringBuffer sql = new StringBuffer ("INSERT INTO ")
-			.append(tableName).append("_Trl (AD_Language,")
-			.append(keyColumn).append(", ")
-			.append(iColumns)
-			.append(" IsTranslated,AD_Client_ID,AD_Org_ID,Created,Createdby,Updated,UpdatedBy) ")
-			.append("SELECT l.AD_Language,t.")
-			.append(keyColumn).append(", ")
-			.append(sColumns)
-			.append(" 'N',t.AD_Client_ID,t.AD_Org_ID,t.Created,t.Createdby,t.Updated,t.UpdatedBy ")
-			.append("FROM AD_Language l, ").append(tableName).append(" t ")
-			.append("WHERE l.IsActive='Y' AND l.IsSystemLanguage='Y' AND l.IsBaseLanguage='N' AND t.")
-			.append(keyColumn).append("=").append(get_ID())
-			.append(" AND NOT EXISTS (SELECT * FROM ").append(tableName)
-			.append("_Trl tt WHERE tt.AD_Language=l.AD_Language AND tt.")
-			.append(keyColumn).append("=t.").append(keyColumn).append(")");
-		int no = DB.executeUpdate(sql.toString(), m_trxName);
+		//	Verify if Table Exist
+		MTable table = MTable.get(getCtx(), tableName);
+		if(table == null) {
+			log.warning("Table [" + tableName + "] Not found");
+			return false;
+		}
+		//	Save by Language
+		int no = 0;
+		for(MLanguage language : langs) {
+			GenericPO po = new GenericPO(tableName, getCtx(), -1);
+			//	Set Values
+			po.set_Value(keyColumn, get_ID());
+			po.set_Value("IsTranslated", false);
+			po.set_Value("AD_Language", language.getAD_Language());
+			po.setAD_Client_ID(getAD_Client_ID());
+			po.setAD_Org_ID(0);
+			//	Add Translation Column
+			for(String translationColumn : tColumns) {
+				Object value = get_Value(translationColumn);
+				po.set_Value(translationColumn, value);
+			}
+			//	Save
+			po.saveEx(m_trxName);
+			//	Increment
+			no ++;
+		}
+		//	Log
 		log.fine("#" + no);
-		return no > 0;
+		return no >= 0;
 	}	//	insertTranslations
 
 	/**
 	 * 	Update Translations.
 	 * 	@return false if error (true if no translation or success)
 	 */
-	private boolean updateTranslations()
-	{
+	private boolean updateTranslations() {
 		//	Not a translation table
 		if (m_IDs.length > 1
 			|| m_IDs[0].equals(I_ZERO)
@@ -3272,11 +3298,9 @@ public abstract class PO
 			return true;
 		//
 		boolean trlColumnChanged = false;
-		for (int i = 0; i < p_info.getColumnCount(); i++)
-		{
+		for (int i = 0; i < p_info.getColumnCount(); i++) {
 			if (p_info.isColumnTranslated(i)
-				&& is_ValueChanged(p_info.getColumnName(i)))
-			{
+				&& is_ValueChanged(p_info.getColumnName(i))) {
 				trlColumnChanged = true;
 				break;
 			}
@@ -3284,43 +3308,46 @@ public abstract class PO
 		if (!trlColumnChanged)
 			return true;
 		//
+		String tableName = p_info.getTableName() + "_Trl";
+		String keyColumn = m_KeyColumns[0];
+		//	Verify if Table Exist
+		MTable table = MTable.get(getCtx(), tableName);
+		if(table == null) {
+			log.warning("Table [" + tableName + "] Not found");
+			return false;
+		}
+		//
 		MClient client = MClient.get(getCtx());
 		//
-		String tableName = p_info.getTableName();
-		String keyColumn = m_KeyColumns[0];
-		StringBuffer sql = new StringBuffer ("UPDATE ")
-			.append(tableName).append("_Trl SET ");
-		//
-		if (client.isAutoUpdateTrl(tableName))
-		{
-			for (int i = 0; i < p_info.getColumnCount(); i++)
-			{
-				if (p_info.isColumnTranslated(i))
-				{
-					String columnName = p_info.getColumnName(i);
-					sql.append(columnName).append("=");
-					Object value = get_Value(columnName);
-					if (value == null)
-						sql.append("NULL");
-					else if (value instanceof String)
-						sql.append(DB.TO_STRING((String)value));
-					else if (value instanceof Boolean)
-						sql.append(((Boolean)value).booleanValue() ? "'Y'" : "'N'");
-					else if (value instanceof Timestamp)
-						sql.append(DB.TO_DATE((Timestamp)value));
-					else
-						sql.append(value.toString());
-					sql.append(",");
+		List<PO> trlList = new Query(getCtx(), tableName,
+				keyColumn + " = ?", get_TrxName())
+			.setParameters(get_ID())
+			.<PO>list();
+
+		if(trlList == null
+				|| trlList.size() == 0)
+			return true;
+		//	Set Values
+		int no = 0;
+		for(PO trl : trlList) {
+			boolean isTranslated = false;
+			if (client.isAutoUpdateTrl(tableName)) {
+				for (int i = 0; i < p_info.getColumnCount(); i++) {
+					if (p_info.isColumnTranslated(i)) {
+						String columnName = p_info.getColumnName(i);
+						Object value = get_Value(columnName);
+						trl.set_Value(columnName, value);
+					}
 				}
+				//	Set flag
+				isTranslated = true;
 			}
-			sql.append("IsTranslated='Y'");
+			//	Set Value
+			trl.set_Value("IsTranslated", isTranslated);
+			trl.saveEx(m_trxName);
+			//	Increment
+			no ++;
 		}
-		else
-			sql.append("IsTranslated='N'");
-		//
-		sql.append(" WHERE ")
-			.append(keyColumn).append("=").append(get_ID());
-		int no = DB.executeUpdate(sql.toString(), m_trxName);
 		log.fine("#" + no);
 		return no >= 0;
 	}	//	updateTranslations
@@ -3330,8 +3357,7 @@ public abstract class PO
 	 * 	@param trxName transaction
 	 * 	@return false if error (true if no translation or success)
 	 */
-	private boolean deleteTranslations(String trxName)
-	{
+	private boolean deleteTranslations(String trxName) {
 		//	Not a translation table
 		if (m_IDs.length > 1
 			|| m_IDs[0].equals(I_ZERO)
@@ -3339,12 +3365,22 @@ public abstract class PO
 			|| !(m_IDs[0] instanceof Integer))
 			return true;
 		//
-		String tableName = p_info.getTableName();
+		String tableName = p_info.getTableName() + "_Trl";
 		String keyColumn = m_KeyColumns[0];
-		StringBuffer sql = new StringBuffer ("DELETE  FROM  ")
-			.append(tableName).append("_Trl WHERE ")
-			.append(keyColumn).append("=").append(get_ID());
-		int no = DB.executeUpdate(sql.toString(), trxName);
+		List<PO> trlList = new Query(getCtx(), tableName,
+				keyColumn + " = ?", get_TrxName())
+			.setParameters(get_ID())
+			.<PO>list();
+
+		if(trlList == null
+				|| trlList.size() == 0)
+			return true;
+		//	Set Values
+		int no = 0;
+		for(PO trl : trlList) {
+			trl.deleteEx(true, m_trxName);
+			no ++;
+		}
 		log.fine("#" + no);
 		return no >= 0;
 	}	//	deleteTranslations
@@ -3391,37 +3427,63 @@ public abstract class PO
 			}
 		}
 
-		//	Create SQL Statement - INSERT
-		StringBuffer sb = new StringBuffer("INSERT INTO ")
-			.append(acctTable)
-			.append(" (").append(get_TableName())
-			.append("_ID, C_AcctSchema_ID, AD_Client_ID,AD_Org_ID,IsActive, Created,CreatedBy,Updated,UpdatedBy ");
-		for (int i = 0; i < s_acctColumns.size(); i++)
-			sb.append(",").append(s_acctColumns.get(i));
-		//	..	SELECT
-		sb.append(") SELECT ").append(get_ID())
-			.append(", p.C_AcctSchema_ID, p.AD_Client_ID,0,'Y', SysDate,")
-			.append(getUpdatedBy()).append(",SysDate,").append(getUpdatedBy());
-		for (int i = 0; i < s_acctColumns.size(); i++)
-			sb.append(",p.").append(s_acctColumns.get(i));
-		//	.. 	FROM
-		sb.append(" FROM ").append(acctBaseTable)
-			.append(" p WHERE p.AD_Client_ID=").append(getAD_Client_ID());
-		if (whereClause != null && whereClause.length() > 0)
-			sb.append (" AND ").append(whereClause);
-		sb.append(" AND NOT EXISTS (SELECT * FROM ").append(acctTable)
-			.append(" e WHERE e.C_AcctSchema_ID=p.C_AcctSchema_ID AND e.")
-			.append(get_TableName()).append("_ID=").append(get_ID()).append(")");
-		//
-		int no = DB.executeUpdate(sb.toString(), get_TrxName());
-		if (no > 0)
-			log.fine("#" + no);
-		else
-			log.warning("#" + no
-				+ " - Table=" + acctTable + " from " + acctBaseTable);
-		return no > 0;
-	}	//	insert_Accounting
+		AtomicBoolean inserted = new AtomicBoolean(false);
+		Arrays.stream(MAcctSchema.getClientAcctSchema(getCtx(), getAD_Client_ID(), get_TrxName()))
+				.filter(accountSchema -> accountSchema != null)
+				.forEach(accountSchema -> {
+				PreparedStatement statement = null;
+				ResultSet resultSet = null;
+				List<Object> parameters = new ArrayList<Object>();
+				try {
+					StringBuilder select = new StringBuilder();
+					select.append("SELECT  * FROM ").append(acctBaseTable).append(" p WHERE p.AD_Client_ID=? AND ").append("p.C_AcctSchema_ID=?");
+					if (whereClause != null && whereClause.length() > 0)
+						select.append(" AND ").append(whereClause);
 
+					select.append(" AND NOT EXISTS (SELECT * FROM ").append(acctTable)
+							.append(" e WHERE e.C_AcctSchema_ID=p.C_AcctSchema_ID AND e.")
+							.append(get_TableName()).append("_ID=? )");
+					parameters.add(getAD_Client_ID());
+					parameters.add(accountSchema.getC_AcctSchema_ID());
+					parameters.add(get_ID());
+					statement = DB.prepareStatement(select.toString(), get_TrxName());
+					DB.setParameters(statement, parameters);
+					resultSet = statement.executeQuery();
+					PO accountBase = null;
+					if (resultSet.next())
+						accountBase = MTable.get(getCtx(), acctBaseTable).getPO(resultSet, get_TrxName());
+
+					if (accountBase != null) {
+						StringBuilder where = new StringBuilder();
+						where.append(MAcctSchema.COLUMNNAME_C_AcctSchema_ID).append("=? AND ").append(get_TableName()).append("_ID=?");
+						parameters = new ArrayList<>();
+						parameters.add(accountSchema.getC_AcctSchema_ID());
+						parameters.add(get_ID());
+						PO accountSetting = MTable.get(getCtx(), acctTable).getPO(where.toString(), parameters.toArray(), get_TrxName());
+						if (accountSetting == null) {
+							accountSetting = MTable.get(getCtx(), acctTable).getPO(0, get_TrxName());
+							accountSetting.setAD_Client_ID(getAD_Client_ID());
+							accountSetting.setAD_Org_ID(0);
+							accountSetting.set_Value(MAcctSchema.COLUMNNAME_C_AcctSchema_ID, accountSchema.getC_AcctSchema_ID());
+							accountSetting.set_Value(get_TableName() + "_ID", get_ID());
+							for (String columnName : s_acctColumns)
+								accountSetting.set_Value(columnName, accountBase.get_Value(columnName));
+
+							accountSetting.saveEx();
+							inserted.set(true);
+						}
+					}
+				} catch (Exception e) {
+					log.log(Level.SEVERE, acctTable, e);
+				} finally {
+					DB.close(resultSet, statement);
+					resultSet = null;
+					statement = null;
+				}
+		});
+		return inserted.get();
+	}	//	insert_Accounting
+;
 	/**
 	 * 	Delete Accounting records.
 	 * 	NOP - done by database constraints
@@ -3439,93 +3501,62 @@ public abstract class PO
 	 * 	@param treeType MTree TREETYPE_*
 	 *	@return true if inserted
 	 */
-	//	Yamel Senih [ 9223372036854775807 ]
-	//	Change for Table ID
-//	protected boolean insert_Tree (String treeType)
-//	{
-//		return insert_Tree (treeType, 0);
-//	}	//	insert_Tree
+	protected boolean insert_Tree (String treeType)
+	{
+		return insert_Tree (treeType, 0);
+	}	//	insert_Tree
 
 	/**
 	 * 	Insert id data into Tree
+	 * 	@param treeType MTree TREETYPE_*
+	 * 	@param C_Element_ID element for accounting element values
 	 *	@return true if inserted
 	 */
-	private boolean insertTreeNode()
-	{	
-		//	Yamel Senih [ 9223372036854775807 ]
-		//	Change for table
-//		String tableName = MTree.getNodeTableName(treeType);
-//		final StringBuilder select = new StringBuilder("SELECT t.AD_Tree_ID FROM AD_Tree t WHERE t.AD_Client_ID=").append(getAD_Client_ID()).append(" AND t.IsActive='Y'"); 
-//		if (C_Element_ID != 0)
-//			select.append(" AND EXISTS (SELECT * FROM C_Element ae WHERE ae.C_Element_ID=")
-//				.append(C_Element_ID).append(" AND t.AD_Tree_ID=ae.AD_Tree_ID)");
-//		else	//	std trees
-//			select.append(" AND t.IsAllNodes='Y' AND t.TreeType='").append(treeType).append("'");
-//		//	Duplicate Check
-//		select.append(" AND NOT EXISTS (SELECT * FROM " + MTree.getNodeTableName(treeType) + " e "
-//				+ "WHERE e.AD_Tree_ID=t.AD_Tree_ID AND Node_ID=").append(get_ID()).append(")");
-//		int AD_Tree_ID = DB.getSQLValue(get_TrxName(), select.toString());
-		
-		int AD_Table_ID = get_Table_ID();
-		if (!MTree.hasTree(AD_Table_ID))
-			return false;
-		int AD_Client_ID = getAD_Client_ID();
-		//	Get Node Table Name
-		String treeTableName = MTree.getNodeTableName(AD_Table_ID);
-		int C_Element_ID = 0;
-		if (AD_Table_ID == X_C_ElementValue.Table_ID)
-		{
-			Integer ii = (Integer)get_Value("C_Element_ID");
-			if (ii != null)
-				C_Element_ID = ii.intValue();
-		}
-		int m_AD_Tree_ID = MTree.getDefaultAD_Tree_ID(AD_Client_ID, AD_Table_ID, C_Element_ID);
-		//	Valid tree
-		if(m_AD_Tree_ID < 0)
-			return false;
-		PO treeNode = MTable.get(getCtx(), treeTableName).getPO(0, get_TrxName());
-		treeNode.setAD_Client_ID(getAD_Client_ID());
-		treeNode.setAD_Org_ID(0);
-		treeNode.setIsActive(true);
-		treeNode.set_CustomColumn("AD_Tree_ID", m_AD_Tree_ID);
-		treeNode.set_CustomColumn("Node_ID", get_ID());
-		treeNode.set_CustomColumn("Parent_ID", 0);
-		treeNode.set_CustomColumn("SeqNo", 999);
-		treeNode.saveEx();
+	protected boolean insert_Tree (String treeType, int C_Element_ID)
+	{
+		String tableName = MTree_Base.getNodeTableName(treeType);
+		final StringBuilder select = new StringBuilder("SELECT t.AD_Tree_ID FROM AD_Tree t WHERE t.AD_Client_ID=").append(getAD_Client_ID()).append(" AND t.IsActive='Y'");
+		if (C_Element_ID != 0)
+			select.append(" AND EXISTS (SELECT * FROM C_Element ae WHERE ae.C_Element_ID=")
+				.append(C_Element_ID).append(" AND t.AD_Tree_ID=ae.AD_Tree_ID)");
+		else	//	std trees
+			select.append(" AND t.IsAllNodes='Y' AND t.TreeType='").append(treeType).append("'");
+		//	Duplicate Check
+		select.append(" AND NOT EXISTS (SELECT * FROM " + MTree_Base.getNodeTableName(treeType) + " e "
+				+ "WHERE e.AD_Tree_ID=t.AD_Tree_ID AND Node_ID=").append(get_ID()).append(")");
+		int AD_Tree_ID = DB.getSQLValue(get_TrxName(), select.toString());
+
+		PO tree = MTable.get(getCtx(), tableName).getPO(0, get_TrxName());
+		tree.setAD_Client_ID(getAD_Client_ID());
+		tree.setAD_Org_ID(0);
+		tree.setIsActive(true);
+		tree.set_CustomColumn("AD_Tree_ID",AD_Tree_ID);
+		tree.set_CustomColumn("Node_ID", get_ID());
+		tree.set_CustomColumn("Parent_ID", 0);
+		tree.set_CustomColumn("SeqNo", 999);
+		tree.saveEx();
 		return true;
-		//	End Yamel Senih
 	}	//	insert_Tree
 
 	/**
 	 * 	Delete ID Tree Nodes
+	 *	@param treeType MTree TREETYPE_*
 	 *	@return true if deleted
 	 */
-	protected boolean deleteTreeNode()
+	protected boolean delete_Tree (String treeType)
 	{
-		//	Yamel Senih [ 9223372036854775807 ]
-		//	Change for table
 		int id = get_ID();
 		if (id == 0)
 			id = get_IDOld();
-		//	Valid Tree
-		int AD_Table_ID = get_Table_ID();
-		if (!MTree.hasTree(AD_Table_ID))
-			return false;
-		int AD_Client_ID = getAD_Client_ID();
-		//	Get Node Table Name
-		int m_AD_Tree_ID = MTree.getDefaultAD_Tree_ID(AD_Client_ID, get_Table_ID());
-		//	Valid tree
-		if(m_AD_Tree_ID < 0)
-			return false;
-		//	
-		String treeNodeTableName = MTree.getNodeTableName(get_Table_ID());
-		String whereClause = treeNodeTableName + ".Node_ID="+id+ " AND EXISTS (SELECT 1 FROM AD_Tree t "
-				+ "WHERE t.AD_Tree_ID="+treeNodeTableName+".AD_Tree_ID AND t.AD_Table_ID=" + get_Table_ID() + ")";
-		PO treeNode = MTable.get(getCtx(), treeNodeTableName).getPO(whereClause, get_TrxName());
-		if (treeNode != null)
-			treeNode.deleteEx(true);
+
+		String tableName = MTree_Base.getNodeTableName(treeType);
+		String whereClause = tableName + ".Node_ID="+id+ " AND EXISTS (SELECT * FROM AD_Tree t "
+				+ "WHERE t.AD_Tree_ID="+tableName+".AD_Tree_ID AND t.TreeType='" + treeType + "')";
+
+		PO tree = MTable.get(getCtx(), tableName).getPO(whereClause, get_TrxName());
+		if (tree != null)
+			tree.deleteEx(true);
 		return true;
-		//	End Yamel Senih
 	}	//	delete_Tree
 
 	/**************************************************************************
@@ -4073,7 +4104,7 @@ public abstract class PO
 		for (PO line : lines)
 			line.set_TrxName(trxName);
 	}
-	
+
 	/**
 	 * Get Integer Value
 	 * @param columnName
@@ -4088,19 +4119,19 @@ public abstract class PO
 		}
 		return get_ValueAsInt(idx);
 	}
-	
+
 	/**
-	 * Get value as Boolean 
+	 * Get value as Boolean
 	 * @param columnName
 	 * @return boolean value
 	 */
 	public boolean get_ValueAsBoolean(String columnName)
 	{
 		Object oo = get_Value(columnName);
-		if (oo != null) 
+		if (oo != null)
 		{
-			 if (oo instanceof Boolean) 
-				 return ((Boolean)oo).booleanValue(); 
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
 			return "Y".equals(oo);
 		}
 		return false;

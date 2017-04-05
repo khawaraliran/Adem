@@ -798,7 +798,16 @@ public class MProduct extends X_M_Product
 		{	
 			download.deleteEx(true);
 		}
-		
+		// @Trifon Delete Product Memo
+		List<MMemo> memos = new Query(getCtx(), I_AD_Memo.Table_Name, whereClause, get_TrxName())
+			.setClient_ID()
+			.setParameters( get_ID() )
+			.setOnlyActiveRecords( false )
+			.list();
+		for(MMemo memo : memos)
+		{	
+			memo.deleteEx( true );
+		}		
 		//
 		return delete_Accounting("M_Product_Acct"); 
 	}	//	beforeDelete
@@ -847,44 +856,7 @@ public class MProduct extends X_M_Product
 			MMPolicy = MClient.get(getCtx()).getMMPolicy();
 		return MMPolicy;
 	}
-	
-	/**
-	 * Check if ASI is mandatory
-	 * @param isSOTrx is outgoing trx?
-	 * @return true if ASI is mandatory, false otherwise
-	 * @deprecated
-	 */
-	/*
-	public boolean isASIMandatory(boolean isSOTrx) {
-		//
-		//	If CostingLevel is BatchLot ASI is always mandatory - check all client acct schemas
-		MAcctSchema[] mass = MAcctSchema.getClientAcctSchema(getCtx(), getAD_Client_ID(), get_TrxName());
-		for (MAcctSchema as : mass)
-		{
-			String cl = getCostingLevel(as);
-			if (MAcctSchema.COSTINGLEVEL_BatchLot.equals(cl)) {
-				return true;
-			}
-		}
-		//
-		// Check Attribute Set settings
-		int M_AttributeSet_ID = getM_AttributeSet_ID();
-		if (M_AttributeSet_ID != 0)
-		{
-			MAttributeSet mas = MAttributeSet.get(getCtx(), M_AttributeSet_ID);
-			if (mas == null || !mas.isInstanceAttribute())
-				return false;
-			// Outgoing transaction
-			else if (isSOTrx)
-				return mas.isMandatory();
-			// Incoming transaction
-			else // isSOTrx == false
-				return mas.isMandatoryAlways();
-		}
-		//
-		// Default not mandatory
-		return false;
-	}*/
+
 	
 	/**
 	 * Check if ASI is mandatory

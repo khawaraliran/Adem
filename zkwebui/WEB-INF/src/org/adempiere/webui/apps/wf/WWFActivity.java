@@ -592,7 +592,7 @@ public class WWFActivity extends ADForm implements EventListener
 		{
 			int AD_Browse_ID = node.getAD_Browse_ID();
 
-			Window browse = WBrowser.openBrowse(AD_Browse_ID);
+			Window browse = WBrowser.openBrowse(0 , AD_Browse_ID, "", m_activity.isSOTrx());
 			AEnv.showWindow(browse);
 		}
 		else
@@ -705,6 +705,8 @@ public class WWFActivity extends ADForm implements EventListener
 			Clients.clearBusy();
 			if (trx != null)
 				trx.close();
+			FDialog.info(m_WindowNo, this , "WorkflowResult" ,
+					Msg.parseTranslation(Env.getCtx(), "@AD_WF_Node_ID@") + " : "  + m_activity.getNodeName() + " -> " +  m_activity.getTextMsg());
 		}
 
 		//	Next

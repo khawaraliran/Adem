@@ -61,6 +61,7 @@ import org.compiere.model.MClient;
 import org.compiere.model.MDunningRunEntry;
 import org.compiere.model.MInOut;
 import org.compiere.model.MInvoice;
+import org.compiere.model.MMovement;
 import org.compiere.model.MOrder;
 import org.compiere.model.MPaySelectionCheck;
 import org.compiere.model.MProject;
@@ -109,6 +110,8 @@ import org.eevolution.model.X_PP_Order;  // to be changed by MPPOrder
  * 		@see https://github.com/adempiere/adempiere/issues/237
  * 		<li>FR [ 295 ] Report viewer re-query
  * 		@see https://github.com/adempiere/adempiere/issues/295
+ * 		<li>FR [ 238 ] Is Summary property by default in Print Format (Set default summary property from print format)
+ * 		@see https://github.com/adempiere/adempiere/issues/238
  */
 public class ReportEngine implements PrintServiceAttributeListener
 {
@@ -135,8 +138,7 @@ public class ReportEngine implements PrintServiceAttributeListener
 	 */
 	public ReportEngine ( Properties ctx,MPrintFormat pf,MQuery query,ProcessInfo pInfo, PrintInfo info ){
 		this(ctx, pf, query, info, null);
-		this.setProcessInfo(pInfo) ;
-
+		this.setProcessInfo(pInfo);
 	}
 
 
@@ -158,8 +160,9 @@ public class ReportEngine implements PrintServiceAttributeListener
 		m_printFormat = pf;
 		m_info = info;
 		m_trxName = trxName;
+		//	FR [ 238 ] Set default summary from print format
+		setSummary(m_printFormat.isSummary());
 		setQuery(query);		//	loads Data
-
 	}	//	ReportEngine
 
 	/**	Static Logger	*/
@@ -1241,7 +1244,7 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 	/*************************************************************************/
 
 	/** Order = 0				*/
-	public static final int		ORDER = 0;
+	public static final int			ORDER = 0;
 	/** Shipment = 1				*/
 	public static final int		SHIPMENT = 1;
 	/** Invoice = 2				*/
@@ -1265,6 +1268,8 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 
     public static final int     HR_REMITTANCE = 11;
 
+	public static final int     MOVEMENT = 12;
+
 
 	//	private static final String[]	DOC_TABLES = new String[] {
 	//		"C_Order_Header_v", "M_InOut_Header_v", "C_Invoice_Header_v", "C_Project_Header_v",
@@ -1275,17 +1280,17 @@ queued-job-count = 0  (class javax.print.attribute.standard.QueuedJobCount)
 		"C_Order", "M_InOut", "C_Invoice", "C_Project",
 		"C_RfQResponse",
 		"C_PaySelectionCheck", "C_PaySelectionCheck", 
-		"C_DunningRunEntry","PP_Order", "DD_Order", "HR_PaySelectionCheck","HR_PaySelectionCheck"};
+		"C_DunningRunEntry","PP_Order", "DD_Order", "HR_PaySelectionCheck","HR_PaySelectionCheck", "M_Movement"};
 	private static final String[]	DOC_IDS = new String[] {
 		"C_Order_ID", "M_InOut_ID", "C_Invoice_ID", "C_Project_ID",
 		"C_RfQResponse_ID",
 		"C_PaySelectionCheck_ID", "C_PaySelectionCheck_ID", 
-		"C_DunningRunEntry_ID" , "PP_Order_ID" , "DD_Order_ID" , "HR_PaySelectionCheck_ID", "HR_PaySelectionCheck" };
+		"C_DunningRunEntry_ID" , "PP_Order_ID" , "DD_Order_ID" , "HR_PaySelectionCheck_ID", "HR_PaySelectionCheck_ID" , "M_Movement_ID"};
 	private static final int[]	DOC_TABLE_ID = new int[] {
 		MOrder.Table_ID, MInOut.Table_ID, MInvoice.Table_ID, MProject.Table_ID,
 		MRfQResponse.Table_ID,
 		MPaySelectionCheck.Table_ID, MPaySelectionCheck.Table_ID, 
-		MDunningRunEntry.Table_ID, X_PP_Order.Table_ID, MDDOrder.Table_ID , X_HR_PaySelectionCheck.Table_ID ,  X_HR_PaySelectionCheck.Table_ID };
+		MDunningRunEntry.Table_ID, X_PP_Order.Table_ID, MDDOrder.Table_ID , X_HR_PaySelectionCheck.Table_ID ,  X_HR_PaySelectionCheck.Table_ID , MMovement.Table_ID};
 
 	/**************************************************************************
 	 * 	Get Document Print Engine for Document Type.

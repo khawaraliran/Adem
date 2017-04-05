@@ -28,14 +28,14 @@ import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.model.MBrowse;
-import org.adempiere.model.MBrowseField;
+import org.adempiere.model.MViewDefinition;
 import org.adempiere.webui.apps.AEnv;
 import org.adempiere.webui.apps.BusyDialog;
-import org.adempiere.webui.apps.ProcessParameterPanel;
+import org.adempiere.webui.apps.ProcessPanel;
 import org.adempiere.webui.component.Borderlayout;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.ConfirmPanel;
-import org.adempiere.webui.component.Rows;
+import org.adempiere.webui.component.Panel;
 import org.adempiere.webui.component.Tab;
 import org.adempiere.webui.component.Tabbox;
 import org.adempiere.webui.component.Tabpanel;
@@ -44,10 +44,6 @@ import org.adempiere.webui.component.Tabs;
 import org.adempiere.webui.component.ToolBar;
 import org.adempiere.webui.component.WAppsAction;
 import org.adempiere.webui.editor.WEditor;
-import org.adempiere.webui.event.ValueChangeEvent;
-import org.adempiere.webui.event.ValueChangeListener;
-import org.adempiere.webui.event.WTableModelEvent;
-import org.adempiere.webui.event.WTableModelListener;
 import org.adempiere.webui.panel.CustomForm;
 import org.adempiere.webui.panel.IFormController;
 import org.adempiere.webui.panel.StatusBarPanel;
@@ -56,16 +52,15 @@ import org.adempiere.webui.window.FDialog;
 import org.compiere.apps.ProcessCtl;
 import org.compiere.minigrid.IDColumn;
 import org.compiere.model.GridField;
-import org.compiere.model.MPInstance;
 import org.compiere.model.MQuery;
 import org.compiere.process.ProcessInfo;
-import org.compiere.process.ProcessInfoUtil;
 import org.compiere.util.ASyncProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.eevolution.grid.Browser;
-import org.eevolution.grid.WBrowserListbox;
+import org.eevolution.grid.BrowserSearch;
+import org.eevolution.grid.WBrowserTable;
 import org.zkoss.util.media.AMedia;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
@@ -76,7 +71,6 @@ import org.zkoss.zul.South;
 import org.zkoss.zul.Div;
 import org.zkoss.zul.Filedownload;
 import org.zkoss.zul.Hbox;
-import org.zkoss.zul.Row;
 import org.zkoss.zul.Separator;
 import org.zkoss.zul.Vbox;
 
@@ -98,29 +92,32 @@ import org.zkoss.zul.Vbox;
  * 		@see https://github.com/adempiere/adempiere/issues/251
  * 		<li>FR [ 252 ] Smart Browse is Collapsible when query don't have result
  * 		@see https://github.com/adempiere/adempiere/issues/252
- * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
  *		<li>FR [ 265 ] ProcessParameterPanel is not MVC
  *		@see https://github.com/adempiere/adempiere/issues/265
+ *		<li>BR [ 340 ] Smart Browse context is changed from table
+ * 		@see https://github.com/adempiere/adempiere/issues/340
+ * 		<li>BR [ 394 ] Smart browse does not reset context when windows is closed
+ *		@see https://github.com/adempiere/adempiere/issues/394
+ *	@author Michael Mckay michael.mckay@mckayerp.com
+ *		<li> BR [ <a href="https://github.com/adempiere/adempiere/issues/495">495</a> ] 
+ *			Parameter Panel & SmartBrowser criteria do not set gridField value
  */
 public class WBrowser extends Browser implements IFormController,
-		EventListener, WTableModelListener, ValueChangeListener, ASyncProcess {
+		EventListener, ASyncProcess {
 
 	private CustomForm m_frame = new CustomForm();
-	private ProcessParameterPanel parameterPanel;
+	private ProcessPanel parameterPanel;
 	protected StatusBarPanel statusBar = new StatusBarPanel();
 
 	private Button bCancel;
 	private Button bDelete;
 	private Button bExport;
-//	private Button bFind;
 	private Button bOk;
-//	private Button bPrint;
 	private Button bSearch;
 	private Button bZoom;
 	private Button bSelectAll;
 
-	private WBrowserListbox detail;
-//	private Borderlayout graphPanel;
+	private WBrowserTable detail;
 	private WBrowserSearch searchGrid;
 	private Borderlayout searchTab;
 	private North collapsibleSeach;
@@ -129,27 +126,55 @@ public class WBrowser extends Browser implements IFormController,
 	private ToolBar toolsBar;
 	private Hbox topPanel;
 	private BusyDialog m_waiting;
-//	private VerticalBox dialogBody;
 
-	public static CustomForm openBrowse(int AD_Browse_ID) {
-		MBrowse browse = new MBrowse(Env.getCtx(), AD_Browse_ID , null);
-		boolean modal = true;
-		int WindowNo = 0;
+	/**
+	 * Open Browser
+	 * @param windowNo
+	 * @param browserId
+	 * @param whereClause
+	 * @param isSOTrx
+	 * @return
+	 */
+	public static CustomForm openBrowse(int windowNo , int browserId , String whereClause, Boolean isSOTrx) {
+		MBrowse browse = new MBrowse(Env.getCtx(), browserId , null);
+		boolean modal = false;
+		if (windowNo > 0)
+			modal = true;
 		String value = "";
 		String keyColumn = "";
 		boolean multiSelection = true;
-		String whereClause = "";
-		return new WBrowser(modal, WindowNo, value, browse, keyColumn, multiSelection, whereClause).getForm();
+		return new WBrowser(modal, windowNo, value, browse, keyColumn, multiSelection, whereClause,isSOTrx).getForm();
 	}
 	
+	/**
+	 * Standard constructor
+	 * @param modal
+	 * @param WindowNo
+	 * @param value
+	 * @param browse
+	 * @param keyColumn
+	 * @param multiSelection
+	 * @param whereClause
+	 * @param isSOTrx
+	 */
 	public WBrowser(boolean modal, int WindowNo, String value, MBrowse browse,
-			String keyColumn, boolean multiSelection, String whereClause) {
+			String keyColumn, boolean multiSelection, String whereClause, Boolean isSOTrx) {
 		
 		super(modal, WindowNo, value, browse, keyColumn, multiSelection,
 				whereClause);
-		
-		m_frame = new CustomForm();
+		//	Clear Context
+		//	BR [ 394 ]
+		m_frame = new CustomForm() {
+			private static final long serialVersionUID = 2887836301614655646L;
+			//	
+			@Override
+			public void onClose() {
+				Env.clearWinContext(getWindowNo());
+				super.onClose();
+			}
+		};
 		windowNo = SessionManager.getAppDesktop().registerWindow(this);
+		Env.setContext(Env.getCtx(), windowNo, "IsSOTrx", isSOTrx ? "Y" : "N");
 		copyWinContext();
 		setContextWhere(whereClause);
 		//	Init Smart Browse
@@ -169,7 +194,7 @@ public class WBrowser extends Browser implements IFormController,
 		setStatusDB(Integer.toString(no));
 		//	
 		if(isExecuteQueryByDefault()
-				&& evaluateMandatoryFilter() == null)
+				&& searchGrid.validateParameters() == null)
 			executeQuery();
 	}
 	
@@ -177,49 +202,46 @@ public class WBrowser extends Browser implements IFormController,
 	 * Static Setup - add fields to parameterPanel (GridLayout)
 	 */
 	private void statInit() {
-
-		Rows rows = new Rows();
-		rows.setParent(searchGrid);
-
-		int cols = 0;
-		Row row = rows.newRow();
-
-		for (MBrowseField field : m_Browse.getCriteriaFields()) {
-			String title = field.getName();
-			String name = field.getAD_View_Column().getColumnName();
-			searchGrid.addField(field, row, name, title);
-
-			cols++;
-
-			if (field.isRange())
-				cols++;
-
-			if (cols >= 2) {
-				cols = 0;
-				row = rows.newRow();
-			}
-		}
-		
-		searchGrid.dynamicDisplay();
-		
-		if (m_Browse.getAD_Process_ID() > 0) {
+		searchGrid.init();
+		Panel search = searchGrid.getPanel();
+		search.setStyle("background-color: transparent");
+		topPanel.appendChild(search);
+		topPanel.setStyle("overflow-y:auto");
+		//	
+		if (getAD_Process_ID() > 0) {
 			//	FR [ 245 ]
 			initProcessInfo();
 			//	FR [ 265 ]
-			parameterPanel = new ProcessParameterPanel(getWindowNo(), getBrowseProcessInfo() , "100%", ProcessParameterPanel.COLUMNS_2);
-			//
-			South south = new South();
-			south.setAutoscroll(true);
-			south.setSplittable(true);
-			south.setCollapsible(false);
+			parameterPanel = new ProcessPanel(getWindowNo(), getBrowseProcessInfo() , "100%", ProcessPanel.COLUMNS_2);
+			parameterPanel.setShowDescription(false);
+			parameterPanel.setShowButtons(false);
 			//	
-			parameterPanel.init();
+			parameterPanel.createFieldsAndEditors();
+			//	If don't have parameters then don'show collapsible panel
+			if(parameterPanel.hasParameters()) {
+				Panel panel = parameterPanel.getPanel();
+				panel.setWidth("100%");
+				panel.setHeight("100%");
+				panel.setStyle("overflow-y:auto");
+				
+				South south = new South();
+				south.setBorder("none");
+				
+				south.setAutoscroll(true);
+				south.setFlex(true);
+				south.setCollapsible(true);
+				south.setTitle(Msg.getMsg(Env.getCtx(),("Parameter")));
+				south.setCollapsible(true);
+				south.setAutoscroll(true);
+				south.appendChild(panel);
+				south.setStyle("background-color: transparent");
+				south.setStyle("border: none");
+				south.setHeight("40%");
+				//	
+				detailPanel.appendChild(south);
+			}
 			//	
-			Div div = new Div();
-			div.setWidth("100%");
-			div.appendChild(parameterPanel.getPanel());
-			south.appendChild(div);	
-			detailPanel.appendChild(south);
+			detailPanel.setStyle("overflow-y:auto");
 		}		
 	}
 
@@ -235,7 +257,7 @@ public class WBrowser extends Browser implements IFormController,
 		//	
 		if (browserFields.size() == 0) {
 			FDialog.error(getWindowNo(), m_frame, "Error", "No Browse Fields");
-			log.log(Level.SEVERE, "No Browser for view=" + m_View.getName());
+			log.log(Level.SEVERE, "No Browser for view=" + getViewName());
 			return false;
 		}
 		return true;
@@ -254,7 +276,7 @@ public class WBrowser extends Browser implements IFormController,
 	 */
 	protected void executeQuery() {
 		//	FR [ 245 ]
-		String errorMsg = evaluateMandatoryFilter();
+		String errorMsg = searchGrid.validateParameters();
 		if (errorMsg == null) {
 			if (getAD_Window_ID() > 1)
 				bZoom.setEnabled(true);
@@ -356,42 +378,6 @@ public class WBrowser extends Browser implements IFormController,
 	}
 
 	/**
-	 * When is closed
-	 * @param ok
-	 */
-	public void dispose(boolean ok) {
-		log.config("OK=" + ok);
-		searchGrid.dispose();
-		m_ok = ok;
-		
-		saveResultSelection(detail);
-		saveSelection(detail);
-		
-		if (m_Browse.getAD_Process_ID() <= 0)
-			return;
-
-		MPInstance instance = new MPInstance(Env.getCtx(),
-				m_Browse.getAD_Process_ID(), getBrowseProcessInfo().getRecord_ID());
-		instance.saveEx();
-
-		DB.createT_Selection(instance.getAD_PInstance_ID(), getSelectedKeys(),
-				null);
-		ProcessInfo pi = getBrowseProcessInfo();
-		pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
-		pi.setWindowNo(getWindowNo());
-		parameterPanel.saveParameters();
-		ProcessInfoUtil.setParameterFromDB(pi);
-		setBrowseProcessInfo(pi);
-		//Save Values Browse Field Update
-		createT_Selection_Browse(instance.getAD_PInstance_ID());
-		// Execute Process
-		ProcessCtl worker = new ProcessCtl(this, pi.getWindowNo() , pi , null);
-		worker.start();
-        Env.clearWinContext(getWindowNo());
-		SessionManager.getAppDesktop().closeActiveWindow();
-	}
-
-	/**
 	 * Add Components to tool bar
 	 */
 	private void setupToolBar() {
@@ -404,16 +390,12 @@ public class WBrowser extends Browser implements IFormController,
 			bOk = action.getButton();
 			action = new WAppsAction (ConfirmPanel.A_CANCEL, null, ConfirmPanel.A_CANCEL);
 			bCancel = action.getButton();
-//			selectAllAction = new WAppsAction (ConfirmPanel.A_PRINT, null, ConfirmPanel.A_PRINT);
-//			bPrint = selectAllAction.getButton();
 			action = new WAppsAction (ConfirmPanel.A_ZOOM, null, ConfirmPanel.A_ZOOM);
 			bZoom = action.getButton();
 			action = new WAppsAction (ConfirmPanel.A_EXPORT, null, ConfirmPanel.A_EXPORT);
 			bExport =  action.getButton();
 			action = new WAppsAction (ConfirmPanel.A_DELETE, null, ConfirmPanel.A_DELETE);
 			bDelete = action.getButton();
-//			selectAllAction = new WAppsAction ("Find", null, "Find");
-//			bFind = selectAllAction.getButton();
 			action = new WAppsAction ("SelectAll", null, Msg.getMsg(Env.getCtx(),"SelectAll"));
 			bSelectAll = action.getButton();
 		}
@@ -429,20 +411,18 @@ public class WBrowser extends Browser implements IFormController,
 	private void initComponents() {
 
 		toolsBar = new ToolBar();
-//		bPrint = new Button();
 		bZoom = new Button();
 		bExport = new Button();
 		bDelete = new Button();
-//		bFind = new Button();
 		tabsPanel = new Tabbox();
 		searchTab = new Borderlayout();
 		collapsibleSeach = new North();
 		topPanel = new Hbox();
-		searchGrid = new WBrowserSearch(getWindowNo());
-		detail = new WBrowserListbox(this);
+		searchGrid = new WBrowserSearch(getWindowNo(), getAD_Browse_ID(), BrowserSearch.COLUMNS_2);
+		detail = new WBrowserTable(this);
+		detail.addEventListener(Events.ON_SELECT, this);
 		bCancel = new Button();
 		bOk = new Button();
-//		graphPanel = new Borderlayout();
 		detailPanel= new Borderlayout();
 
 		Borderlayout mainLayout = new Borderlayout();
@@ -505,15 +485,6 @@ public class WBrowser extends Browser implements IFormController,
 		if(isDeleteable())
 			toolsBar.appendChild(bDelete);
 
-		//TODO: victor.perez@e-evolution.com pending find functionality
-		/*bFind.setLabel("Find");
-		bFind.addActionListener(new EventListener() {
-			public void onEvent(Event evt) {
-				bFindActionPerformed(evt);
-			}
-		});
-		toolsBar.appendChild(bFind);*/
-
 		m_frame.setWidth("100%");
 		m_frame.setHeight("100%");
 		m_frame.setStyle("position: absolute; padding: 0; margin: 0");
@@ -532,14 +503,8 @@ public class WBrowser extends Browser implements IFormController,
 		searchTab.setStyle("background-color: transparent");
 
 		topPanel = new Hbox();
-		topPanel.setHeight("90%");
-		topPanel.setWidth("100%");
-		//topPanel.setStyle("position: absolute");
 		topPanel.setStyle("background-color: transparent");
 
-		searchGrid.setStyle("background-color: transparent");
-		topPanel.appendChild(searchGrid);
-		
 		bSearch.setLabel(Msg.getMsg(Env.getCtx(), "StartSearch"));
 
 		bSearch.addActionListener(new EventListener() {
@@ -564,6 +529,7 @@ public class WBrowser extends Browser implements IFormController,
 		collapsibleSeach.setCollapsible(true);
 		collapsibleSeach.setAutoscroll(true);
 		collapsibleSeach.appendChild(div);
+		collapsibleSeach.setStyle("overflow-y:auto");
 		collapsibleSeach.setStyle("background-color: transparent");
 		collapsibleSeach.setStyle("border: none");
 		searchTab.appendChild(collapsibleSeach);
@@ -666,6 +632,9 @@ public class WBrowser extends Browser implements IFormController,
 		cmd_zoom();
 	}
 
+	/**
+	 * Ok Action
+	 */
 	private void cmd_Ok() {
 		log.config("OK=" + true);
 		m_ok = true;
@@ -675,27 +644,23 @@ public class WBrowser extends Browser implements IFormController,
 		//	Is Process ok
 		boolean isOk = false;
 		//	Valid Process, Selected Keys and process parameters
-		if (m_Browse.getAD_Process_ID() > 0 && getSelectedKeys() != null)
-		{
+		if (getAD_Process_ID() > 0 && getSelectedKeys() != null) {
+			parameterPanel.getProcessInfo().setAD_PInstance_ID(-1);
 			// FR [ 265 ]
 			if(parameterPanel.validateParameters() == null) {
-				MPInstance instance = new MPInstance(Env.getCtx(),
-						m_Browse.getAD_Process_ID(), getBrowseProcessInfo().getRecord_ID());
-				instance.saveEx();
-				ProcessInfo pi = getBrowseProcessInfo();
-				pi.setWindowNo(getWindowNo());
-				pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
-				pi.setIsSelection(p_multiSelection);
-				// BR [ 249 ]
+				//	Save Parameters
 				if(parameterPanel.saveParameters() == null) {
-					
-					DB.createT_Selection(instance.getAD_PInstance_ID(), getSelectedKeys(),
-							null);
-					//Save Values Browse Field Update
-					createT_Selection_Browse(instance.getAD_PInstance_ID());
-					ProcessInfoUtil.setParameterFromDB(pi);
-					setBrowseProcessInfo(pi);
-								
+					//	Get Process Info
+					ProcessInfo pi = parameterPanel.getProcessInfo();
+					if (getFieldKey() != null && getFieldKey().get_ID() > 0) {
+						MViewDefinition viewDefinition = (MViewDefinition) getFieldKey().getAD_View_Column().getAD_View_Definition();
+						pi.setAliasForTableSelection(viewDefinition.getTableAlias());
+						pi.setTableSelectionId(viewDefinition.getAD_Table_ID());
+					}
+					//	Set Selected Values
+					pi.setSelectionValues(getSelectedValues());
+					//	
+					setBrowseProcessInfo(pi);	
 					// Execute Process
 					ProcessCtl worker = new ProcessCtl(this, pi.getWindowNo(), pi , null);
 					showBusyDialog();
@@ -711,6 +676,8 @@ public class WBrowser extends Browser implements IFormController,
 		if(isOk) {
 			//	Close
 			if(getParentWindowNo() > 0) {
+				//	BR [ 394 ]
+				Env.clearWinContext(getWindowNo());
 				SessionManager.getAppDesktop().closeActiveWindow();
 				return;
 			}
@@ -720,6 +687,9 @@ public class WBrowser extends Browser implements IFormController,
 		}
 	}
 	
+	/**
+	 * Show dialog for busy window
+	 */
 	private void showBusyDialog() {
 		m_waiting = new BusyDialog();
 		m_waiting.setPage(m_frame.getPage());
@@ -735,7 +705,9 @@ public class WBrowser extends Browser implements IFormController,
 	 * Cancel and Dispose
 	 */
 	private void cmd_Cancel() {
-		  SessionManager.getAppDesktop().closeActiveWindow();
+		//	BR [ 394 ]
+		Env.clearWinContext(getWindowNo());
+		SessionManager.getAppDesktop().closeActiveWindow();
 	}
 
 	/**
@@ -758,7 +730,7 @@ public class WBrowser extends Browser implements IFormController,
 		try 
 		{	AMedia media = null;
 			File file = exportXLS(detail);
-			media = new AMedia(m_Browse.getName(), "xls",
+			media = new AMedia(getBrowserName(), "xls",
 					"application/vnd.ms-excel", file, true);
 			Filedownload.save(media);
 		} catch (Exception e) {
@@ -823,22 +795,23 @@ public class WBrowser extends Browser implements IFormController,
 
 	@Override
 	public void onEvent(Event event) throws Exception {
-
+		if (event == null)
+			return;
+		//	For Click
+		if (event.getTarget() == detail && Events.ON_SELECT.equals(event.getName())) {
+			//	For row
+			//click on selected row to enter edit mode
+			int index = detail.getSelectedRow();
+			if (index >= 0 ) {
+				detail.getData().setCurrentRow(index);
+			}
+			//	
+        }
 	}
 
 	@Override
 	public CustomForm getForm() {
 		return m_frame;
-	}
-
-	@Override
-	public void valueChange(ValueChangeEvent evt) {
-
-	}
-
-	@Override
-	public void tableChanged(WTableModelEvent event) {
-
 	}
 
 	@Override
@@ -862,16 +835,16 @@ public class WBrowser extends Browser implements IFormController,
 	}
 	
 	@Override
-	public LinkedHashMap<Object, GridField> getPanelParameters() {
-		LinkedHashMap<Object, GridField> m_List = new LinkedHashMap<Object, GridField>();
-		for (Entry<Object, Object> entry : searchGrid.getParameters().entrySet()) {
+	public LinkedHashMap<String, GridField> getPanelParameters() {
+		LinkedHashMap<String, GridField> m_List = new LinkedHashMap<String, GridField>();
+		for (Entry<String, Object> entry : searchGrid.getParameters().entrySet()) {
 			WEditor editor = (WEditor) entry.getValue();
 			//	BR [ 251 ]
-			if(!editor.isVisible())
+			if(!editor.isVisible()
+					|| editor.getGridField().isInfoOnly())
 				continue;
 			//
 			GridField field = editor.getGridField();
-			field.setValue(editor.getValue(), true);
 			m_List.put(entry.getKey(), field);
 		}
 		//	Default Return
@@ -911,6 +884,6 @@ public class WBrowser extends Browser implements IFormController,
 			}
 			detail.clearSelection();
 		}
-			isAllSelected = !isAllSelected;
+		isAllSelected = !isAllSelected;
 	}
 }

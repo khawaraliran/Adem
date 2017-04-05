@@ -55,7 +55,10 @@ import org.compiere.util.Msg;
  * @author Yamel Senih, ysenih@erpcya.com, ERPCyA http://www.erpcya.com
  *		<li> FR [ 114 ] Change "Create From" UI for Form like Dialog in window without "hardcode"
  *		@see https://github.com/adempiere/adempiere/issues/114
+ *		<li> FR [ 327 ] Create From in M_InOut change to Smart Browse
+ *  	@see https://github.com/adempiere/adempiere/issues/327
  */
+@Deprecated
 public class CreateFromShipment extends CreateFromHelper {
 	/**  Loaded Invoice     */
 	private MInvoice		m_invoice = null;
@@ -608,6 +611,8 @@ public class CreateFromShipment extends CreateFromHelper {
 					iol.setAD_OrgTrx_ID(ol.getAD_OrgTrx_ID());
 					iol.setUser1_ID(ol.getUser1_ID());
 					iol.setUser2_ID(ol.getUser2_ID());
+					iol.setUser3_ID(ol.getUser3_ID());
+					iol.setUser4_ID(ol.getUser4_ID());
 				}
 				else if (il != null)
 				{
@@ -627,6 +632,8 @@ public class CreateFromShipment extends CreateFromHelper {
 					iol.setAD_OrgTrx_ID(il.getAD_OrgTrx_ID());
 					iol.setUser1_ID(il.getUser1_ID());
 					iol.setUser2_ID(il.getUser2_ID());
+					iol.setUser3_ID(il.getUser3_ID());
+					iol.setUser4_ID(il.getUser4_ID());
 				}
 				else if (M_RMALine_ID != 0)
 				{
@@ -642,6 +649,8 @@ public class CreateFromShipment extends CreateFromHelper {
 					iol.setAD_OrgTrx_ID(rmal.getAD_OrgTrx_ID());
 					iol.setUser1_ID(rmal.getUser1_ID());
 					iol.setUser2_ID(rmal.getUser2_ID());
+					iol.setUser3_ID(rmal.getUser3_ID());
+					iol.setUser4_ID(rmal.getUser4_ID());
 				}
 
 				//	Charge
@@ -681,6 +690,8 @@ public class CreateFromShipment extends CreateFromHelper {
 			inout.setC_Activity_ID(p_order.getC_Activity_ID());
 			inout.setUser1_ID(p_order.getUser1_ID());
 			inout.setUser2_ID(p_order.getUser2_ID());
+			inout.setUser3_ID(p_order.getUser3_ID());
+			inout.setUser4_ID(p_order.getUser4_ID());
 
 			if ( p_order.isDropShip() )
 			{
@@ -702,6 +713,8 @@ public class CreateFromShipment extends CreateFromHelper {
 			inout.setC_Activity_ID(m_invoice.getC_Activity_ID());
 			inout.setUser1_ID(m_invoice.getUser1_ID());
 			inout.setUser2_ID(m_invoice.getUser2_ID());
+			inout.setUser3_ID(m_invoice.getUser3_ID());
+			inout.setUser4_ID(m_invoice.getUser4_ID());
 		}
 		if (m_rma != null && m_rma.getM_RMA_ID() != 0)
 		{
@@ -716,6 +729,8 @@ public class CreateFromShipment extends CreateFromHelper {
 			inout.setC_Activity_ID(originalIO.getC_Activity_ID());
 			inout.setUser1_ID(originalIO.getUser1_ID());
 			inout.setUser2_ID(originalIO.getUser2_ID());
+			inout.setUser3_ID(originalIO.getUser3_ID());
+			inout.setUser4_ID(originalIO.getUser4_ID());
 		}
 		inout.saveEx();
 		return true;		
