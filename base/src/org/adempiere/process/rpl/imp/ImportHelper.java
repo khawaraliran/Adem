@@ -235,7 +235,7 @@ public class ImportHelper {
 
 				if (ModelValidator.TIMING_AFTER_REVERSECORRECT==ReplicationEvent)
 				{
-					if(status.equals(DocAction.STATUS_Reversed) && action.equals(DocAction.ACTION_None))
+					if (status.equals(DocAction.STATUS_Reversed) && action.equals(DocAction.ACTION_None))
 					{
 						po.saveEx();
 						return;
@@ -258,7 +258,7 @@ public class ImportHelper {
 				}
 			}
 		}
-		result.append("Save Successful ;");
+		result.append("PO Saved Successfully;");
 	}
 
 	/**
@@ -422,7 +422,7 @@ public class ImportHelper {
 						embeddedPo.saveReplica(true);
 						isChanged = true;
 					}
-					result.append(" !!! C_Location !!! Saved Successful ; ");
+					result.append(" !!! C_Location !!! Saved Successfully; ");
 					refRecord_ID = embeddedPo.get_ID();
 				} else {
 					refRecord_ID = getID(ctx, referencedExpFormat, referencedNode, line.getValue(), po.get_TrxName());
@@ -443,11 +443,11 @@ public class ImportHelper {
 				isChanged = true;
 				po.saveReplica(true);
 			} else {
-				return value;
+				// return value; // WHY ARE WE returning when master record is not changed???
 			}
 
-			// Embedded Export Format It is used for Parent-Son records like Order&OrderLine
-			//get from cache
+			// Embedded Export Format. It is used for Parent-Son records like Order&OrderLine
+			// Get t from cache.
 			MEXPFormat referencedExpFormat = MEXPFormat.get(ctx, line.getEXP_EmbeddedFormat_ID(), po.get_TrxName());
 			log.info("embeddedExpFormat = " + referencedExpFormat);
 
@@ -460,20 +460,20 @@ public class ImportHelper {
 				{
 					Element referencedElement = (Element)nodeList.item(j);
 					log.info("EmbeddedEXPFormat - referencedElement.getNodeName = " + referencedElement.getNodeName());
-					
+
 					PO embeddedPo = null;
 					// Import embedded PO
 					log.info("=== BEGIN RECURSION CALL ===");
 					embeddedPo = importElement(ctx, result, referencedElement, referencedExpFormat, replicationType, po.get_TrxName());
 					log.info("embeddedPo = " + embeddedPo);
 					if (!embeddedPo.is_Changed()) {
-					    log.info("Object not changed = " + po.toString());
-					    continue;
+						log.info("Object not changed = " + po.toString());
+						continue;
 					} else {
 						embeddedPo.saveReplica(true);
 						isChanged = true;
 					}
-					result.append(" Embedded Save Successful; ");
+					result.append(" Embedded Saved Successfully; ");
 				}
 			}// end - view
 		} 
