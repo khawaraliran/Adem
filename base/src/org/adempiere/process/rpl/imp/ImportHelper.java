@@ -42,11 +42,15 @@ import javax.xml.xpath.XPathExpressionException;
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.process.rpl.XMLHelper;
 import org.adempiere.process.rpl.exp.ExportHelper;
+import org.apache.commons.codec.binary.Base64;
 import org.compiere.model.I_AD_Client;
+import org.compiere.model.I_AD_ReplicationStrategy;
 import org.compiere.model.MClient;
 import org.compiere.model.MColumn;
 import org.compiere.model.MEXPFormat;
 import org.compiere.model.MEXPFormatLine;
+import org.compiere.model.MImage;
+import org.compiere.model.MLocation;
 import org.compiere.model.MReplicationStrategy;
 import org.compiere.model.MTable;
 import org.compiere.model.ModelValidator;
@@ -128,7 +132,7 @@ public class ImportHelper {
 		}
 		///Getting Attributes.
 		int ReplicationMode = new Integer(rootElement.getAttribute("ReplicationMode"));
-		String ReplicationType = rootElement.getAttribute("ReplicationType");
+		String ReplicationType = rootElement.getAttribute("ReplicationType"); // Why we read it from the XML??? This is wrong!
 		int ReplicationEvent = new Integer(rootElement.getAttribute("ReplicationEvent"));
 		
 		MClient client = null;
@@ -182,8 +186,8 @@ public class ImportHelper {
 			if (MReplicationStrategy.REPLICATION_TABLE==ReplicationMode)
 			{
 				// Here must invoke other method else we get cycle...
-				if (ModelValidator.TYPE_BEFORE_DELETE == ReplicationEvent 
-					||	ModelValidator.TYPE_BEFORE_DELETE_REPLICATION == ReplicationEvent 
+				if (ModelValidator.TYPE_BEFORE_DELETE == ReplicationEvent
+					||	ModelValidator.TYPE_BEFORE_DELETE_REPLICATION == ReplicationEvent
 					||	ModelValidator.TYPE_DELETE == ReplicationEvent)
 				{
 					po.deleteEx(true);
@@ -220,7 +224,7 @@ public class ImportHelper {
 					}
 				}	
 			}
-			else if (MReplicationStrategy.REPLICATION_DOCUMENT == ReplicationMode  
+			else if (MReplicationStrategy.REPLICATION_DOCUMENT == ReplicationMode
 					&& X_AD_ReplicationDocument.REPLICATIONTYPE_Merge.equals(ReplicationType)
 					&& po instanceof DocAction)
 			{
@@ -305,7 +309,7 @@ public class ImportHelper {
 		//  and set value of column!
 		for (MEXPFormatLine formatLine : formatLines) 
 		{
-			log.info("=================== Beginnig of Format Line ===============================");
+			log.info("=================== Beginning of Format Line ===============================");
 			log.info("formatLine: [" + formatLine.toString() + "]");			
 			//Get the value
 			Object value = getValueFromFormat(formatLine, po, rootElement, result, replicationType);
@@ -327,15 +331,64 @@ public class ImportHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	private Object getValueFromFormat(MEXPFormatLine line,PO po,Element rootElement, StringBuffer result, String replicationType) throws Exception
+	private Object getValueFromFormat(MEXPFormatLine line, PO po, Element rootElement, StringBuffer result, String replicationType) throws Exception
 	{
 		Object value = null;
 
 		if (MEXPFormatLine.TYPE_XMLElement.equals(line.getType())) 
 		{
-			// XML Element
-			value = XMLHelper.getString(line.getValue(), rootElement);
-			log.info("value=[" + value + "]");
+			if (line.getAD_Column() != null && line.getAD_Column_ID() > 0 
+				&& line.getAD_Column().getAD_Reference().getName().equalsIgnoreCase("image") 
+			) {
+				// Handle AD_Image
+				String imageTagName = line.getValue();
+
+				String imageIdStr = XMLHelper.getString(imageTagName + "/@id", rootElement);
+				log.info("ImageID=[" + imageIdStr + "]");
+
+				String imageName = XMLHelper.getString(imageTagName + "/Name", rootElement);
+				log.info("ImageName=[" + imageName + "]");
+
+				String imageDescription = XMLHelper.getString(imageTagName + "/Description", rootElement);
+				log.info("ImageDescription=[" + imageDescription + "]");
+
+				String imageURL = XMLHelper.getString(imageTagName + "/ImageURL", rootElement);
+				log.info("ImageURL=[" + imageURL + "]");
+
+				String imageBinaryData = XMLHelper.getString(imageTagName + "/BinaryData", rootElement);
+				log.info("ImageBinaryData=[" + imageBinaryData + "]");
+
+				MImage image = null;
+				int imageId = 0;
+				if (imageIdStr != null && imageIdStr.length() > 0) {
+					imageId = Integer.parseInt( imageIdStr );
+				}
+				image = new MImage( ctx, imageId, po.get_TrxName());
+				if (imageName != null) {
+					image.setName( imageName );
+				}
+				if (imageDescription != null) {
+					image.setDescription(imageDescription);
+				}
+				if (imageURL != null) {
+					image.setImageURL( imageURL );
+				}
+				if (imageBinaryData != null) {
+					byte[] decodedBytes = Base64.decodeBase64( imageBinaryData.getBytes() );
+				    //System.out.println("decodedBytes " + new String(decodedBytes));
+					image.setBinaryData( decodedBytes );
+				}
+				if (image.getAD_Image_ID() > 0 || (imageBinaryData != null && imageBinaryData.length() > 0)) {
+					image.saveReplica( true );
+					isChanged = true;
+				}
+				value = image;
+				log.info("value=[" + value + "]");
+			} else {
+				// XML Element
+				value = XMLHelper.getString(line.getValue(), rootElement);
+				log.info("value=[" + value + "]");
+			}
 		} 
 		else if (MEXPFormatLine.TYPE_ReferencedEXPFormat.equals(line.getType())) 
 		{
@@ -349,13 +402,31 @@ public class ImportHelper {
 			String xPath = null;
 			xPath = "" + line.getValue() + ""; 
 
-			log.info("Seach for XML Element = " + xPath);
+			log.info("Search for XML Element = " + xPath);
 			Element referencedNode = XMLHelper.getElement(xPath, rootElement);
 
 			log.info("referencedNode = " + referencedNode);
 			if (referencedNode!=null)
 			{
-				refRecord_ID = getID(ctx, referencedExpFormat, referencedNode, line.getValue(), po.get_TrxName());
+				// SPECIAL HANDLING of C_Location !!!
+				// In Case of C_Location. Try to save C_Location First, similar to Embedded code
+				if (referencedExpFormat.getAD_Table().getTableName().equals(MLocation.Table_Name)) {
+					PO embeddedPo = null;
+					// Import embedded PO
+					log.info("=== BEGIN RECURSION CALL ===");
+					embeddedPo = importElement(ctx, result, referencedNode, referencedExpFormat, replicationType, po.get_TrxName());
+					log.info("embeddedPo = " + embeddedPo);
+					if (!embeddedPo.is_Changed()) {
+					    log.info("Object not changed = " + po.toString());
+					} else {	
+						embeddedPo.saveReplica(true);
+						isChanged = true;
+					}
+					result.append(" !!! C_Location !!! Saved Successful ; ");
+					refRecord_ID = embeddedPo.get_ID();
+				} else {
+					refRecord_ID = getID(ctx, referencedExpFormat, referencedNode, line.getValue(), po.get_TrxName());
+				}
 				log.info("refRecord_ID = " + refRecord_ID);
 				value = new Integer(refRecord_ID);
 			}
@@ -380,26 +451,31 @@ public class ImportHelper {
 			MEXPFormat referencedExpFormat = MEXPFormat.get(ctx, line.getEXP_EmbeddedFormat_ID(), po.get_TrxName());
 			log.info("embeddedExpFormat = " + referencedExpFormat);
 
-			NodeList nodeList = XMLHelper.getNodeList("/"+rootElement.getNodeName() + "/" + line.getValue(), rootElement);
-			for (int j = 0; j < nodeList.getLength(); j++) 
-			{
-				Element referencedElement = (Element)nodeList.item(j);
-				log.info("EmbeddedEXPFormat - referencedElement.getNodeName = " + referencedElement.getNodeName());
-				
-				PO embeddedPo = null;
-				// Import embedded PO
-				log.info("=== BEGIN RECURSION CALL ===");
-				embeddedPo = importElement(ctx, result, referencedElement, referencedExpFormat, replicationType, po.get_TrxName());
-				log.info("embeddedPo = " + embeddedPo);
-				if (!embeddedPo.is_Changed()) {
-					log.info("Object not changed = " + po.toString());
-				    continue;
-				} else {	
-					embeddedPo.saveReplica(true);
-					isChanged = true;
+			// Skip View tables!
+			if ( referencedExpFormat.getAD_Table().isView() ) {
+				// SKIP
+			} else {
+				NodeList nodeList = XMLHelper.getNodeList("/"+rootElement.getNodeName() + "/" + line.getValue(), rootElement);
+				for (int j = 0; j < nodeList.getLength(); j++) 
+				{
+					Element referencedElement = (Element)nodeList.item(j);
+					log.info("EmbeddedEXPFormat - referencedElement.getNodeName = " + referencedElement.getNodeName());
+					
+					PO embeddedPo = null;
+					// Import embedded PO
+					log.info("=== BEGIN RECURSION CALL ===");
+					embeddedPo = importElement(ctx, result, referencedElement, referencedExpFormat, replicationType, po.get_TrxName());
+					log.info("embeddedPo = " + embeddedPo);
+					if (!embeddedPo.is_Changed()) {
+					    log.info("Object not changed = " + po.toString());
+					    continue;
+					} else {
+						embeddedPo.saveReplica(true);
+						isChanged = true;
+					}
+					result.append(" Embedded Save Successful; ");
 				}
-				result.append(" Embedded Save Successful; ");
-			}
+			}// end - view
 		} 
 		else if (MEXPFormatLine.TYPE_XMLAttribute.equals(line.getType())) 
 		{
@@ -468,14 +544,19 @@ public class ImportHelper {
 						po.set_ValueOfColumn(line.getAD_Column_ID(), value);
 						log.info("Set value of column ["+column.getColumnName()+"]=["+value+"]");
 					} 
-					else if (  DisplayType.isID(column.getAD_Reference_ID())
-							|| DisplayType.Integer	==	column.getAD_Reference_ID()
+					else if (  (    DisplayType.isID(column.getAD_Reference_ID())
+							     || DisplayType.Integer == column.getAD_Reference_ID()
+							   ) &&  ! (column.getColumnName().equalsIgnoreCase("AD_Language"))
 							) 
 					{
 						//
 						if (!Util.isEmpty(value.toString())) {
-							int intValue = Integer.parseInt(value.toString());
-							value = new Integer( intValue );
+							if (DisplayType.Image == column.getAD_Reference_ID()) {
+								value = ((MImage)value).getAD_Image_ID();
+							} else {
+								int intValue = Integer.parseInt(value.toString());
+								value = new Integer( intValue );
+							}
 						} else {
 							value = null;
 						}
@@ -588,7 +669,7 @@ public class ImportHelper {
 		for (MEXPFormatLine uniqueFormatLine : uniqueFormatLines) 
 		{
 			MColumn column = MColumn.get(ctx, uniqueFormatLine.getAD_Column_ID());
-			log.info("column = ["+column+"]");
+			log.info("UNIQUE column = ["+column+"]");
 			String valuecol=column.getColumnName();
 			
 			formatLines = formatLines + "|"+ valuecol;
@@ -631,7 +712,7 @@ public class ImportHelper {
 			}
 			else
 			{
-				// Export Format Line is not one of two possible values...ERROR
+				// Export Format Line is not one of three possible values...ERROR
 				throw new Exception(Msg.getMsg(ctx, "EXPFormatLineNonValidType"));
 			}
 			
@@ -645,8 +726,10 @@ public class ImportHelper {
 			{
 				params[col] = (String)cols[col];
 			}
-			else if (  DisplayType.isID(column.getAD_Reference_ID())
-					|| DisplayType.Integer	==	column.getAD_Reference_ID()) 
+			else if ( (    DisplayType.isID(column.getAD_Reference_ID())
+					    || DisplayType.Integer	==	column.getAD_Reference_ID()
+					  ) && ! (column.getColumnName().equalsIgnoreCase("AD_Language"))
+					) 
 			{
 				Object value =  cols[col];
 				if (!Util.isEmpty(value.toString())) {
@@ -680,12 +763,20 @@ public class ImportHelper {
 		}
 		
 		Query query = new Query(ctx, MTable.get(ctx, expFormat.getAD_Table_ID()), whereClause.toString(), trxName)
-						.setParameters(params);
+						.setParameters( params )
+						.setOnlyActiveRecords( true );
 		values = query.list();
 
 		if (values.size()>1) //The Return Object must be always one
 		{
-			throw new AdempiereException(Msg.getMsg(ctx, "EXPFormatLineNoUniqueColumns") + " : " +expFormat.getName() + "(" +formatLines+")");
+			StringBuffer paramsStr = new StringBuffer();
+			
+			for (int i = 0; i < params.length; i++) {
+//				System.err.println("param["+i+"] = " + params[i]);
+				paramsStr.append("param["+i+"] = " + params[i]);
+			}
+			throw new AdempiereException(Msg.getMsg(ctx, "EXPFormatLineNoUniqueColumns") + " : " +expFormat.getName() + "(" +formatLines
+					+") WHERE clause: " + whereClause.toString() + "; params: " + paramsStr.toString());
 		}
 
 		if (values.size()<=0) //Means that is a new record
