@@ -94,22 +94,27 @@ public class ImportHelper {
 	
 	/** Context						*/
 	private Properties ctx = null;
-	
+	private StringBuffer resultBuff = null;
+
 	public ImportHelper(Properties ctx) 
 	{
 		this.ctx = ctx;
+		resultBuff = new StringBuffer("");
 	}
 
+	public String getResultLog() {
+		return resultBuff.toString();
+	}
 	/**
 	 * Import XML Document
-	 * @param result
+	 * 
 	 * @param documentToBeImported
 	 * @param trxName
 	 * @throws Exception
 	 * @throws SQLException
 	 * @throws XPathExpressionException
 	 */
-	public void importXMLDocument(StringBuffer result, Document documentToBeImported, String trxName) 
+	public void importXMLDocument(Document documentToBeImported, String trxName) 
 		throws Exception, SQLException,	XPathExpressionException 
 	{
 		Element rootElement = documentToBeImported.getDocumentElement();
@@ -131,9 +136,9 @@ public class ImportHelper {
 			throw new Exception(Msg.getMsg(ctx, "XMLVersionAttributeMandatory"));
 		}
 		///Getting Attributes.
-		int ReplicationMode = new Integer(rootElement.getAttribute("ReplicationMode"));
-		String ReplicationType = rootElement.getAttribute("ReplicationType"); // Why we read it from the XML??? This is wrong!
-		int ReplicationEvent = new Integer(rootElement.getAttribute("ReplicationEvent"));
+		int replicationMode = new Integer(rootElement.getAttribute("ReplicationMode"));
+		String replicationType = rootElement.getAttribute("ReplicationType"); // Why we read it from the XML??? This is wrong!
+		int replicationEvent = new Integer(rootElement.getAttribute("ReplicationEvent"));
 		
 		MClient client = null;
 		client = getAD_ClientByValue(ctx, AD_Client_Value, trxName);
@@ -168,33 +173,33 @@ public class ImportHelper {
 		}
 		log.info("expFormat = " + expFormat.toString());
 		isChanged = false;
-		PO po = importElement(ctx, result, rootElement, expFormat, ReplicationType, trxName);
-		if (ModelValidator.TYPE_BEFORE_DELETE == ReplicationEvent
-				|| ModelValidator.TYPE_BEFORE_DELETE_REPLICATION == ReplicationEvent
-				|| ModelValidator.TYPE_DELETE == ReplicationEvent)
+		PO po = importElement(ctx, rootElement, expFormat, replicationType, trxName);
+		if (ModelValidator.TYPE_BEFORE_DELETE == replicationEvent
+				|| ModelValidator.TYPE_BEFORE_DELETE_REPLICATION == replicationEvent
+				|| ModelValidator.TYPE_DELETE == replicationEvent)
 		;
 		else if (!po.is_Changed() && !isChanged)
 		{
 		    log.info("Object not changed = " + po.toString());
 		    return;
 		}
-		
+
 		if (po != null)
 		{
 			Env.setContext(po.getCtx(), "#AD_Client_ID", po.getAD_Client_ID());
 
-			if (MReplicationStrategy.REPLICATION_TABLE==ReplicationMode)
+			if (MReplicationStrategy.REPLICATION_TABLE==replicationMode)
 			{
 				// Here must invoke other method else we get cycle...
-				if (ModelValidator.TYPE_BEFORE_DELETE == ReplicationEvent
-					||	ModelValidator.TYPE_BEFORE_DELETE_REPLICATION == ReplicationEvent
-					||	ModelValidator.TYPE_DELETE == ReplicationEvent)
+				if (ModelValidator.TYPE_BEFORE_DELETE == replicationEvent
+					||	ModelValidator.TYPE_BEFORE_DELETE_REPLICATION == replicationEvent
+					||	ModelValidator.TYPE_DELETE == replicationEvent)
 				{
 					po.deleteEx(true);
 				}
 				else
 				{
-					if (X_AD_ReplicationTable.REPLICATIONTYPE_Broadcast.equals(ReplicationType))
+					if (X_AD_ReplicationTable.REPLICATIONTYPE_Broadcast.equals(replicationType))
 					{
 						MReplicationStrategy rplStrategy = new MReplicationStrategy(client.getCtx(), client.getAD_ReplicationStrategy_ID(), po.get_TrxName());
 						ExportHelper expHelper = new ExportHelper(client, rplStrategy);
@@ -204,16 +209,12 @@ public class ImportHelper {
 								ModelValidator.TYPE_AFTER_CHANGE);
 						po.saveReplica(true);
 					}
-					else if(X_AD_ReplicationTable.REPLICATIONTYPE_Merge.equals(ReplicationType)
-						||  X_AD_ReplicationTable.REPLICATIONTYPE_Reference.equals(ReplicationType))
+					else if (X_AD_ReplicationTable.REPLICATIONTYPE_Merge.equals(replicationType)
+						||  X_AD_ReplicationTable.REPLICATIONTYPE_Reference.equals(replicationType))
 					{
 						po.saveReplica(true);
 					}
-					/*else if (X_AD_ReplicationTable.REPLICATIONTYPE_Reference.equals(ReplicationType))
-					{
-						//Do nothing??	
-					}*/
-					else if(X_AD_ReplicationTable.REPLICATIONTYPE_Local.equals(ReplicationType))
+					else if (X_AD_ReplicationTable.REPLICATIONTYPE_Local.equals(replicationType))
 					{
 						//Do nothing??	
 					}
@@ -224,8 +225,8 @@ public class ImportHelper {
 					}
 				}	
 			}
-			else if (MReplicationStrategy.REPLICATION_DOCUMENT == ReplicationMode
-					&& X_AD_ReplicationDocument.REPLICATIONTYPE_Merge.equals(ReplicationType)
+			else if (MReplicationStrategy.REPLICATION_DOCUMENT == replicationMode
+					&& X_AD_ReplicationDocument.REPLICATIONTYPE_Merge.equals(replicationType)
 					&& po instanceof DocAction)
 			{
 				DocAction document = (DocAction)po;
@@ -233,7 +234,7 @@ public class ImportHelper {
 				String status = document.getDocStatus();
 				log.info("Document:"+document.toString() + " DocStauts:" + status + " DocAction:"+action);
 
-				if (ModelValidator.TIMING_AFTER_REVERSECORRECT==ReplicationEvent)
+				if (ModelValidator.TIMING_AFTER_REVERSECORRECT==replicationEvent)
 				{
 					if (status.equals(DocAction.STATUS_Reversed) && action.equals(DocAction.ACTION_None))
 					{
@@ -258,7 +259,7 @@ public class ImportHelper {
 				}
 			}
 		}
-		result.append("PO Saved Successfully;");
+		resultBuff.append("PO Saved Successfully;");
 	}
 
 	/**
@@ -273,32 +274,28 @@ public class ImportHelper {
 	 * @throws Exception
 	 * @throws XPathExpressionException
 	 */
-	private PO importElement(Properties ctx, StringBuffer result, Element rootElement,
-			MEXPFormat expFormat, String replicationType, String trxName) throws Exception, XPathExpressionException
+	private PO importElement(Properties ctx, Element rootElement, MEXPFormat expFormat, String replicationType, String trxName) 
+			throws Exception, XPathExpressionException
 	{
 		//Getting the Object for the replicate
-		PO po = getObjectFromFormat(ctx, expFormat, rootElement, rootElement.getNodeName(), trxName);
+		PO po = getObjectFromFormat(ctx, expFormat, rootElement, replicationType, trxName);
 
-		if (po == null)
-		{
+		if (po == null) {
 			throw new Exception(Msg.getMsg(ctx, "Can't Load PO Object"));
 		}
-		
-		if (X_AD_ReplicationTable.REPLICATIONTYPE_Reference.equals(replicationType)) //If this is just for push and exists we do nothing
-		{
-			if (po.get_ID() == 0)
-			{
+
+		// If this is just for push and exists we do nothing
+		if (X_AD_ReplicationTable.REPLICATIONTYPE_Reference.equals(replicationType)) {
+			if (po.get_ID() == 0) {
 				return null;
 			}
 		}
-
 		log.info("PO.toString() = " + po.toString());
 
-		if (po.get_KeyColumns().length < 1) 
-		{
+		if (po.get_KeyColumns().length < 1) {
 			throw new Exception(Msg.getMsg(ctx, "EDIMultiColumnNotSupported"));
 		}
-				
+
 		Collection<MEXPFormatLine> formatLines = expFormat.getFormatLinesOrderedBy(MEXPFormatLine.COLUMNNAME_IsMandatory 
 		+ " , " + MEXPFormatLine.COLUMNNAME_Position);
 		if (formatLines == null || formatLines.size() < 1) 
@@ -311,12 +308,12 @@ public class ImportHelper {
 		{
 			log.info("=================== Beginning of Format Line ===============================");
 			log.info("formatLine: [" + formatLine.toString() + "]");			
-			//Get the value
-			Object value = getValueFromFormat(formatLine, po, rootElement, result, replicationType);
-			if (value == null || value.toString().equals(""))
+			// Get the value
+			Object value = getValueFromFormat(formatLine, po, rootElement, replicationType);
+			if (value == null) // @Trifon - If XML document contains XML element then even if value is EMPTY we will update the DB record! - OLD: || value.toString().equals(""))
 				continue;	
 			//Set the value
-			setReplicaValues(value, formatLine, po, result);
+			setReplicaValues(value, formatLine, po);
 		}
 		return po;
 	}
@@ -326,12 +323,11 @@ public class ImportHelper {
 	 * @param line
 	 * @param po
 	 * @param rootElement
-	 * @param result
 	 * @param replicationType
 	 * @return
 	 * @throws Exception
 	 */
-	private Object getValueFromFormat(MEXPFormatLine line, PO po, Element rootElement, StringBuffer result, String replicationType) throws Exception
+	private Object getValueFromFormat(MEXPFormatLine line, PO po, Element rootElement, String replicationType) throws Exception
 	{
 		Object value = null;
 
@@ -392,8 +388,7 @@ public class ImportHelper {
 		} 
 		else if (MEXPFormatLine.TYPE_ReferencedEXPFormat.equals(line.getType())) 
 		{
-			// Referenced Export Format
-			//get from cache
+			// Referenced Export Format. Get it from cache
 			MEXPFormat referencedExpFormat = MEXPFormat.get(ctx, line.getEXP_EmbeddedFormat_ID(), po.get_TrxName());
 			log.info("referencedExpFormat = " + referencedExpFormat);
 
@@ -406,7 +401,7 @@ public class ImportHelper {
 			Element referencedNode = XMLHelper.getElement(xPath, rootElement);
 
 			log.info("referencedNode = " + referencedNode);
-			if (referencedNode!=null)
+			if (referencedNode != null)
 			{
 				// SPECIAL HANDLING of C_Location !!!
 				// In Case of C_Location. Try to save C_Location First, similar to Embedded code
@@ -414,7 +409,7 @@ public class ImportHelper {
 					PO embeddedPo = null;
 					// Import embedded PO
 					log.info("=== BEGIN RECURSION CALL ===");
-					embeddedPo = importElement(ctx, result, referencedNode, referencedExpFormat, replicationType, po.get_TrxName());
+					embeddedPo = importElement(ctx, referencedNode, referencedExpFormat, replicationType, po.get_TrxName());
 					log.info("embeddedPo = " + embeddedPo);
 					if (!embeddedPo.is_Changed()) {
 					    log.info("Object not changed = " + po.toString());
@@ -422,10 +417,10 @@ public class ImportHelper {
 						embeddedPo.saveReplica(true);
 						isChanged = true;
 					}
-					result.append(" !!! C_Location !!! Saved Successfully; ");
+					resultBuff.append(" !!! C_Location !!! Saved Successfully; ");
 					refRecord_ID = embeddedPo.get_ID();
 				} else {
-					refRecord_ID = getID(ctx, referencedExpFormat, referencedNode, line.getValue(), po.get_TrxName());
+					refRecord_ID = getID(ctx, referencedExpFormat, referencedNode, line.getValue(), replicationType, po.get_TrxName());
 				}
 				log.info("refRecord_ID = " + refRecord_ID);
 				value = new Integer(refRecord_ID);
@@ -455,7 +450,8 @@ public class ImportHelper {
 			if ( referencedExpFormat.getAD_Table().isView() ) {
 				// SKIP
 			} else {
-				NodeList nodeList = XMLHelper.getNodeList("/"+rootElement.getNodeName() + "/" + line.getValue(), rootElement);
+				NodeList nodeList = XMLHelper.getNodeList(line.getValue(), rootElement);
+//				NodeList nodeList = XMLHelper.getNodeList("/"+rootElement.getNodeName() + "/" + line.getValue(), rootElement);
 				for (int j = 0; j < nodeList.getLength(); j++) 
 				{
 					Element referencedElement = (Element)nodeList.item(j);
@@ -464,7 +460,7 @@ public class ImportHelper {
 					PO embeddedPo = null;
 					// Import embedded PO
 					log.info("=== BEGIN RECURSION CALL ===");
-					embeddedPo = importElement(ctx, result, referencedElement, referencedExpFormat, replicationType, po.get_TrxName());
+					embeddedPo = importElement(ctx, referencedElement, referencedExpFormat, replicationType, po.get_TrxName());
 					log.info("embeddedPo = " + embeddedPo);
 					if (!embeddedPo.is_Changed()) {
 						log.info("Object not changed = " + po.toString());
@@ -473,7 +469,7 @@ public class ImportHelper {
 						embeddedPo.saveReplica(true);
 						isChanged = true;
 					}
-					result.append(" Embedded Saved Successfully; ");
+					resultBuff.append(" Embedded Saved Successfully; ");
 				}
 			}// end - view
 		} 
@@ -496,10 +492,9 @@ public class ImportHelper {
 	 * @param value
 	 * @param line
 	 * @param po
-	 * @param result
 	 * @throws Exception
 	 */
-	private void setReplicaValues(Object value, MEXPFormatLine line, PO po, StringBuffer result) throws Exception
+	private void setReplicaValues(Object value, MEXPFormatLine line, PO po) throws Exception
 	{
 		MColumn column = MColumn.get(ctx, line.getAD_Column_ID());
 		log.info("column=[" + column + "]");
@@ -605,7 +600,7 @@ public class ImportHelper {
 							throw new Exception(ex);
 						}
 					}
-					result.append(column.getColumnName()).append("=").append(value).append("; ");
+					resultBuff.append(column.getColumnName()).append("=").append(value).append("; ");
 				}//end else			
 			}//end if TYPE_EmbeddedEXPFormat			
 		}//end if value !=null
@@ -635,41 +630,37 @@ public class ImportHelper {
 	 * @param trxName
 	 * @throws Exception
 	 * */
-	private PO getObjectFromFormat(Properties ctx, MEXPFormat expFormat, Element rootElement, String rootNodeName, String trxName) throws Exception
+	private PO getObjectFromFormat(Properties ctx, MEXPFormat expFormat, Element rootElement, String replicationType, String trxName) throws Exception
 	{
 		List<PO> values = null;
-		
-		if (expFormat == null || rootElement == null || rootNodeName == null) 
-		{
+
+		if (expFormat == null || rootElement == null) {
 			throw new IllegalArgumentException("expFormat, rootNode and RootnodeName can't be null!");
 		}
 		
 		log.info("expFormat = " + expFormat);
 		log.info("rootNode.getNodeName() = " + rootElement.getNodeName());
-		log.info("rootNodeName = " + rootNodeName);
 
-		if (rootElement.getParentNode() != null) 
-		{
+		if (rootElement.getParentNode() != null) {
 			log.info("rootNode.ParentName = " + rootElement.getParentNode().getNodeName());	
 		}
 		
 		// Get list with all Unique columns!
 		Collection<MEXPFormatLine> uniqueFormatLines = expFormat.getUniqueColumns();
-		if (uniqueFormatLines == null || uniqueFormatLines.size() < 1) 
-		{
+		if (uniqueFormatLines == null || uniqueFormatLines.size() < 1) {
 			throw new AdempiereException(Msg.getMsg(ctx, "EXPFormatLineNoUniqueColumns"));
 		}
 		
 		int replication_id = 0;
 		Object[] cols 	= new Object[uniqueFormatLines.size()];
 		Object[] params = new Object[uniqueFormatLines.size()];
-		StringBuffer whereClause= new StringBuffer("");
+		StringBuffer whereClause = new StringBuffer("");
 		int col = 0;
 		String formatLines = "";
 		for (MEXPFormatLine uniqueFormatLine : uniqueFormatLines) 
 		{
 			MColumn column = MColumn.get(ctx, uniqueFormatLine.getAD_Column_ID());
-			log.info("UNIQUE column = ["+column+"]");
+			log.info("UNIQUE column = ["+column.getAD_Table().getTableName()+"."+column.getColumnName()+"]");
 			String valuecol=column.getColumnName();
 			
 			formatLines = formatLines + "|"+ valuecol;
@@ -704,10 +695,25 @@ public class ImportHelper {
 				{					
 					throw new IllegalArgumentException("referencedNode can't be found!");
 				}
-				record_ID = getID(ctx, referencedExpFormat, referencedNode, uniqueFormatLine.getValue(), trxName);
+				record_ID = getID(ctx, referencedExpFormat, referencedNode, uniqueFormatLine.getValue(), replicationType, trxName);
 
+				// TODO - Trifon - If ReferencedExport format is marked that NON existing record MUST be created then try to create new RECORD!!!
+				// TODO - Trifon - add new column to EXP_FormatLine
+				boolean createNonExistingRecords = uniqueFormatLine.getValue().equalsIgnoreCase("C_BPartner_ID");
+				if (createNonExistingRecords && record_ID <= 0) {
+					PO po = importElement(ctx, referencedNode, referencedExpFormat, replicationType, trxName);
+					log.info("Embeded - po = " + po);
+					if (!po.is_Changed()) {
+					    log.info("Object not changed = " + po.toString());
+					} else {	
+						po.saveReplica(true);
+						isChanged = true;
+					}
+					resultBuff.append(" !!! C_BPartner_Location !!! Saved Successfully; ");
+					record_ID = po.get_ID();
+				}
 				log.info("record_ID = " + record_ID);
-				
+
 				cols[col] = new Integer(record_ID);
 			}
 			else
@@ -739,7 +745,7 @@ public class ImportHelper {
 						replication_id = (Integer) value;
 					}
 				} else {
-					value=null;
+					value = null;
 				}
 
 				params[col] = value;
@@ -761,7 +767,7 @@ public class ImportHelper {
 			}
 			col++;
 		}
-		
+
 		Query query = new Query(ctx, MTable.get(ctx, expFormat.getAD_Table_ID()), whereClause.toString(), trxName)
 						.setParameters( params )
 						.setOnlyActiveRecords( true );
@@ -805,10 +811,10 @@ public class ImportHelper {
 	 * @param trxName
 	 * @throws Exception
 	 * */
-	private int getID(Properties ctx, MEXPFormat expFormat, Element rootElement, String rootNodeName, String trxName) throws Exception 
+	private int getID(Properties ctx, MEXPFormat expFormat, Element rootElement, String rootNodeName, String replicationType, String trxName) throws Exception 
 	{
 		int record_id = 0;
-		PO po = getObjectFromFormat(ctx, expFormat, rootElement, rootNodeName, trxName);
+		PO po = getObjectFromFormat(ctx, expFormat, rootElement, replicationType, trxName);
 		if (po != null) {
 			record_id = po.get_ID();
 		}
