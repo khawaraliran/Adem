@@ -78,51 +78,60 @@ import org.w3c.dom.Text;
  */
 public class ExportHelper {
 
-	/**	Logger					*/
+	/**	Logger			*/
 	private static CLogger log = CLogger.getCLogger(ExportHelper.class);
 
-	/** XML Document 			*/
+	/** XML Document 		*/
 	private Document outDocument = null;
 
 	/** Custom Date Format		*/
 	private SimpleDateFormat	customDateFormat = null;
 
 	/** Client					*/
-	private int		m_AD_Client_ID = -1;
+	private int clientId = -1;
 
 	/** Replication Strategy	*/
-	MReplicationStrategy m_rplStrategy = null;
+	MReplicationStrategy replicationStrategy = null;
 
 
-	public ExportHelper(MClient client, MReplicationStrategy rplStrategy) {
-		m_AD_Client_ID = client.getAD_Client_ID();
-		m_rplStrategy = rplStrategy;
-	}
-
-	public ExportHelper(Properties ctx , int AD_Client_ID) {
-		m_AD_Client_ID = AD_Client_ID;
+	public ExportHelper(MClient client, MReplicationStrategy replicationStrategy) {
+		clientId = client.getAD_Client_ID();
+		this.replicationStrategy = replicationStrategy;
 	}
 
 	/**
-	 * 	Process - Generate Export Format
-	 *	@return info
+	 * Export Helper constructor
+	 * @param ctx
+	 * @param clientId
 	 */
-	@SuppressWarnings("unchecked")
-	public String exportRecord (PO po, Integer ReplicationMode , String ReplicationType, Integer ReplicationEvent) throws Exception
+	public ExportHelper(Properties ctx , int clientId) {
+		this.clientId = clientId;
+	}
+
+	/**
+	 *
+	 * Process - Generate Export Format
+ 	 * @param po
+	 * @param replicationMode
+	 * @param replicationType
+	 * @param replicationEvent
+	 * @return info
+	 * @throws Exception
+	 */
+	public String exportRecord (PO po, Integer replicationMode , String replicationType, Integer replicationEvent) throws Exception
 	{
-		MClient client = MClient.get (po.getCtx(), m_AD_Client_ID);
+		MClient client = MClient.get (po.getCtx(), clientId);
 		log.info("Client = " + client.toString());
-		
+
 		log.info("po.getAD_Org_ID() = " + po.getAD_Org_ID());
-		
+
 		log.info("po.get_TrxName() = " + po.get_TrxName());
 		if (po.get_TrxName() == null || po.get_TrxName().equals("")) {
 			po.set_TrxName("exportRecord");
 		}
-		
-		
+
 		log.info("Table = " + po.get_TableName());
-		
+
 		if (po.get_KeyColumns().length < 1) {
 			throw new Exception(Msg.getMsg (po.getCtx(), "ExportNoneColumnKeyNotSupported")); //TODO: Create Message.
 		}
@@ -131,7 +140,7 @@ public class ExportHelper {
 		//int EXP_Format_ID = 1000006;
 		MEXPFormat exportFormat = null;
 		//exportFormat = new MFormat(po.getCtx(), EXP_Format_ID, po.get_TrxName());
-		exportFormat = MEXPFormat.getFormatByAD_Client_IDAD_Table_IDAndVersion(po.getCtx(), m_AD_Client_ID, po.get_Table_ID(), version, po.get_TrxName());
+		exportFormat = MEXPFormat.getFormatByAD_Client_IDAD_Table_IDAndVersion(po.getCtx(), clientId, po.get_Table_ID(), version, po.get_TrxName());
 		log.fine("exportFormat = " + exportFormat);
 		if (exportFormat == null || exportFormat.getEXP_Format_ID() == 0) {
 			// Fall back to System Client
@@ -155,14 +164,14 @@ public class ExportHelper {
 		}
 		rootElement.setAttribute("AD_Client_Value", client.getValue());
 		rootElement.setAttribute("Version", exportFormat.getVersion());
-		rootElement.setAttribute("ReplicationMode", ReplicationMode.toString());
-		rootElement.setAttribute("ReplicationType", ReplicationType);
-		rootElement.setAttribute("ReplicationEvent", ReplicationEvent.toString());
+		rootElement.setAttribute("ReplicationMode", replicationMode.toString());
+		rootElement.setAttribute("ReplicationType", replicationType);
+		rootElement.setAttribute("ReplicationEvent", replicationEvent.toString());
 		outDocument.appendChild(rootElement);
 		generateExportFormat(rootElement, exportFormat, po, po.get_ID(), variableMap);
 
 		MEXPProcessor mExportProcessor = null;
-		mExportProcessor = new MEXPProcessor (po.getCtx(), m_rplStrategy.getEXP_Processor_ID(), po.get_TrxName() );
+		mExportProcessor = new MEXPProcessor (po.getCtx(), replicationStrategy.getEXP_Processor_ID(), po.get_TrxName() );
 		log.fine("ExportProcessor = " + mExportProcessor);
 		int EXP_ProcessorType_ID = 0;
 		EXP_ProcessorType_ID = mExportProcessor.getEXP_Processor_Type_ID();
@@ -181,17 +190,21 @@ public class ExportHelper {
 
 		return outDocument.toString();
 	}
-	
-	
+
 	/**
-	 * 	Process - Generate Export Format
-	 *  @param 
-	 * 
-	 *	@return Document
+	 * Process - Generate Export Format
+	 * @param exportFormat
+	 * @param where
+	 * @param replicationMode
+	 * @param replicationType
+	 * @param replicationEvent
+	 *
+	 * @return Document
+	 * @throws Exception
 	 */
-	public Document exportRecord (MEXPFormat exportFormat, String where, Integer ReplicationMode, String ReplicationType, Integer ReplicationEvent) throws Exception
+	public Document exportRecord (MEXPFormat exportFormat, String where, Integer replicationMode, String replicationType, Integer replicationEvent) throws Exception
 	{
-		MClient client = MClient.get (exportFormat.getCtx(), m_AD_Client_ID);
+		MClient client = MClient.get (exportFormat.getCtx(), clientId);
 		MTable table = MTable.get(exportFormat.getCtx(), exportFormat.getAD_Table_ID());
 		log.info("Table = " + table);
 
@@ -222,9 +235,9 @@ public class ExportHelper {
 			}
 			rootElement.setAttribute("AD_Client_Value", client.getValue());
 			rootElement.setAttribute("Version", exportFormat.getVersion());
-			rootElement.setAttribute("ReplicationMode", ReplicationMode.toString());
-			rootElement.setAttribute("ReplicationType", ReplicationType);
-			rootElement.setAttribute("ReplicationEvent", ReplicationEvent.toString());
+			rootElement.setAttribute("ReplicationMode", replicationMode.toString());
+			rootElement.setAttribute("ReplicationType", replicationType);
+			rootElement.setAttribute("ReplicationEvent", replicationEvent.toString());
 			outDocument.appendChild(rootElement);
 			generateExportFormat(rootElement, exportFormat, po, po.get_ID(), variableMap);
 		}// finish record read
@@ -232,11 +245,18 @@ public class ExportHelper {
 	}
 
 
-	/*
-	 * Trifon Generate Export Format process; RESULT = 
+	/**
+	 * Trifon Generate Export Format process; result =
 	 * <C_Invoice>
 	 *   <DocumentNo>101</DocumentNo>
 	 * </C_Invoice>
+	 * @param rootElement
+	 * @param exportFormat
+	 * @param masterPO
+	 * @param masterID
+	 * @param variableMap
+	 * @throws SQLException
+	 * @throws Exception
 	 */
 	private void generateExportFormat(Element rootElement, MEXPFormat exportFormat, PO masterPO, int masterID, HashMap<String, Integer> variableMap) throws SQLException, Exception 
 	{
