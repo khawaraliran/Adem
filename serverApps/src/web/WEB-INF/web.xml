@@ -5,6 +5,7 @@
    version="2.4">
 	<display-name>ADempiere Web Application</display-name>
 	<description>ADempiere Web Application</description>
+
 	<context-param>
 		<param-name>AD_Client_ID</param-name>
 		<param-value>0</param-value>
@@ -13,6 +14,7 @@
 		<param-name>ServerApps</param-name>
 		<param-value>1</param-value>
 	</context-param>
+
 	<filter>
 		<display-name>ADempiere Web Filter</display-name>
 		<filter-name>WFilter</filter-name>
@@ -26,6 +28,7 @@
 		<filter-name>WFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+
 	<servlet>
 		<display-name>ADempiere Account</display-name>
 		<servlet-name>WAccount</servlet-name>
@@ -144,6 +147,7 @@
 		<servlet-name>WFindAdv</servlet-name>
 		<servlet-class>org.compiere.www.WFindAdv</servlet-class>
 	</servlet>
+
 	<servlet-mapping>
 		<servlet-name>WAccount</servlet-name>
 		<url-pattern>/WAccount</url-pattern>
@@ -232,9 +236,11 @@
 		<servlet-name>WFindAdv</servlet-name>
 		<url-pattern>/WFindAdv</url-pattern>
 	</servlet-mapping>
+
 	<session-config>
 		<session-timeout>15</session-timeout>
 	</session-config>
+
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>
