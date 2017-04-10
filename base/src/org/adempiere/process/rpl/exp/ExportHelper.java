@@ -85,7 +85,7 @@ public class ExportHelper {
 	private Document outDocument = null;
 
 	/** Custom Date Format		*/
-	private SimpleDateFormat	m_customDateFormat = null;
+	private SimpleDateFormat	customDateFormat = null;
 
 	/** Client					*/
 	private int		m_AD_Client_ID = -1;
@@ -103,7 +103,7 @@ public class ExportHelper {
 		m_AD_Client_ID = AD_Client_ID;
 	}
 
-		/**
+	/**
 	 * 	Process - Generate Export Format
 	 *	@return info
 	 */
@@ -172,9 +172,8 @@ public class ExportHelper {
 		try {
 			Class clazz = Class.forName(javaClass);
 			IExportProcessor exportProcessor = (IExportProcessor)clazz.newInstance();
-			
+
 			exportProcessor.process(po.getCtx(), mExportProcessor, outDocument, Trx.get( po.get_TrxName(), false ));
-			
 		} catch (Exception e) {
 			log.severe(e.toString());
 			throw e;
@@ -277,10 +276,10 @@ public class ExportHelper {
 				if (column.getAD_Reference_ID() == DisplayType.Date) {
 					if (valueString != null) {
 						if (formatLine.getDateFormat() != null && !"".equals(formatLine.getDateFormat())) {
-							m_customDateFormat = new SimpleDateFormat( formatLine.getDateFormat() ); // "MM/dd/yyyy"
+							customDateFormat = new SimpleDateFormat( formatLine.getDateFormat() ); // "MM/dd/yyyy"
 
-							valueString = m_customDateFormat.format(Timestamp.valueOf (valueString));
-							newElement.setAttribute("DateFormat", m_customDateFormat.toPattern()); // Add "DateForamt attribute"
+							valueString = customDateFormat.format(Timestamp.valueOf (valueString));
+							newElement.setAttribute("DateFormat", customDateFormat.toPattern()); // Add "DateForamt attribute"
 						} else
 						{
 							newElement.setAttribute("DateFormat", valueString);
@@ -289,9 +288,9 @@ public class ExportHelper {
 				} else if (column.getAD_Reference_ID() == DisplayType.DateTime) {
 					if (valueString != null) {
 						if (formatLine.getDateFormat() != null && !"".equals(formatLine.getDateFormat())) {
-							m_customDateFormat = new SimpleDateFormat( formatLine.getDateFormat() ); // "MM/dd/yyyy"
-							valueString = m_customDateFormat.format(Timestamp.valueOf (valueString));
-							newElement.setAttribute("DateFormat", m_customDateFormat.toPattern()); // Add "DateForamt attribute"
+							customDateFormat = new SimpleDateFormat( formatLine.getDateFormat() ); // "MM/dd/yyyy"
+							valueString = customDateFormat.format(Timestamp.valueOf (valueString));
+							newElement.setAttribute("DateFormat", customDateFormat.toPattern()); // Add "DateForamt attribute"
 						} else {
 							newElement.setAttribute("DateFormat", valueString);
 						}
