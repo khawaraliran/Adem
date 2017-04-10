@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSPY v2004 rel. 4 U (http://www.xmlspy.com) by Jorg Janke (ComPiere, Inc.) -->
 <web-app xmlns="http://java.sun.com/xml/ns/j2ee"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
    version="2.4">
 	<display-name>ADempiere Web Application</display-name>
-	<description></description>
+	<description>ADempiere Web Application</description>
 	<context-param>
 		<param-name>AD_Client_ID</param-name>
 		<param-value>0</param-value>
