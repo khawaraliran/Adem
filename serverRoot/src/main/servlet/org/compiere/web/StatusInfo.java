@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +38,6 @@ import org.compiere.interfaces.Status;
  *	Status Info Servlet
  *
  * 	@author 	Jorg Janke
- * 	@version 	$Id: StatusInfo.java,v 1.3 2006/07/30 00:53:33 jjanke Exp $
  */
 public class StatusInfo extends HttpServlet
 {
@@ -61,8 +62,7 @@ public class StatusInfo extends HttpServlet
 	 *	@throws ServletException
 	 *	@throws IOException
 	 */
-	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-	{
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType(CONTENT_TYPE);
 		PrintWriter out = response.getWriter();
 		out.println("<html>");
@@ -70,57 +70,53 @@ public class StatusInfo extends HttpServlet
 		out.println("<body>");
 
 		InitialContext context = null;
-		try
-		{
+		try {
 			context = new InitialContext();
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			out.println("<p><b>" + ex + "</b></p>");
 		}
 
-		try
-		{
-			Status status = (Status)context.lookup (Status.JNDI_NAME);
+		try {
+			Status status = (Status) context.lookup(Status.JNDI_NAME);
 			out.println("<p>" + status.getStatus() + "</p>");
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			out.println("<p><b>" + ex + "</b></p>");
 		}
 
-		try
-		{
-			Server server = (Server)context.lookup (Server.JNDI_NAME);
+		try {
+			Server server = (Server) context.lookup(Server.JNDI_NAME);
 			out.println("<p>" + server.getStatus() + "</p>");
-		}
-		catch (Exception ex)
-		{
+		} catch (Exception ex) {
 			out.println("<p><b>" + ex + "</b></p>");
 		}
 
-		try
-		{
+		Connection con = null;
+		try {
 			out.println("<h2>-- /</h2>");
 			NamingEnumeration ne = context.list("/");
 			while (ne.hasMore())
 				out.println("<br>   " + ne.nextElement());
+
 			out.println("<h2>-- java</h2>");
 			ne = context.list("java:");
 			while (ne.hasMore())
 				out.println("<br>   " + ne.nextElement());
+
 			out.println("<h2>-- ejb</h2>");
-			ne = context.list("ejb");
-			while (ne.hasMore())
-				out.println("<br>   " + ne.nextElement());
+			try {
+				ne = context.list("ejb");
+				while (ne.hasMore())
+					out.println("<br>   " + ne.nextElement());
+			} catch (NamingException ex) {
+				out.println("<br>   " + ex.getMessage());
+			}
 
 			//
-
 			out.println("<h2>-- DS</h2>");
-			DataSource ds = (DataSource)context.lookup("java:/OracleDS");
+			DataSource ds = (DataSource)context.lookup("java:/DefaultDS");
 			out.println("<br>  DataSource " + ds.getClass().getName() + " LoginTimeout=" + ds.getLoginTimeout());
 
-			Connection con = ds.getConnection("adempiere","adempiere");
+			con = ds.getConnection("adempiere", "adempiere");
 			out.println("<br>  Connection ");
 
 			getServletContext().log("Connection closed=" + con.isClosed());
@@ -140,19 +136,18 @@ public class StatusInfo extends HttpServlet
 			getServletContext().log("Connection DDL&DML " + dbmd.supportsDataDefinitionAndDataManipulationTransactions());
 			getServletContext().log("Connection CatalogsIn DML " + dbmd.supportsCatalogsInDataManipulation());
 			getServletContext().log("Connection Schema In DML " + dbmd.supportsSchemasInDataManipulation());
-
-			con.close();
-
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			out.println("<p><b>" + e + "</b></p>");
+		} finally {
+			if (con != null) {
+				try {
+					con.close();
+				} catch (SQLException e) { /*ignored*/}
+			}
 		}
-
-
 		out.println("</body></html>");
 	}
-	
+
 	/**
 	 * 	Put - Processes Get
 	 *	@param request
