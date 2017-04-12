@@ -541,8 +541,7 @@ public final class MPayment extends X_C_Payment
 	protected boolean beforeSave (boolean newRecord)
 	{
 		// @Trifon - CashPayments
-		//if ( getTenderType().equals("X") ) {
-		if ( isCashTrx() && !MSysConfig.getBooleanValue("CASH_AS_PAYMENT", true , getAD_Client_ID())) {
+		if ( isCashTrx() && !MSysConfig.getBooleanValue("CASH_AS_PAYMENT", true, getAD_Client_ID())) {
 			// Cash Book Is mandatory
 			if ( getC_CashBook_ID() <= 0 ) {
 				log.saveError("Error", Msg.parseTranslation(getCtx(), "@Mandatory@: @C_CashBook_ID@"));
@@ -556,7 +555,7 @@ public final class MPayment extends X_C_Payment
 			}
 		}
 		// end @Trifon - CashPayments
-		
+
 		//	We have a charge
 		if (getC_Charge_ID() != 0) 
 		{
@@ -603,7 +602,7 @@ public final class MPayment extends X_C_Payment
 				setOverUnderAmt(Env.ZERO);
 			}
 		}
-		
+
 		//	Document Type/Receipt
 		if (getC_DocType_ID() == 0)
 			setC_DocType_ID();
